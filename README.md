@@ -1,16 +1,75 @@
-# React + Vite
+# Prompt Manager Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+**Live app → https://chatonniers.github.io/prompt-manager-web/**
 
-Currently, two official plugins are available:
+A standalone web application for SAP Solution Advisors to store, organise, and instantly copy demo prompts during live customer demos. Ported from the [SAP Demo Prompt Manager](https://github.com/chatonniers/prompt-manager) Edge extension — same features, no installation required.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+> Built by Sylvain Chatonnier — SAP Solution Advisor, Supply Chain
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Features
 
-## Expanding the Oxlint configuration
+| Feature | Details |
+|---|---|
+| **Prompt library** | Create, edit, delete prompts with title, body, notes, tags |
+| **EN / FR bilingual** | Each prompt has an optional French body; toggle with the FR/EN button |
+| **Story Flow & Solution tags** | Organise by SAP solution (S/4HANA, IBP, Ariba, Joule…) and end-to-end flow |
+| **Favorites** | Star prompts; favorites appear first in the list |
+| **Full-text search** | Weighted scoring across title, tags, solutions, body, notes |
+| **Smart sort** | Favorites → solution match → story-flow match → A–Z or score |
+| **SAP URL detection** | Paste any SAP URL in Settings to auto-filter prompts by detected solution |
+| **File attachments** | Attach files / ZIPs to prompts — stored locally in IndexedDB |
+| **Import / Export** | JSON export compatible with the Edge extension (v1.0 & v1.1) |
+| **Admin catalog** | Add, rename (with cascade), delete Solutions, Story Flows, Landscapes |
+| **Resizable sidebar** | Drag the sidebar edge to resize; persisted across sessions |
+| **100% local** | All data lives in your browser — `localStorage` + `IndexedDB`, no server |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+---
+
+## Import / Export compatibility
+
+Export files are fully interchangeable with the **SAP Demo Prompt Manager Edge extension**. Same JSON schema:
+
+```json
+{
+  "prompts": [...],
+  "catalog": { "solutions": [], "storyFlows": [], "landscapes": [] },
+  "settings": {},
+  "attachments": [{ "id", "promptId", "name", "type", "size", "data" }],
+  "exportVersion": "1.1",
+  "exportedAt": "ISO-8601"
+}
+```
+
+---
+
+## Tech stack
+
+- **React 18 + Vite 5** — no UI library, custom CSS (indigo palette)
+- **localStorage** — prompts, catalog, settings
+- **IndexedDB** — binary file attachments
+- **gh-pages** — deployed to GitHub Pages
+
+---
+
+## Local development
+
+```bash
+git clone https://github.com/chatonniers/prompt-manager-web.git
+cd prompt-manager-web
+npm install
+npm run dev        # http://localhost:5173/prompt-manager-web/
+```
+
+## Deploy
+
+```bash
+npm run deploy     # builds + pushes to gh-pages branch
+```
+
+---
+
+## Related
+
+- [SAP Demo Prompt Manager — Edge Extension](https://github.com/chatonniers/prompt-manager)
