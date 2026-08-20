@@ -1,13 +1,17 @@
+import { useRef } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
+import { useSidebarResize } from '../../hooks/useSidebarResize.js';
 import { t } from '../../lib/i18n.js';
 
-export default function Sidebar({ sidebarRef }) {
+export default function Sidebar() {
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
   const { prompts, catalog, currentView, currentFilter } = state;
+  const sidebarRef = useRef(null);
+  const resizerRef = useSidebarResize(sidebarRef);
 
   const favCount = prompts.filter(p => p.isFavorite).length;
-  const mostUsedCount = prompts.filter(p => p.usageCount > 0).length;
+  const mostUsedCount = prompts.filter(p => (p.usageCount || 0) > 0).length;
 
   function setView(view, filter) {
     dispatch({ type: 'SET_VIEW', payload: { view, filter: filter ?? { storyFlow: null, solution: null } } });
@@ -21,24 +25,25 @@ export default function Sidebar({ sidebarRef }) {
   }
 
   return (
-    <nav id="sidebar" ref={sidebarRef}>
-      <div className="nav-section-label">{t('allPrompts', lang).toUpperCase().replace('ALL PROMPTS', 'LIBRARY')}</div>
+    <>
+      <nav id="sidebar" ref={sidebarRef}>
+      <div className="nav-section-label">LIBRARY</div>
 
-      <button className={`nav-item${isActive('all', null) ? ' active' : ''}`} onClick={() => setView('all', null)}>
+      <button className={`nav-item${isActive('all') ? ' active' : ''}`} onClick={() => setView('all')}>
         <span className="nav-icon">≡</span>
-        <span>{t('allPrompts', lang)}</span>
+        <span style={{ flex: 1 }}>{t('allPrompts', lang)}</span>
         <span className="nav-badge">{prompts.length}</span>
       </button>
 
-      <button className={`nav-item${isActive('favorites', null) ? ' active' : ''}`} onClick={() => setView('favorites', null)}>
+      <button className={`nav-item${isActive('favorites') ? ' active' : ''}`} onClick={() => setView('favorites')}>
         <span className="nav-icon">★</span>
-        <span>{t('favorites', lang)}</span>
+        <span style={{ flex: 1 }}>{t('favorites', lang)}</span>
         <span className="nav-badge">{favCount}</span>
       </button>
 
-      <button className={`nav-item${isActive('most-used', null) ? ' active' : ''}`} onClick={() => setView('most-used', null)}>
+      <button className={`nav-item${isActive('most-used') ? ' active' : ''}`} onClick={() => setView('most-used')}>
         <span className="nav-icon">🔥</span>
-        <span>{t('mostUsed', lang)}</span>
+        <span style={{ flex: 1 }}>{t('mostUsed', lang)}</span>
         <span className="nav-badge">{mostUsedCount}</span>
       </button>
 
@@ -46,11 +51,14 @@ export default function Sidebar({ sidebarRef }) {
       <div id="nav-flows">
         {catalog.storyFlows.map(flow => {
           const cnt = prompts.filter(p => p.storyFlow === flow).length;
-          if (cnt === 0) return null;
           return (
-            <button key={flow} className={`nav-item${isActive('flow', flow) ? ' active' : ''}`} onClick={() => setView('flow', flow)}>
-              <span className="nav-icon">⟳</span>
-              <span>{flow}</span>
+            <button
+              key={flow}
+              className={`nav-item${isActive('flow', flow) ? ' active' : ''}`}
+              onClick={() => setView('flow', { storyFlow: flow, solution: null })}
+            >
+              <span className="nav-icon">▶</span>
+              <span style={{ flex: 1 }}>{flow}</span>
               <span className="nav-badge">{cnt}</span>
             </button>
           );
@@ -60,12 +68,15 @@ export default function Sidebar({ sidebarRef }) {
       <div className="nav-section-label">{t('bySolution', lang)}</div>
       <div id="nav-solutions">
         {catalog.solutions.map(sol => {
-          const cnt = prompts.filter(p => p.solutions?.includes(sol)).length;
-          if (cnt === 0) return null;
+          const cnt = prompts.filter(p => (p.solutions || []).includes(sol)).length;
           return (
-            <button key={sol} className={`nav-item${isActive('solution', sol) ? ' active' : ''}`} onClick={() => setView('solution', sol)}>
-              <span className="nav-icon">◈</span>
-              <span>{sol}</span>
+            <button
+              key={sol}
+              className={`nav-item${isActive('solution', sol) ? ' active' : ''}`}
+              onClick={() => setView('solution', { storyFlow: null, solution: sol })}
+            >
+              <span className="nav-icon">◆</span>
+              <span style={{ flex: 1 }}>{sol}</span>
               <span className="nav-badge">{cnt}</span>
             </button>
           );
@@ -76,13 +87,15 @@ export default function Sidebar({ sidebarRef }) {
 
       <button className={`nav-item${currentView === 'import-export' ? ' active' : ''}`} onClick={() => setView('import-export')}>
         <span className="nav-icon">⇄</span>
-        <span>{t('importExport', lang)}</span>
+        <span style={{ flex: 1 }}>{t('importExport', lang)}</span>
       </button>
 
       <button className={`nav-item${currentView === 'settings' ? ' active' : ''}`} onClick={() => setView('settings')}>
         <span className="nav-icon">⚙</span>
-        <span>{t('settings', lang)}</span>
+        <span style={{ flex: 1 }}>{t('settings', lang)}</span>
       </button>
-    </nav>
+      </nav>
+      <div id="sidebar-resizer" ref={resizerRef} />
+    </>
   );
 }

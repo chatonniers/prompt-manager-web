@@ -6,10 +6,13 @@ export default function EmptyState() {
   const lang = state.settings?.lang || 'en';
   return (
     <div className="empty-state">
-      <div className="empty-state-icon">🗂</div>
-      <div className="empty-state-title">{t('noPrompts', lang)}</div>
-      <div className="empty-state-hint">{t('noPromptsHint', lang)}</div>
-      <button className="action-btn primary" style={{ marginTop: 16 }} onClick={() => dispatch({ type: 'OPEN_EDIT', id: null })}>
+      <h3>{t('noPrompts', lang)}</h3>
+      <p>{t('noPromptsHint', lang)}</p>
+      <button
+        className="action-btn primary"
+        style={{ marginTop: 16 }}
+        onClick={() => dispatch({ type: 'OPEN_MODAL', payload: undefined })}
+      >
         {t('newPrompt', lang)}
       </button>
     </div>

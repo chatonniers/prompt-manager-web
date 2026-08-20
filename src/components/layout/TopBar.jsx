@@ -52,7 +52,7 @@ export default function TopBar() {
     <header id="top-bar">
       <div id="top-bar-left">
         <div id="app-title">
-          <span className="title-main">Prompt Manager</span>
+          <span className="title-main">Prompt Manager Web</span>
         </div>
       </div>
       <div id="top-bar-right">

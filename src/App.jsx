@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { AppProvider, useApp } from './context/AppContext.jsx'
 import { useStorage } from './hooks/useStorage.js'
 import TopBar from './components/layout/TopBar.jsx'
