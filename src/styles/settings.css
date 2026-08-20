@@ -1,0 +1,65 @@
+/* ── Settings ─────────────────────────────────────────────────────────── */
+.setting-row { margin-bottom: 22px; }
+.setting-label { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--pm-text1); }
+.setting-hint  { font-size: 12px; color: var(--pm-text2); margin-top: 5px; line-height: 1.6; }
+.setting-hint a { color: var(--pm-accent); text-decoration: none; }
+.setting-hint a:hover { text-decoration: underline; }
+kbd {
+  background: var(--pm-bg);
+  border: 1.5px solid var(--pm-border2);
+  border-radius: 5px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--pm-text1);
+  box-shadow: 0 1px 2px rgba(15,22,41,0.08);
+}
+
+.sap-url-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.sap-url-row input {
+  flex: 1;
+  border: 1.5px solid var(--pm-border2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  color: var(--pm-text1);
+  background: var(--pm-surface);
+  transition: border-color 0.15s;
+}
+
+.sap-url-row input:focus { border-color: var(--pm-accent); }
+
+.detected-context {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pm-success);
+  background: var(--pm-success-bg);
+  padding: 6px 12px;
+  border-radius: 7px;
+}
+
+.detected-context button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--pm-text3);
+  font-size: 13px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  transition: color 0.12s;
+  margin-left: auto;
+}
+
+.detected-context button:hover { color: var(--pm-danger); }

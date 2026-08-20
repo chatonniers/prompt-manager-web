@@ -1,0 +1,169 @@
+/* ── Top bar ──────────────────────────────────────────────────────────── */
+#top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #1E1B4B 0%, #312E81 100%);
+  color: #fff;
+  padding: 0 24px;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(15,22,41,0.2);
+}
+
+.title-main {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  display: block;
+}
+
+#top-bar-right { display: flex; gap: 8px; align-items: center; }
+
+.tb-btn {
+  background: rgba(255,255,255,0.1);
+  color: #E0E7FF;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 7px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+  letter-spacing: 0.1px;
+}
+
+.tb-btn:hover {
+  background: rgba(255,255,255,0.2);
+  border-color: rgba(255,255,255,0.4);
+  color: #fff;
+}
+
+.tb-btn.tb-btn-primary {
+  background: #6366F1;
+  color: #fff;
+  border-color: #6366F1;
+}
+
+.tb-btn.tb-btn-primary:hover { background: #4F46E5; border-color: #4F46E5; }
+
+.tb-btn-lang {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.35);
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  min-width: 42px;
+  text-align: center;
+}
+
+.tb-btn-lang:hover {
+  background: rgba(255,255,255,0.22);
+  border-color: rgba(255,255,255,0.6);
+}
+
+/* ── Layout ───────────────────────────────────────────────────────────── */
+#main-layout {
+  display: flex;
+  height: calc(100vh - 56px);
+}
+
+/* ── Sidebar resize handle ────────────────────────────────────────────── */
+#sidebar-resizer {
+  width: 5px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 0.15s;
+  position: relative;
+  z-index: 10;
+}
+
+#sidebar-resizer:hover,
+#sidebar-resizer.resizing {
+  background: var(--pm-accent);
+}
+
+/* ── Content ──────────────────────────────────────────────────────────── */
+#content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 18px;
+  min-width: 0;
+}
+
+/* ── Toolbar ──────────────────────────────────────────────────────────── */
+#list-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+#list-search {
+  flex: 1;
+  border: 1.5px solid var(--pm-border2);
+  border-radius: 9px;
+  padding: 9px 12px 9px 36px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  color: var(--pm-text1);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='6.5' cy='6.5' r='4.5' fill='none' stroke='%238B93B0' stroke-width='1.5'/%3E%3Cline x1='10' y1='10' x2='14' y2='14' stroke='%238B93B0' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 11px center;
+  background-color: var(--pm-surface);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+#list-search:focus {
+  border-color: var(--pm-accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+}
+#list-search::placeholder { color: var(--pm-text3); }
+
+#sort-controls label { font-size: 12px; color: var(--pm-text2); font-weight: 500; }
+#sort-select {
+  border: 1.5px solid var(--pm-border2);
+  border-radius: 7px;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  margin-left: 6px;
+  outline: none;
+  background: var(--pm-surface);
+  color: var(--pm-text1);
+  cursor: pointer;
+}
+
+/* SAP context banner */
+.sap-context-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--pm-accent-bg);
+  border: 1.5px solid var(--pm-accent);
+  border-radius: 8px;
+  padding: 8px 14px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pm-accent);
+}
+
+.sap-context-banner button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--pm-text3);
+  font-size: 13px;
+  margin-left: auto;
+  padding: 2px 6px;
+  border-radius: 5px;
+  transition: color 0.12s, background 0.12s;
+}
+
+.sap-context-banner button:hover { color: var(--pm-accent); background: var(--pm-surface); }

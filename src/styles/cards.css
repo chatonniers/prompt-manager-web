@@ -1,0 +1,155 @@
+/* ── Prompt grid ──────────────────────────────────────────────────────── */
+#prompt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.prompt-card {
+  background: var(--pm-surface);
+  border: 1.5px solid var(--pm-border);
+  border-radius: 10px;
+  padding: 11px 13px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
+  position: relative;
+}
+
+.prompt-card:hover {
+  box-shadow: var(--pm-shadow-md);
+  border-color: var(--pm-accent);
+  transform: translateY(-1px);
+}
+
+.prompt-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.prompt-card-title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--pm-text1);
+  line-height: 1.3;
+  letter-spacing: -0.1px;
+}
+
+.prompt-card-fav {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  color: var(--pm-border2);
+  padding: 0;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: color 0.15s, transform 0.15s;
+}
+
+.prompt-card-fav.active { color: var(--pm-fav); }
+.prompt-card-fav:hover { color: var(--pm-fav); transform: scale(1.2); }
+
+.prompt-card-body-preview {
+  font-size: 11px;
+  color: var(--pm-text2);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.prompt-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  align-items: center;
+}
+
+.pill {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: var(--pm-accent-bg);
+  color: var(--pm-accent);
+  white-space: nowrap;
+  letter-spacing: 0.1px;
+}
+
+.pill.flow { background: var(--pm-flow-bg); color: var(--pm-flow-text); }
+.pill.tag  { background: var(--pm-bg); color: var(--pm-text2); }
+.pill.lang-badge.fr { background: var(--pm-flow-bg); color: var(--pm-flow-text); }
+.pill.lang-missing  { background: var(--pm-warn-bg); color: var(--pm-warn); }
+
+.prompt-card-actions {
+  display: flex;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.card-action-btn {
+  flex: 1;
+  background: var(--pm-bg);
+  border: 1.5px solid var(--pm-border);
+  border-radius: 6px;
+  padding: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--pm-text2);
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.card-action-btn:hover { background: var(--pm-border); }
+.card-action-btn.copy  { color: var(--pm-accent); border-color: var(--pm-accent-bg); }
+.card-action-btn.copy:hover { background: var(--pm-accent-bg); border-color: var(--pm-accent); }
+.card-action-btn.del   { color: var(--pm-danger); }
+.card-action-btn.del:hover { background: var(--pm-danger-bg); border-color: var(--pm-danger); }
+
+.usage-hint {
+  font-size: 10px;
+  color: var(--pm-text3);
+  text-align: right;
+  font-weight: 500;
+}
+
+/* ── Grid section labels ──────────────────────────────────────────────── */
+.grid-section-label {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  color: var(--pm-text3);
+  padding: 6px 2px 2px;
+  margin-top: 6px;
+}
+
+.grid-section-label:first-child { margin-top: 0; }
+
+/* Empty state */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 56px 24px;
+  color: var(--pm-text3);
+}
+
+.empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--pm-text2); font-weight: 600; }
+
+/* Attach count pill on card */
+.attach-count-pill {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: #F0F0FF;
+  color: #6366F1;
+  white-space: nowrap;
+}

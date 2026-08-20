@@ -1,0 +1,44 @@
+/* ── Toast ────────────────────────────────────────────────────────────── */
+#pm-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #1D2D3E;
+  color: #fff;
+  font-size: 13px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  z-index: 9999;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  font-family: var(--pm-font);
+  opacity: 0;
+}
+
+#pm-toast.visible { opacity: 1; }
+
+/* ── Confirm dialog ───────────────────────────────────────────────────── */
+#confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,22,41,0.5);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#confirm-modal {
+  background: var(--pm-surface);
+  border-radius: 14px;
+  padding: 28px;
+  max-width: 380px;
+  box-shadow: var(--pm-shadow-lg);
+  border: 1.5px solid var(--pm-border);
+}
+
+#confirm-msg { font-size: 14px; color: var(--pm-text1); margin-bottom: 22px; font-weight: 600; line-height: 1.5; }
+.confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }
