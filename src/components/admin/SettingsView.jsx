@@ -14,19 +14,19 @@ export default function SettingsView() {
   async function handleSave() {
     const updated = { ...state.settings, autoFilterEnabled: autoFilter };
     await StorageAPI.saveSettings(updated);
-    dispatch({ type: 'SAVE_SETTINGS', settings: updated });
-    dispatch({ type: 'SHOW_TOAST', msg: t('settingsSaved', lang) });
+    dispatch({ type: 'SET_SETTINGS', payload: updated });
+    dispatch({ type: 'SHOW_TOAST', payload: t('settingsSaved', lang) });
   }
 
   function handleDetect() {
     if (!sapUrl.trim()) return;
     const ctx = detectSAPContext(sapUrl.trim());
-    dispatch({ type: 'SET_SAP_CONTEXT', context: ctx });
+    dispatch({ type: 'SET_SAP_CONTEXT', payload: ctx });
     if (ctx?.detected) {
-      dispatch({ type: 'SHOW_TOAST', msg: t('detectedContext', lang, ctx.solution) });
-      dispatch({ type: 'SET_VIEW', view: 'all', filter: null });
+      dispatch({ type: 'SHOW_TOAST', payload: t('detectedContext', lang, ctx.solution) });
+      dispatch({ type: 'SET_VIEW', payload: { view: 'all', filter: { storyFlow: null, solution: null } } });
     } else {
-      dispatch({ type: 'SHOW_TOAST', msg: 'No SAP solution detected for that URL.' });
+      dispatch({ type: 'SHOW_TOAST', payload: 'No SAP solution detected for that URL.' });
     }
   }
 

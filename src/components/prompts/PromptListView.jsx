@@ -15,7 +15,7 @@ export default function PromptListView() {
           type="text"
           placeholder={t('searchPlaceholder', lang)}
           value={searchQuery}
-          onChange={e => dispatch({ type: 'SET_SEARCH', query: e.target.value })}
+          onChange={e => dispatch({ type: 'SET_SEARCH', payload: e.target.value })}
           autoComplete="off"
           spellCheck="false"
         />
@@ -25,7 +25,7 @@ export default function PromptListView() {
             <select
               id="sort-select"
               value={sortOrder}
-              onChange={e => dispatch({ type: 'SET_SORT', order: e.target.value })}
+              onChange={e => dispatch({ type: 'SET_SORT', payload: e.target.value })}
             >
               <option value="updated">{t('sortUpdated', lang)}</option>
               <option value="title">{t('sortTitle', lang)}</option>
@@ -39,7 +39,7 @@ export default function PromptListView() {
       {sapContext?.detected && (
         <div className="sap-context-banner">
           <span>{t('sapContextBanner', lang, sapContext.solution)}</span>
-          <button className="banner-clear-btn" onClick={() => dispatch({ type: 'SET_SAP_CONTEXT', context: null })}>
+          <button className="banner-clear-btn" onClick={() => dispatch({ type: 'SET_SAP_CONTEXT', payload: null })}>
             {t('clearFilter', lang)}
           </button>
         </div>

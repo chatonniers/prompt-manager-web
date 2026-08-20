@@ -30,11 +30,11 @@ export default function ImportExportView() {
         const result = await StorageAPI.importAll(data, importMode);
         const prompts = await StorageAPI.getAllPrompts();
         const catalog = await StorageAPI.getCatalog();
-        dispatch({ type: 'SET_PROMPTS', prompts });
-        dispatch({ type: 'SET_CATALOG', catalog });
+        dispatch({ type: 'SET_PROMPTS', payload: prompts });
+        dispatch({ type: 'SET_CATALOG', payload: catalog });
         const msg = t('importOk', lang, result.imported, result.skipped);
         setImportStatus({ ok: true, msg });
-        dispatch({ type: 'SHOW_TOAST', msg });
+        dispatch({ type: 'SHOW_TOAST', payload: msg });
       } catch {
         setImportStatus({ ok: false, msg: 'Import failed — invalid file.' });
       }

@@ -12,7 +12,7 @@ export default function TopBar() {
     const newLang = lang === 'en' ? 'fr' : 'en';
     const updated = { ...state.settings, lang: newLang };
     StorageAPI.saveSettings(updated);
-    dispatch({ type: 'SAVE_SETTINGS', settings: updated });
+    dispatch({ type: 'SET_SETTINGS', payload: updated });
   }
 
   function handleExport() {
@@ -37,11 +37,11 @@ export default function TopBar() {
         const result = await StorageAPI.importAll(data, 'merge');
         const prompts = await StorageAPI.getAllPrompts();
         const catalog = await StorageAPI.getCatalog();
-        dispatch({ type: 'SET_PROMPTS', prompts });
-        dispatch({ type: 'SET_CATALOG', catalog });
-        dispatch({ type: 'SHOW_TOAST', msg: t('importOk', lang, result.imported, result.skipped) });
+        dispatch({ type: 'SET_PROMPTS', payload: prompts });
+        dispatch({ type: 'SET_CATALOG', payload: catalog });
+        dispatch({ type: 'SHOW_TOAST', payload: t('importOk', lang, result.imported, result.skipped) });
       } catch {
-        dispatch({ type: 'SHOW_TOAST', msg: 'Import failed — invalid file.' });
+        dispatch({ type: 'SHOW_TOAST', payload: 'Import failed — invalid file.' });
       }
       e.target.value = '';
     };
@@ -59,7 +59,7 @@ export default function TopBar() {
         <button className="tb-btn tb-btn-lang" onClick={handleLangToggle} title="Switch language">
           {lang === 'en' ? 'FR' : 'EN'}
         </button>
-        <button className="tb-btn tb-btn-primary" onClick={() => dispatch({ type: 'OPEN_EDIT', id: null })}>
+        <button className="tb-btn tb-btn-primary" onClick={() => dispatch({ type: 'OPEN_MODAL', payload: undefined })}>
           {t('newPrompt', lang)}
         </button>
         <button className="tb-btn" onClick={() => importRef.current?.click()}>{t('import', lang)}</button>
