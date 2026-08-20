@@ -1,15 +1,13 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { StorageAPI } from '../lib/storage.js';
 import { getDefaultPrompts } from '../lib/defaults.js';
 import { useApp } from '../context/AppContext.jsx';
 
 export function useStorage() {
-  const { state, dispatch } = useApp();
-  const ranRef = useRef(false);
+  const { dispatch } = useApp();
 
   useEffect(() => {
-    if (ranRef.current || state.initialized) return;
-    ranRef.current = true;
+    let cancelled = false;
 
     async function init() {
       let [prompts, catalog, settings] = await Promise.all([
@@ -17,13 +15,18 @@ export function useStorage() {
         StorageAPI.getCatalog(),
         StorageAPI.getSettings(),
       ]);
+      if (cancelled) return;
       if (prompts.length === 0) {
         const defaults = getDefaultPrompts();
         await Promise.all(defaults.map(p => StorageAPI.upsertPrompt(p)));
         prompts = defaults;
       }
-      dispatch({ type: 'LOAD_INITIAL', payload: { prompts, catalog, settings } });
+      if (!cancelled) {
+        dispatch({ type: 'LOAD_INITIAL', payload: { prompts, catalog, settings } });
+      }
     }
     init();
-  }, []); // empty deps — run once only
+
+    return () => { cancelled = true; };
+  }, [dispatch]); // eslint-disable-line react-hooks/exhaustive-deps
 }
