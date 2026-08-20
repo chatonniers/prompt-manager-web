@@ -22,6 +22,7 @@ const initialState = {
 function reducer(state, action) {
   switch (action.type) {
     case 'LOAD_INITIAL':
+      if (state.initialized) return state;
       return { ...state, ...action.payload, initialized: true };
     // Accept both .payload and legacy field names for SET_PROMPTS
     case 'SET_PROMPTS':

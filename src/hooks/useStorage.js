@@ -1,12 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { StorageAPI } from '../lib/storage.js';
 import { getDefaultPrompts } from '../lib/defaults.js';
 import { useApp } from '../context/AppContext.jsx';
 
 export function useStorage() {
-  const { dispatch } = useApp();
+  const { state, dispatch } = useApp();
+  const ranRef = useRef(false);
 
   useEffect(() => {
+    if (ranRef.current || state.initialized) return;
+    ranRef.current = true;
+
     async function init() {
       let [prompts, catalog, settings] = await Promise.all([
         StorageAPI.getAllPrompts(),
@@ -21,5 +25,5 @@ export function useStorage() {
       dispatch({ type: 'LOAD_INITIAL', payload: { prompts, catalog, settings } });
     }
     init();
-  }, [dispatch]);
+  }, []); // empty deps — run once only
 }
