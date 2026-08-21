@@ -5,6 +5,7 @@ import { detectSAPContext } from '../../lib/url-detector.js';
 import { t } from '../../lib/i18n.js';
 import AdminCatalogCard from './AdminCatalogCard.jsx';
 import AdminMcpCard from './AdminMcpCard.jsx';
+import AdminCategoriesCard from './AdminCategoriesCard.jsx';
 
 export default function SettingsView() {
   const { state, dispatch } = useApp();
@@ -64,14 +65,7 @@ export default function SettingsView() {
         </div>
 
         <div className="settings-col">
-          <AdminCatalogCard
-            titleKey="categoriesAdmin"
-            descKey="categoriesDesc"
-            addKey="addCategory"
-            items={state.catalog.categories || []}
-            promptField="category"
-            isArray={false}
-          />
+          <AdminCategoriesCard />
           <AdminCatalogCard
             titleKey="solutionsAdmin"
             descKey="solutionsDesc"
