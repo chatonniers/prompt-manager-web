@@ -194,7 +194,7 @@
   flex-direction: column;
   border: 1px solid var(--pm-border);
   border-radius: var(--pm-radius-sm);
-  overflow: hidden;
+  overflow: visible;
   background: var(--pm-surface2);
 }
 
@@ -253,23 +253,21 @@
 /* Tooltip */
 .prompt-item-tooltip {
   display: none;
-  position: absolute;
-  left: 0;
-  top: calc(100% + 8px);
-  z-index: 300;
+  position: fixed;
+  z-index: 9999;
   background: #0A0F1E;
   color: #E8ECFF;
   font-size: 12px;
   line-height: 1.65;
   padding: 14px 16px;
   border-radius: 12px;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
   white-space: pre-wrap;
   word-break: break-word;
   width: 360px;
   max-height: 300px;
   overflow-y: auto;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
   pointer-events: none;
 }
 .prompt-item-preview-wrap:hover .prompt-item-tooltip { display: block; }

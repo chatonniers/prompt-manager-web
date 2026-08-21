@@ -620,7 +620,21 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
               <div key={item.id} className="prompt-item-row">
                 <div className="prompt-item-content">
                   <span className="prompt-item-num">{idx + 1}</span>
-                  <div className="prompt-item-preview-wrap">
+                  <div
+                    className="prompt-item-preview-wrap"
+                    onMouseEnter={e => {
+                      const tip = e.currentTarget.querySelector('.prompt-item-tooltip');
+                      if (!tip) return;
+                      const r = e.currentTarget.getBoundingClientRect();
+                      tip.style.left = r.left + 'px';
+                      tip.style.top = (r.bottom + 8) + 'px';
+                      // Clamp to viewport right edge
+                      const tipW = 360;
+                      if (r.left + tipW > window.innerWidth - 12) {
+                        tip.style.left = (window.innerWidth - tipW - 12) + 'px';
+                      }
+                    }}
+                  >
                     <span className="prompt-item-preview">{label}</span>
                     <div className="prompt-item-tooltip">{body}</div>
                   </div>
