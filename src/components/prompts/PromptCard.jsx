@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { AttachmentsDB } from '../../lib/attachments.js';
@@ -177,7 +177,10 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
   const [notes, setNotes] = useState(p.notes || '');
   const [systems, setSystems] = useState(() => getSystems(p));
   const [attachments, setAttachments] = useState([]);
+  const [pendingFiles, setPendingFiles] = useState([]);
+  const [pendingDeletes, setPendingDeletes] = useState([]);
   const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     AttachmentsDB.getForPrompt(p.id).then(setAttachments);
@@ -193,6 +196,22 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
     URL.revokeObjectURL(url);
   }
 
+  function addFiles(files) {
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        setPendingFiles(prev => [...prev, {
+          _tempId: crypto.randomUUID(),
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          data: ev.target.result,
+        }]);
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
   function updateItemBody(id, field, value) {
     setItems(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
   }
@@ -203,6 +222,21 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
     if (validItems.length === 0) return;
     setSaving(true);
     const finalItems = validItems.map(i => ({ ...i, body: i.body.trim(), body_fr: i.body_fr?.trim() || null }));
+
+    const savedNewAtts = [];
+    for (const f of pendingFiles) {
+      const attId = crypto.randomUUID();
+      await AttachmentsDB.save({ id: attId, promptId: p.id, name: f.name, type: f.type, size: f.size, data: f.data });
+      savedNewAtts.push({ id: attId, name: f.name, type: f.type, size: f.size });
+    }
+    for (const attId of pendingDeletes) {
+      await AttachmentsDB.delete(attId);
+    }
+    const attachmentsMeta = [
+      ...attachments.filter(a => !pendingDeletes.includes(a.id)).map(a => ({ id: a.id, name: a.name, type: a.type, size: a.size })),
+      ...savedNewAtts,
+    ];
+
     await StorageAPI.upsertPrompt({
       ...p,
       title: title.trim(),
@@ -213,6 +247,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
       storyFlow,
       notes: notes.trim(),
       systems,
+      attachments: attachmentsMeta,
     });
     setSaving(false);
     onSave();
@@ -339,22 +374,40 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
         />
       </div>
 
-      {/* Attachments — read-only, click to download */}
-      {attachments.length > 0 && (
-        <div className="card-edit-field">
-          <label className="card-edit-label">Attachments</label>
-          <div className="card-edit-attachments">
-            {attachments.map(att => (
-              <button key={att.id} className="card-edit-att-row" onClick={() => downloadAtt(att)} title="Download">
-                <span>{fileIcon(att.type)}</span>
-                <span className="card-edit-att-name">{att.name}</span>
-                <span className="card-edit-att-size">{fmtSize(att.size)}</span>
-                <span className="card-edit-att-dl">↓</span>
-              </button>
-            ))}
-          </div>
+      {/* Attachments */}
+      <div className="card-edit-field">
+        <label className="card-edit-label">Attachments</label>
+        <div className="card-edit-attachments">
+          {attachments.filter(a => !pendingDeletes.includes(a.id)).map(att => (
+            <div key={att.id} className="card-edit-att-row">
+              <span>{fileIcon(att.type)}</span>
+              <button className="card-edit-att-name-btn" onClick={() => downloadAtt(att)} title="Download">{att.name}</button>
+              <span className="card-edit-att-size">{fmtSize(att.size)}</span>
+              <button className="card-edit-att-del" onClick={() => setPendingDeletes(prev => [...prev, att.id])} title="Remove">×</button>
+            </div>
+          ))}
+          {pendingFiles.map(f => (
+            <div key={f._tempId} className="card-edit-att-row pending">
+              <span>{fileIcon(f.type)}</span>
+              <span className="card-edit-att-name">{f.name}</span>
+              <span className="card-edit-att-size">{fmtSize(f.size)}</span>
+              <button className="card-edit-att-del" onClick={() => setPendingFiles(prev => prev.filter(x => x._tempId !== f._tempId))} title="Remove">×</button>
+            </div>
+          ))}
+          <button
+            type="button"
+            className="card-edit-att-add"
+            onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}
+          >+ Add file</button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            multiple
+            style={{ display: 'none' }}
+            onChange={e => addFiles(e.target.files)}
+          />
         </div>
-      )}
+      </div>
 
       <div className="card-edit-actions">
         <button className="card-edit-cancel-btn" onClick={onCancel}>{t('cancel', lang)}</button>
