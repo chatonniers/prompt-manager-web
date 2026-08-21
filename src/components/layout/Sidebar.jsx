@@ -125,7 +125,7 @@ export default function Sidebar({ collapsed }) {
           </div>
         )}
         <div className="sidebar-version">
-          v{__APP_VERSION__} · {__BUILD_DATE__}
+          v{__APP_VERSION__} · {__BUILD_DATE__}<br />by Sylvain C.
         </div>
       </nav>
       <div id="sidebar-resizer" ref={resizerRef} />
