@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { detectSAPContext } from '../../lib/url-detector.js';
+import { encodeShareUrl } from '../../lib/share.js';
 import { t } from '../../lib/i18n.js';
 import AdminCatalogCard from './AdminCatalogCard.jsx';
 import AdminCategoriesCard from './AdminCategoriesCard.jsx';
@@ -47,6 +48,22 @@ export default function SettingsView() {
     } else {
       dispatch({ type: 'SHOW_TOAST', payload: t('noSapDetected', lang) });
     }
+  }
+
+  async function handleShareUrl() {
+    const data = await StorageAPI.exportAll();
+    const url = await encodeShareUrl(data);
+    if (url.length > 200 * 1024) {
+      dispatch({ type: 'SHOW_TOAST', payload: t('shareUrlTooLarge', lang) });
+      return;
+    }
+    await navigator.clipboard.writeText(url).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = url; ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    });
+    dispatch({ type: 'SHOW_TOAST', payload: t('shareUrlCopied', lang) });
   }
 
   function handleExport() {
@@ -158,6 +175,11 @@ export default function SettingsView() {
                     {importStatus.msg}
                   </div>
                 )}
+              </div>
+              <div className="view-card">
+                <h2>{t('shareUrl', lang)}</h2>
+                <p>{t('shareUrlDesc', lang)}</p>
+                <button className="action-btn" onClick={handleShareUrl}>🔗 {t('shareUrl', lang)}</button>
               </div>
               {importData && (
                 <ImportModeModal
