@@ -317,7 +317,7 @@ export default function PromptModal() {
             </button>
           </div>
 
-          {/* Category + Story Flow + Favorite */}
+          {/* Category */}
           <div className="field-row">
             <label>{t('category', lang)}</label>
             <select value={category} onChange={e => setCategory(e.target.value)}>
@@ -326,6 +326,7 @@ export default function PromptModal() {
             </select>
           </div>
 
+          {/* Status */}
           <div className="field-row">
             <label>Status</label>
             <div className="card-status-btns">
@@ -338,6 +339,37 @@ export default function PromptModal() {
                 >
                   {s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'}
                 </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Story Flow + Favorite */}
+          <div className="field-row-2col">
+            <div className="field-col">
+              <label>{t('storyFlow', lang)}</label>
+              <select value={storyFlow} onChange={e => setStoryFlow(e.target.value)}>
+                <option value="">{t('selectFlowNone', lang)}</option>
+                {catalog.storyFlows.map(f => <option key={f} value={f}>{f}</option>)}
+              </select>
+            </div>
+            <div className="field-col">
+              <label>{t('favLabel', lang)}</label>
+              <label className="toggle-label">
+                <input type="checkbox" checked={isFavorite} onChange={e => setIsFavorite(e.target.checked)} />
+                <span> {t('markFav', lang)}</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Solutions */}
+          <div className="field-row">
+            <label>{t('solutionsLabel', lang)}</label>
+            <div className="checkbox-group">
+              {catalog.solutions.map(sol => (
+                <label key={sol} className="checkbox-label">
+                  <input type="checkbox" checked={selectedSolutions.includes(sol)} onChange={() => toggleSolution(sol)} />
+                  <span>{sol}</span>
+                </label>
               ))}
             </div>
           </div>
