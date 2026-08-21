@@ -262,6 +262,28 @@ export default function PromptModal() {
             {errors.title && <span className="field-error">{errors.title}</span>}
           </div>
 
+          {/* Personas */}
+          {(catalog.personas || []).length > 0 && (
+            <div className="field-row">
+              <label>{t('personasLabel', lang)}</label>
+              <div className="catalog-picker">
+                {catalog.personas.map(persona => {
+                  const selected = personas.includes(persona);
+                  return (
+                    <button
+                      key={persona}
+                      type="button"
+                      className={`catalog-chip${selected ? ' selected' : ''}`}
+                      onClick={() => setPersonas(prev => selected ? prev.filter(x => x !== persona) : [...prev, persona])}
+                    >
+                      {persona}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Prompt Items */}
           <div className="field-row">
             <label>{t('promptBodiesLabel', lang)} <span className="req">*</span> <span className="hint">({t('promptBodiesCopyHint', lang)})</span></label>
