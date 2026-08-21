@@ -2,9 +2,9 @@
 .help-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15,22,41,0.5);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  background: rgba(15,22,41,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -15,9 +15,9 @@
 .help-modal {
   background: var(--pm-surface);
   border-radius: 16px;
-  width: 760px;
+  width: 900px;
   max-width: calc(100vw - 48px);
-  max-height: calc(100vh - 80px);
+  max-height: calc(100vh - 60px);
   display: flex;
   flex-direction: column;
   box-shadow: var(--pm-shadow-lg);
@@ -88,48 +88,68 @@
   gap: 20px;
 }
 
+/* ── Grid ── */
 .help-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 
+/* ── Card ── */
 .help-card {
-  display: flex;
-  gap: 12px;
   background: var(--pm-bg);
   border: 1.5px solid var(--pm-border);
   border-radius: 10px;
-  padding: 12px 14px;
-  transition: border-color 0.15s;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.help-card:hover { border-color: var(--pm-accent); }
+.help-card.help-card-open {
+  border-color: var(--pm-accent);
+  box-shadow: 0 0 0 3px var(--pm-accent-bg);
+  grid-column: span 2;
 }
 
-.help-card:hover { border-color: var(--pm-accent); }
+.help-card-top {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+}
 
-.help-card-icon {
-  font-size: 20px;
+.help-card-num {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--pm-accent);
+  opacity: 0.5;
   flex-shrink: 0;
-  width: 28px;
-  text-align: center;
-  margin-top: 1px;
+  width: 22px;
+  margin-top: 2px;
+  letter-spacing: 0.5px;
 }
 
 .help-card-content {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
 }
 
 .help-card-title {
   font-size: 13px;
   font-weight: 700;
   color: var(--pm-text1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
+
+.help-card-emoji { font-size: 14px; }
 
 .help-card-body {
   font-size: 12px;
   color: var(--pm-text2);
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
 .help-card-tip {
@@ -142,6 +162,28 @@
   line-height: 1.45;
 }
 
+/* ── Screen mockup ── */
+.help-card-screen {
+  border-top: 1px solid var(--pm-border);
+  background: var(--pm-bg);
+  padding: 14px 16px;
+  animation: helpScreenIn 0.18s ease;
+}
+
+@keyframes helpScreenIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.help-screen {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+  border: 1px solid var(--pm-border);
+}
+
+/* ── Shortcuts ── */
 .help-shortcuts {
   border-top: 1px solid var(--pm-border);
   padding-top: 16px;
@@ -176,4 +218,5 @@ kbd {
   font-family: inherit;
   color: var(--pm-text1);
   box-shadow: 0 1px 0 var(--pm-border2);
+  white-space: nowrap;
 }
