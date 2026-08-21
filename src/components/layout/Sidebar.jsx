@@ -39,8 +39,6 @@ export default function Sidebar({ collapsed }) {
   return (
     <>
       <nav id="sidebar" ref={sidebarRef}>
-        <div className="nav-section-label">{t('libraryLabel', lang)}</div>
-
         <button className={`nav-item${isActive('all') ? ' active' : ''}`} onClick={() => setView('all')}>
           <span className="nav-icon">≡</span>
           <span style={{ flex: 1 }}>{t('allPrompts', lang)}</span>
