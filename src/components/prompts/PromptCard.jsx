@@ -416,7 +416,6 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
         </div>
       </div>
 
-      </div>
       </div>{/* end card-edit-body */}
 
       <div className="card-edit-actions">
