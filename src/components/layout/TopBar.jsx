@@ -96,6 +96,7 @@ export default function TopBar({ onHelp }) {
       <div id="top-bar-left">
         <div id="app-title" style={{ cursor: 'pointer' }} onClick={() => dispatch({ type: 'SET_VIEW', payload: { view: 'all', filter: { storyFlow: null, solution: null, category: null } } })}>
           <span className="title-main">{t('appTitle', lang)}</span>
+          <span className="title-sub">AI Discovery · SAP</span>
         </div>
       </div>
       <div id="top-bar-right">
