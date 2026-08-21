@@ -76,22 +76,14 @@
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Card entrance animation */
-@keyframes cardEntrance {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ── Card — core visual unit ──────────────────────────────────────────── */
+/* Card hover lift */
 .prompt-card {
-  background: var(--pm-surface);
+  background: #ffffff;
   border-radius: var(--pm-radius);
   display: flex;
   flex-direction: column;
   position: relative;
   box-shadow: var(--pm-shadow-card);
-  transition: box-shadow 0.22s ease, transform 0.22s ease;
-  animation: cardEntrance 0.3s ease both;
 }
 
 /* Left accent bar — the primary visual identity of a card */
@@ -195,7 +187,7 @@
   border: 1px solid var(--pm-border);
   border-radius: var(--pm-radius-sm);
   overflow: visible;
-  background: var(--pm-surface2);
+  background: #ffffff;
 }
 
 .prompt-item-row {
@@ -204,11 +196,11 @@
   gap: 10px;
   padding: 10px 12px;
   border-bottom: 1px solid var(--pm-border);
-  background: var(--pm-surface);
+  background: #ffffff;
   transition: background 0.12s;
 }
 .prompt-item-row:last-child { border-bottom: none; }
-.prompt-item-row:hover { background: var(--pm-bg); }
+.prompt-item-row:hover { background: #F5F7FF; }
 
 .prompt-item-content {
   flex: 1;
