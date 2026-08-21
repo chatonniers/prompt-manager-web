@@ -168,6 +168,24 @@ export default function PromptCard({ prompt: p }) {
     dispatch({ type: 'SET_PROMPTS', payload: prompts });
   }
 
+  async function handleDuplicate() {
+    const now = new Date().toISOString();
+    const dupe = {
+      ...p,
+      id: crypto.randomUUID(),
+      title: p.title + ' (copy)',
+      isFavorite: false,
+      usageCount: 0,
+      lastUsedAt: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    await StorageAPI.upsertPrompt(dupe);
+    const prompts = await StorageAPI.getAllPrompts();
+    dispatch({ type: 'SET_PROMPTS', payload: prompts });
+    dispatch({ type: 'SHOW_TOAST', payload: `"${dupe.title}" created` });
+  }
+
   function handleEdit() {
     dispatch({ type: 'OPEN_MODAL', payload: p.id });
   }
@@ -240,6 +258,7 @@ export default function PromptCard({ prompt: p }) {
       )}
 
       <div className="prompt-card-actions">
+        <button className="card-action-btn" onClick={handleDuplicate} title="Duplicate">⧉</button>
         <button className="card-action-btn edit" onClick={handleEdit}>{t('edit', lang)}</button>
         <button className="card-action-btn del" onClick={handleDelete}>{t('del', lang)}</button>
       </div>
