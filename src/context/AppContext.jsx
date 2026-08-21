@@ -16,6 +16,7 @@ const initialState = {
   isConfirmOpen: false,
   pendingDeleteId: null,
   toastMsg: null,
+  toastUndo: null,   // { label, onUndo } — if set, Toast shows an Undo button
   initialized: false,
   selectedIds: new Set(),
   zoom: (() => { const v = parseFloat(localStorage.getItem('pm-zoom')); return v >= 0.5 && v <= 2 ? v : 1; })(),
@@ -58,9 +59,9 @@ function reducer(state, action) {
     case 'CLOSE_CONFIRM':
       return { ...state, isConfirmOpen: false, pendingDeleteId: null };
     case 'SHOW_TOAST':
-      return { ...state, toastMsg: action.payload ?? action.msg };
+      return { ...state, toastMsg: action.payload ?? action.msg, toastUndo: action.undo ?? null };
     case 'CLEAR_TOAST':
-      return { ...state, toastMsg: null };
+      return { ...state, toastMsg: null, toastUndo: null };
     case 'SET_ZOOM': {
       const v = Math.min(2, Math.max(0.5, Math.round(action.payload * 10) / 10));
       localStorage.setItem('pm-zoom', v);

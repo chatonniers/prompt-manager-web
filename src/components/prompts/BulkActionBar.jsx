@@ -51,12 +51,30 @@ export default function BulkActionBar({ visibleIds }) {
 
   async function deleteSelected() {
     const ids = [...selectedIds];
-    await Promise.all(ids.map(id => StorageAPI.deletePrompt(id)));
-    const updated = await StorageAPI.getAllPrompts();
-    dispatch({ type: 'SET_PROMPTS', payload: updated });
+    const deleted = prompts.filter(p => ids.includes(p.id));
+    const remaining = prompts.filter(p => !ids.includes(p.id));
+
+    // Optimistic: remove from UI immediately
+    dispatch({ type: 'SET_PROMPTS', payload: remaining });
     dispatch({ type: 'CLEAR_SELECT' });
-    dispatch({ type: 'SHOW_TOAST', payload: `${ids.length} prompt${ids.length !== 1 ? 's' : ''} deleted` });
     setConfirmDelete(false);
+
+    // Schedule actual storage delete, cancelled if undo is clicked
+    let undone = false;
+    const timer = setTimeout(async () => {
+      if (undone) return;
+      await Promise.all(ids.map(id => StorageAPI.deletePrompt(id)));
+    }, 10000);
+
+    dispatch({
+      type: 'SHOW_TOAST',
+      payload: `${ids.length} prompt${ids.length !== 1 ? 's' : ''} deleted`,
+      undo: () => {
+        undone = true;
+        clearTimeout(timer);
+        dispatch({ type: 'SET_PROMPTS', payload: prompts }); // restore original list
+      },
+    });
   }
 
   return (

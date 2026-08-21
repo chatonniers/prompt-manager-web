@@ -11,12 +11,29 @@ export default function ConfirmModal() {
 
   async function handleConfirm() {
     if (!pendingDeleteId) return;
-    await AttachmentsDB.deleteForPrompt(pendingDeleteId);
-    await StorageAPI.deletePrompt(pendingDeleteId);
-    const updated = await StorageAPI.getAllPrompts();
-    dispatch({ type: 'SET_PROMPTS', payload: updated });
-    dispatch({ type: 'SHOW_TOAST', payload: t('promptDeleted', lang) });
+    const id = pendingDeleteId;
+    const deleted = prompts.find(p => p.id === id);
+    const remaining = prompts.filter(p => p.id !== id);
+
+    dispatch({ type: 'SET_PROMPTS', payload: remaining });
     dispatch({ type: 'CLOSE_CONFIRM' });
+
+    let undone = false;
+    const timer = setTimeout(async () => {
+      if (undone) return;
+      await AttachmentsDB.deleteForPrompt(id);
+      await StorageAPI.deletePrompt(id);
+    }, 10000);
+
+    dispatch({
+      type: 'SHOW_TOAST',
+      payload: t('promptDeleted', lang),
+      undo: () => {
+        undone = true;
+        clearTimeout(timer);
+        dispatch({ type: 'SET_PROMPTS', payload: prompts });
+      },
+    });
   }
 
   if (!isConfirmOpen) return null;

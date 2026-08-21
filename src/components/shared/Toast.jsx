@@ -8,17 +8,24 @@ export default function Toast() {
   useEffect(() => {
     if (state.toastMsg) {
       clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => dispatch({ type: 'CLEAR_TOAST' }), 2200);
+      const delay = state.toastUndo ? 10000 : 2200;
+      timerRef.current = setTimeout(() => dispatch({ type: 'CLEAR_TOAST' }), delay);
     }
     return () => clearTimeout(timerRef.current);
-  }, [state.toastMsg, dispatch]);
+  }, [state.toastMsg, state.toastUndo, dispatch]);
+
+  function handleUndo() {
+    clearTimeout(timerRef.current);
+    state.toastUndo?.();
+    dispatch({ type: 'CLEAR_TOAST' });
+  }
 
   return (
-    <div
-      id="pm-toast"
-      className={state.toastMsg ? 'visible' : ''}
-    >
-      {state.toastMsg || ''}
+    <div id="pm-toast" className={state.toastMsg ? 'visible' : ''}>
+      <span>{state.toastMsg || ''}</span>
+      {state.toastUndo && (
+        <button className="toast-undo-btn" onClick={handleUndo}>Undo</button>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-const VAR_RE = /\[([A-Z0-9_][A-Z0-9_ ]*)\]/g;
+const VAR_RE = /\[([A-Za-z0-9_][A-Za-z0-9_ ]*)\]/g;
 
 export function extractVars(text) {
   const matches = [...(text || '').matchAll(VAR_RE)];

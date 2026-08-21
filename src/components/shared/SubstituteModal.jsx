@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { extractVars, applyVars } from '../../lib/substitution.js';
 import { t } from '../../lib/i18n.js';
 
@@ -22,7 +23,7 @@ export default function SubstituteModal({ text, onCopy, onClose, lang }) {
     onClose();
   }
 
-  return (
+  return createPortal(
     <div className="subst-backdrop" onClick={onClose}>
       <div className="subst-modal" onClick={e => e.stopPropagation()}>
         <div className="subst-header">
@@ -49,6 +50,7 @@ export default function SubstituteModal({ text, onCopy, onClose, lang }) {
           <button className="subst-btn-primary" onClick={handleCopyWithValues}>{t('varSubstCopyBtn', lang)}</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
