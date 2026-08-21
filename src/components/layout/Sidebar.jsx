@@ -124,6 +124,9 @@ export default function Sidebar({ collapsed }) {
             })}
           </div>
         )}
+        <div className="sidebar-version">
+          v{__APP_VERSION__} · {__BUILD_DATE__}
+        </div>
       </nav>
       <div id="sidebar-resizer" ref={resizerRef} />
     </>
