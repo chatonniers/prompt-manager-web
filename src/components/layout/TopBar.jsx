@@ -77,6 +77,7 @@ export default function TopBar({ onHelp }) {
               placeholder={t('searchPlaceholder', lang)}
               value={searchQuery}
               onChange={e => dispatch({ type: 'SET_SEARCH', payload: e.target.value })}
+              onKeyDown={e => { if (e.key === 'Escape') dispatch({ type: 'SET_SEARCH', payload: '' }); }}
               autoComplete="off"
               spellCheck="false"
             />
