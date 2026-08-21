@@ -105,14 +105,16 @@ export default function PromptGrid() {
       <>
         <BulkActionBar visibleIds={visibleIds} />
         <div id="prompt-grid-outer">
-          {favs.length > 0 && (
-            <div className="category-block">
-              <div className="grid-section-label">{t('favorites', lang)}</div>
+          <div className="category-block">
+            <div className="grid-section-label">{t('favorites', lang)}</div>
+            {favs.length > 0 ? (
               <div className="category-flat-grid">
                 {favs.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
               </div>
-            </div>
-          )}
+            ) : (
+              <p style={{ fontSize: 13, color: 'var(--pm-text3)', padding: '8px 2px', fontStyle: 'italic' }}>No favorites yet — click the star on any card.</p>
+            )}
+          </div>
           {categoryBlocks.map(block => (
             <CategoryBlock
               key={block.key}
