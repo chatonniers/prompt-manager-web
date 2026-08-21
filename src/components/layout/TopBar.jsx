@@ -94,7 +94,7 @@ export default function TopBar({ onHelp }) {
   return (
     <header id="top-bar">
       <div id="top-bar-left">
-        <div id="app-title">
+        <div id="app-title" style={{ cursor: 'pointer' }} onClick={() => dispatch({ type: 'SET_VIEW', payload: { view: 'all', filter: { storyFlow: null, solution: null, category: null } } })}>
           <span className="title-main">{t('appTitle', lang)}</span>
         </div>
       </div>
