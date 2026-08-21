@@ -286,6 +286,18 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
         />
       </div>
 
+      {/* Notes — directly under title */}
+      <div className="card-edit-field">
+        <label className="card-edit-label">{t('notesLabel', lang)}</label>
+        <textarea
+          className="card-edit-textarea"
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+          rows={2}
+          placeholder={t('notesPlaceholderCard', lang)}
+        />
+      </div>
+
       {/* Prompt items selector + body */}
       <div className="card-edit-item-tabs">
         {items.map((item, idx) => (
@@ -377,9 +389,9 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
       </div>
 
       {/* Personas */}
-      {(catalog.personas || []).length > 0 && (
-        <div className="card-edit-field">
-          <label className="card-edit-label">{t('personasLabel', lang)}</label>
+      <div className="card-edit-field">
+        <label className="card-edit-label">{t('personasLabel', lang)}</label>
+        {(catalog.personas || []).length > 0 ? (
           <div className="card-edit-systems">
             {catalog.personas.map(persona => {
               const selected = personas.includes(persona);
@@ -397,8 +409,10 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
               );
             })}
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="card-edit-hint">{t('noPersonasYet', lang)}</p>
+        )}
+      </div>
 
       {/* Demo Links */}
       <div className="card-edit-field">
@@ -457,18 +471,6 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
           </div>
         </div>
       )}
-
-      {/* Notes */}
-      <div className="card-edit-field">
-        <label className="card-edit-label">{t('notesLabel', lang)}</label>
-        <textarea
-          className="card-edit-textarea"
-          value={notes}
-          onChange={e => setNotes(e.target.value)}
-          rows={2}
-          placeholder={t('notesPlaceholderCard', lang)}
-        />
-      </div>
 
       {/* Attachments */}
       <div className="card-edit-field">

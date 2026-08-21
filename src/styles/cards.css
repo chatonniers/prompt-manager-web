@@ -169,6 +169,13 @@
   color: var(--pm-text3);
 }
 
+.card-edit-hint {
+  font-size: 11px;
+  color: var(--pm-text3);
+  font-style: italic;
+  margin: 2px 0 0;
+}
+
 .card-edit-input {
   border: 1.5px solid var(--pm-border2);
   border-radius: 7px;
