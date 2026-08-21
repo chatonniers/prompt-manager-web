@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { t } from '../../lib/i18n.js';
@@ -289,16 +289,6 @@ export default function PromptCard({ prompt: p }) {
   const catalog = state.catalog;
 
   const [flipped, setFlipped] = useState(false);
-  const frontRef = useRef(null);
-  const [frontHeight, setFrontHeight] = useState(null);
-
-  useEffect(() => {
-    if (frontRef.current) {
-      setFrontHeight(frontRef.current.offsetHeight);
-    }
-  }, [p]);
-
-  // Close edit when card is scrolled out — optional UX nicety, skip for now
 
   const promptItems = p.promptItems?.length
     ? p.promptItems
@@ -365,12 +355,9 @@ export default function PromptCard({ prompt: p }) {
   const isSingle = promptItems.length === 1;
 
   return (
-    <div
-      className={`prompt-card-flip-wrapper${flipped ? ' flipped' : ''}`}
-      style={frontHeight ? { minHeight: frontHeight } : undefined}
-    >
+    <div className={`prompt-card-flip-wrapper${flipped ? ' flipped' : ''}`}>
       {/* Front face */}
-      <div className="prompt-card prompt-card-face prompt-card-front" ref={frontRef} onClick={() => setFlipped(true)}>
+      <div className="prompt-card prompt-card-face prompt-card-front" onClick={() => setFlipped(true)}>
         <div className="prompt-card-header">
           <div className="prompt-card-title">{p.title}</div>
           <button
