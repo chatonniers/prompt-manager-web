@@ -41,7 +41,7 @@ function SystemChip({ sys, lang, onCopied }) {
   }
 
   return (
-    <div className={`card-sys-chip${flipped ? ' flipped' : ''}`}>
+    <div className={`card-sys-chip${flipped ? ' flipped' : ''}`} onClick={e => e.stopPropagation()}>
       {/* Front */}
       <div className="card-sys-face card-sys-front" onClick={() => hasEndpoints && setFlipped(true)}>
         {sys.url && !hasEndpoints ? (
