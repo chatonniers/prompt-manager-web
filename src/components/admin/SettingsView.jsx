@@ -65,6 +65,14 @@ export default function SettingsView() {
             <button className="action-btn primary" style={{ marginTop: 16 }} onClick={handleSave}>{t('saveSettings', lang)}</button>
           </div>
           <AdminCategoriesCard />
+          <AdminCatalogCard
+            titleKey="personasAdmin"
+            descKey="personasDesc"
+            addKey="addPersona"
+            items={state.catalog.personas || []}
+            promptField="personas"
+            isArray
+          />
         </div>
 
         {/* Col 2: Systems */}
@@ -89,14 +97,6 @@ export default function SettingsView() {
             items={state.catalog.storyFlows}
             promptField="storyFlow"
             isArray={false}
-          />
-          <AdminCatalogCard
-            titleKey="personasAdmin"
-            descKey="personasDesc"
-            addKey="addPersona"
-            items={state.catalog.personas || []}
-            promptField="personas"
-            isArray
           />
         </div>
 
