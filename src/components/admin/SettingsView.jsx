@@ -12,13 +12,13 @@ import ImportModeModal from '../shared/ImportModeModal.jsx';
 
 const SECTIONS = [
   { id: 'general',       labelKey: 'settingsTitle' },
-  { id: 'import-export', labelKey: 'importExport' },
   { id: 'categories',    labelKey: 'categoriesAdmin' },
-  { id: 'personas',      labelKey: 'personasAdmin' },
-  { id: 'tags',          labelKey: 'tagsAdmin' },
-  { id: 'systems',       labelKey: 'systemsAdmin' },
-  { id: 'solutions',     labelKey: 'solutionsAdmin' },
   { id: 'flows',         labelKey: 'flowsAdmin' },
+  { id: 'import-export', labelKey: 'importExport' },
+  { id: 'personas',      labelKey: 'personasAdmin' },
+  { id: 'solutions',     labelKey: 'solutionsAdmin' },
+  { id: 'systems',       labelKey: 'systemsAdmin' },
+  { id: 'tags',          labelKey: 'tagsAdmin' },
 ];
 
 export default function SettingsView() {
