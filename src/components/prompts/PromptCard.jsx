@@ -154,6 +154,8 @@ function makeItem(body = '', body_fr = '') {
 }
 
 function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate, onDelete }) {
+  const { state } = useApp();
+  const allTags = [...new Set((state.prompts || []).flatMap(pr => pr.tags || []))].sort();
   const [title, setTitle] = useState(p.title || '');
   const [items, setItems] = useState(() =>
     p.promptItems?.length
@@ -395,7 +397,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
         </div>
       )}
 
-      <div className="card-edit-field">
+      <div className="card-edit-field" style={{ position: 'relative' }}>
         <label className="card-edit-label">{t('tagsLabel', lang)}</label>
         <div className="card-edit-tags">
           {tags.map(tag => (
@@ -410,6 +412,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
             value={tagInput}
             onChange={e => setTagInput(e.target.value)}
             onKeyDown={e => {
+              if (e.key === 'Escape') { setTagInput(''); return; }
               if ((e.key === 'Enter' || e.key === ',') && tagInput.trim()) {
                 e.preventDefault();
                 const val = tagInput.trim().replace(/^#/, '');
@@ -422,6 +425,17 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
             placeholder={tags.length === 0 ? t('tagPlaceholder', lang) : ''}
           />
         </div>
+        {tagInput.trim() && (() => {
+          const q = tagInput.trim().replace(/^#/, '').toLowerCase();
+          const suggestions = allTags.filter(t => t.toLowerCase().includes(q) && !tags.includes(t));
+          return suggestions.length > 0 ? (
+            <div className="tag-suggestions">
+              {suggestions.map(s => (
+                <button key={s} type="button" className="tag-suggestion-item" onMouseDown={e => { e.preventDefault(); setTags(prev => [...prev, s]); setTagInput(''); }}>#{s}</button>
+              ))}
+            </div>
+          ) : null;
+        })()}
       </div>
 
       <div className="card-edit-field">

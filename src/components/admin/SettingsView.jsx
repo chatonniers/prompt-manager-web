@@ -7,6 +7,7 @@ import { t } from '../../lib/i18n.js';
 import AdminCatalogCard from './AdminCatalogCard.jsx';
 import AdminCategoriesCard from './AdminCategoriesCard.jsx';
 import AdminSystemsCard from './AdminSystemsCard.jsx';
+import AdminTagsCard from './AdminTagsCard.jsx';
 import ImportModeModal from '../shared/ImportModeModal.jsx';
 
 const SECTIONS = [
@@ -14,6 +15,7 @@ const SECTIONS = [
   { id: 'import-export', labelKey: 'importExport' },
   { id: 'categories',    labelKey: 'categoriesAdmin' },
   { id: 'personas',      labelKey: 'personasAdmin' },
+  { id: 'tags',          labelKey: 'tagsAdmin' },
   { id: 'systems',       labelKey: 'systemsAdmin' },
   { id: 'solutions',     labelKey: 'solutionsAdmin' },
   { id: 'flows',         labelKey: 'flowsAdmin' },
@@ -204,6 +206,8 @@ export default function SettingsView() {
           )}
 
           {activeSection === 'systems' && <AdminSystemsCard />}
+
+          {activeSection === 'tags' && <AdminTagsCard />}
 
           {activeSection === 'solutions' && (
             <AdminCatalogCard

@@ -405,7 +405,7 @@ export default function PromptModal() {
           </div>
 
           {/* Tags */}
-          <div className="field-row">
+          <div className="field-row" style={{ position: 'relative' }}>
             <label>{t('tagsLabel', lang)} <span className="hint">({t('tagHint', lang)})</span></label>
             <div className="tag-input-wrap">
               {tags.map(tag => (
@@ -418,10 +418,25 @@ export default function PromptModal() {
                 type="text"
                 value={tagInput}
                 onChange={e => setTagInput(e.target.value)}
-                onKeyDown={handleTagKey}
+                onKeyDown={e => {
+                  if (e.key === 'Escape') { setTagInput(''); return; }
+                  handleTagKey(e);
+                }}
                 placeholder={tags.length === 0 ? t('tagPlaceholder', lang) : ''}
               />
             </div>
+            {tagInput.trim() && (() => {
+              const allTags = [...new Set(prompts.flatMap(p => p.tags || []))].sort();
+              const q = tagInput.trim().replace(/^#/, '').toLowerCase();
+              const suggestions = allTags.filter(t => t.toLowerCase().includes(q) && !tags.includes(t));
+              return suggestions.length > 0 ? (
+                <div className="tag-suggestions">
+                  {suggestions.map(s => (
+                    <button key={s} type="button" className="tag-suggestion-item" onMouseDown={e => { e.preventDefault(); setTags(prev => [...prev, s]); setTagInput(''); }}>#{s}</button>
+                  ))}
+                </div>
+              ) : null;
+            })()}
           </div>
 
           {/* Attachments */}

@@ -775,6 +775,35 @@
   flex: 1;
 }
 
+.tag-suggestions {
+  position: absolute;
+  left: 0; right: 0;
+  top: calc(100% + 2px);
+  background: var(--pm-surface);
+  border: 1.5px solid var(--pm-accent);
+  border-radius: var(--pm-radius-sm);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  z-index: 200;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px 8px;
+}
+
+.tag-suggestion-item {
+  background: var(--pm-accent-bg);
+  border: none;
+  border-radius: 20px;
+  color: var(--pm-accent);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.tag-suggestion-item:hover { background: var(--pm-accent); color: #fff; }
+
 /* ── Edit actions ─────────────────────────────────────────────────────── */
 .card-edit-actions {
   display: flex;
