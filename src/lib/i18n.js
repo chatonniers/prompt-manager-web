@@ -104,7 +104,7 @@ export const I18N = {
     landscapeName: "Name",
     landscapeUrl:  "URL",
     openSystem:   "Open System",
-    byCategory:   "BY CATEGORY",
+    byCategory:   "AUTONOMOUS SUITE",
     category:     "Category",
     noCategory:   "Uncategorized",
     catFinance:   "Autonomous Finance",

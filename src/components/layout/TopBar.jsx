@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { t } from '../../lib/i18n.js';
 
-export default function TopBar() {
+export default function TopBar({ sidebarCollapsed, onToggleSidebar }) {
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
   const importRef = useRef(null);
@@ -51,6 +51,14 @@ export default function TopBar() {
   return (
     <header id="top-bar">
       <div id="top-bar-left">
+        <button
+          className="tb-btn tb-btn-icon"
+          onClick={onToggleSidebar}
+          title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label="Toggle sidebar"
+        >
+          {sidebarCollapsed ? '▶' : '◀'}
+        </button>
         <div id="app-title">
           <span className="title-main">Prompt Manager Web</span>
         </div>
@@ -65,6 +73,12 @@ export default function TopBar() {
         <button className="tb-btn" onClick={() => importRef.current?.click()}>{t('import', lang)}</button>
         <button className="tb-btn" onClick={handleExport}>{t('export', lang)}</button>
         <input type="file" ref={importRef} accept=".json" style={{ display:'none' }} onChange={handleImportFile} />
+        <div className="tb-divider" />
+        <button
+          className={`tb-btn tb-btn-icon${state.currentView === 'settings' ? ' tb-btn-active' : ''}`}
+          onClick={() => dispatch({ type: 'SET_VIEW', payload: { view: 'settings' } })}
+          title={t('settings', lang)}
+        >⚙</button>
       </div>
     </header>
   );

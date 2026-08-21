@@ -1,19 +1,19 @@
 import { useEffect, useRef } from 'react';
 
-export function useSidebarResize(sidebarRef) {
+export function useSidebarResize(sidebarRef, collapsed) {
   const resizerRef = useRef(null);
 
   useEffect(() => {
     const sidebar = sidebarRef.current;
     const resizer = resizerRef.current;
-    if (!sidebar || !resizer) return;
+    if (!sidebar || !resizer || collapsed) return;
 
     const saved = localStorage.getItem('pm-sidebar-width');
     if (saved) sidebar.style.width = saved + 'px';
 
     let dragging = false;
 
-    function onDown(e) {
+    function onDown(_e) {
       dragging = true;
       document.body.style.cursor = 'col-resize';
       document.body.style.userSelect = 'none';
@@ -41,7 +41,7 @@ export function useSidebarResize(sidebarRef) {
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
     };
-  }, [sidebarRef]);
+  }, [sidebarRef, collapsed]);
 
   return resizerRef;
 }

@@ -58,14 +58,14 @@ export default function PromptGrid() {
     // Favorites first
     const favs = ranked.filter(p => p.isFavorite);
     if (favs.length > 0) {
-      groups.push({ label: `⭐ ${t('favorites', lang)}`, prompts: favs });
+      groups.push({ label: `★ ${t('favorites', lang)}`, prompts: favs });
     }
 
     // Then group by category
     for (const cat of AUTONOMOUS_CATEGORIES) {
       const catPrompts = ranked.filter(p => !p.isFavorite && p.category === cat);
       if (catPrompts.length > 0) {
-        groups.push({ label: `${CAT_ICONS[cat] || '◉'} ${cat}`, prompts: catPrompts });
+        groups.push({ label: cat, prompts: catPrompts });
       }
     }
 

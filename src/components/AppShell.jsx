@@ -1,7 +1,6 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import { useStorage } from '../hooks/useStorage.js';
-import { useSidebarResize } from '../hooks/useSidebarResize.js';
 import TopBar from './layout/TopBar.jsx';
 import Sidebar from './layout/Sidebar.jsx';
 import MainContent from './layout/MainContent.jsx';
@@ -12,8 +11,7 @@ import Toast from './shared/Toast.jsx';
 export default function AppShell() {
   useStorage();
   const { state } = useApp();
-  const sidebarRef = useRef(null);
-  const resizerRef = useSidebarResize(sidebarRef);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   if (!state.initialized) {
     return <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', color:'var(--pm-text3)' }}>Loading…</div>;
@@ -21,10 +19,9 @@ export default function AppShell() {
 
   return (
     <div id="app">
-      <TopBar />
+      <TopBar sidebarCollapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed(v => !v)} />
       <div id="main-layout">
-        <Sidebar sidebarRef={sidebarRef} />
-        <div id="sidebar-resizer" ref={resizerRef} />
+        <Sidebar collapsed={sidebarCollapsed} />
         <MainContent />
       </div>
       {state.isModalOpen && <PromptModal />}
