@@ -521,12 +521,17 @@
 .prompt-card-notes {
   font-size: 11px;
   color: var(--pm-text2);
-  line-height: 1.45;
-  margin-top: 6px;
+  line-height: 1.5;
+  margin-top: 7px;
+  padding: 6px 10px;
+  background: var(--pm-bg);
+  border-left: 3px solid var(--pm-border2);
+  border-radius: 0 6px 6px 0;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  font-style: italic;
 }
 
 .prompt-card-fav {
