@@ -1,7 +1,6 @@
 import { useApp } from '../../context/AppContext.jsx';
 import { filterAndRank } from '../../lib/search.js';
 import { t } from '../../lib/i18n.js';
-import { AUTONOMOUS_CATEGORIES } from '../../lib/storage.js';
 import PromptCard from './PromptCard.jsx';
 import EmptyState from './EmptyState.jsx';
 
@@ -33,8 +32,9 @@ const CAT_ICONS = {
 
 export default function PromptGrid() {
   const { state } = useApp();
-  const { prompts, currentView, currentFilter, searchQuery, sortOrder, sapContext, settings } = state;
+  const { prompts, currentView, currentFilter, searchQuery, sortOrder, sapContext, settings, catalog } = state;
   const lang = settings?.lang || 'en';
+  const categories = catalog.categories || [];
 
   let pool = applyViewFilter(prompts, currentView, currentFilter);
 
@@ -62,7 +62,7 @@ export default function PromptGrid() {
     }
 
     // Then group by category
-    for (const cat of AUTONOMOUS_CATEGORIES) {
+    for (const cat of categories) {
       const catPrompts = ranked.filter(p => !p.isFavorite && p.category === cat);
       if (catPrompts.length > 0) {
         groups.push({ label: cat, prompts: catPrompts });

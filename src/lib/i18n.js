@@ -116,6 +116,9 @@ export const I18N = {
     mcpCatalogDesc: "Manage shared MCP credentials available to all prompt cards.",
     addMcpCred:   "+ Add Credential",
     selectMcp:    "Select from catalog…",
+    categoriesAdmin: "Autonomous Suite Categories",
+    categoriesDesc: "Manage the Autonomous Suite categories used to organise prompts.",
+    addCategory:  "+ Add Category",
   },
   fr: {
     allPrompts:   "Tous les prompts",
@@ -234,6 +237,9 @@ export const I18N = {
     mcpCatalogDesc: "Gérez les identifiants MCP partagés disponibles pour toutes les cartes.",
     addMcpCred:   "+ Ajouter un identifiant",
     selectMcp:    "Sélectionner dans le catalogue…",
+    categoriesAdmin: "Catégories Autonomous Suite",
+    categoriesDesc: "Gérez les catégories Autonomous Suite pour organiser les prompts.",
+    addCategory:  "+ Ajouter une catégorie",
   }
 };
 

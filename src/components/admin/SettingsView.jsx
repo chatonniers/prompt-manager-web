@@ -65,6 +65,14 @@ export default function SettingsView() {
 
         <div className="settings-col">
           <AdminCatalogCard
+            titleKey="categoriesAdmin"
+            descKey="categoriesDesc"
+            addKey="addCategory"
+            items={state.catalog.categories || []}
+            promptField="category"
+            isArray={false}
+          />
+          <AdminCatalogCard
             titleKey="solutionsAdmin"
             descKey="solutionsDesc"
             addKey="addSolution"

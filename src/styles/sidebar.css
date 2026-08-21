@@ -80,3 +80,30 @@
   background: var(--pm-border);
   margin: 10px 0;
 }
+
+/* Collapsible section headers */
+.nav-section-toggle {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--pm-text3);
+  padding: 12px 16px 4px;
+  text-align: left;
+  transition: color 0.1s;
+}
+
+.nav-section-toggle:hover { color: var(--pm-text1); }
+
+.nav-section-chevron {
+  margin-left: auto;
+  font-size: 11px;
+  line-height: 1;
+}

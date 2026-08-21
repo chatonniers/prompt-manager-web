@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
-import { StorageAPI, AUTONOMOUS_CATEGORIES } from '../../lib/storage.js';
+import { StorageAPI } from '../../lib/storage.js';
 import { AttachmentsDB } from '../../lib/attachments.js';
 import { t } from '../../lib/i18n.js';
 
@@ -306,7 +306,7 @@ export default function PromptModal() {
             <label>{t('category', lang)}</label>
             <select value={category} onChange={e => setCategory(e.target.value)}>
               <option value="">— {t('noCategory', lang)} —</option>
-              {AUTONOMOUS_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              {(catalog.categories || []).map(cat => <option key={cat} value={cat}>{cat}</option>)}
             </select>
           </div>
 

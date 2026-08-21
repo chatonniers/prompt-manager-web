@@ -4,7 +4,7 @@ export const AppContext = createContext(null);
 
 const initialState = {
   prompts: [],
-  catalog: { solutions: [], storyFlows: [], landscapes: [], mcpCredentials: [] },
+  catalog: { solutions: [], storyFlows: [], categories: [], landscapes: [], mcpCredentials: [] },
   settings: { autoFilterEnabled: true, lang: 'en' },
   currentView: 'all',
   currentFilter: null,

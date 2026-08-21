@@ -1,19 +1,23 @@
 import { AttachmentsDB } from './attachments.js';
 
-const DEFAULT_CATALOG = {
-  solutions:  ["S/4HANA","IBP","Ariba","Joule","Joule Studio","BTP","Datasphere","SuccessFactors","Digital Manufacturing"],
-  storyFlows: ["Procure-to-Pay","Order-to-Cash","Plan-to-Inventory","Hire-to-Retire","Record-to-Report","Lead-to-Cash","Design-to-Operate","Other"],
-  landscapes: [],
-  mcpCredentials: [],
-};
-
-export const AUTONOMOUS_CATEGORIES = [
+export const DEFAULT_CATEGORIES = [
   "Autonomous Finance",
   "Autonomous Supply Chain",
   "Autonomous Spend",
   "Autonomous HCM",
   "Autonomous CX",
 ];
+
+const DEFAULT_CATALOG = {
+  solutions:  ["S/4HANA","IBP","Ariba","Joule","Joule Studio","BTP","Datasphere","SuccessFactors","Digital Manufacturing"],
+  storyFlows: ["Procure-to-Pay","Order-to-Cash","Plan-to-Inventory","Hire-to-Retire","Record-to-Report","Lead-to-Cash","Design-to-Operate","Other"],
+  categories: DEFAULT_CATEGORIES,
+  landscapes: [],
+  mcpCredentials: [],
+};
+
+// Keep exporting for any legacy callers; resolved from catalog at runtime instead
+export const AUTONOMOUS_CATEGORIES = DEFAULT_CATEGORIES;
 
 export const StorageAPI = {
   async getAllPrompts() {
@@ -34,6 +38,7 @@ export const StorageAPI = {
     return {
       solutions:  data.solutions  ?? [...DEFAULT_CATALOG.solutions],
       storyFlows: data.storyFlows ?? [...DEFAULT_CATALOG.storyFlows],
+      categories: data.categories ?? [...DEFAULT_CATALOG.categories],
       landscapes,
       mcpCredentials: (data.mcpCredentials ?? []),
     };
@@ -151,6 +156,7 @@ export const StorageAPI = {
       await this.saveCatalog({
         solutions:  [...new Set([...cur.solutions,  ...(data.catalog.solutions  || [])])],
         storyFlows: [...new Set([...cur.storyFlows, ...(data.catalog.storyFlows || [])])],
+        categories: [...new Set([...cur.categories, ...(data.catalog.categories || [])])],
         landscapes: mergedLandscapes,
         mcpCredentials: cur.mcpCredentials ?? [],
       });

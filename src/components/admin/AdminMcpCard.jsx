@@ -61,6 +61,7 @@ export default function AdminMcpCard() {
             {editingIdx === idx ? (
               <div className="admin-mcp-edit">
                 <input className="admin-item-input" value={editVal.label} onChange={e => setEditVal(p => ({ ...p, label: e.target.value }))} placeholder="Label…" autoFocus />
+                <input className="admin-item-input" value={editVal.url || ''} onChange={e => setEditVal(p => ({ ...p, url: e.target.value }))} placeholder="MCP server URL (optional)…" />
                 <input className="admin-item-input" value={editVal.clientId} onChange={e => setEditVal(p => ({ ...p, clientId: e.target.value }))} placeholder={t('mcpClientId', lang)} />
                 <div className="admin-mcp-secret-row">
                   <input
@@ -94,12 +95,12 @@ export default function AdminMcpCard() {
       {/* Add new */}
       <div className="admin-mcp-add">
         <input className="admin-item-input" style={inputStyle} type="text" value={newCred.label} onChange={e => setNewCred(p => ({ ...p, label: e.target.value }))} placeholder="Label…" />
+        <input className="admin-item-input" style={inputStyle} type="text" value={newCred.url} onChange={e => setNewCred(p => ({ ...p, url: e.target.value }))} placeholder="MCP server URL…" />
         <input className="admin-item-input" style={inputStyle} type="text" value={newCred.clientId} onChange={e => setNewCred(p => ({ ...p, clientId: e.target.value }))} placeholder={t('mcpClientId', lang) + '…'} />
         <div style={{ flex: 2, display: 'flex', gap: 4 }}>
-          <input className="admin-item-input" style={{ ...inputStyle, flex: 1 }} type={showNewSecret ? 'text' : 'password'} value={newCred.clientSecret} onChange={e => setNewCred(p => ({ ...p, clientSecret: e.target.value }))} placeholder={t('mcpClientSecret', lang) + '…'} />
+          <input className="admin-item-input" style={{ ...inputStyle, flex: 1 }} type={showNewSecret ? 'text' : 'password'} value={newCred.clientSecret} onChange={e => setNewCred(p => ({ ...p, clientSecret: e.target.value }))} placeholder={t('mcpClientSecret', lang) + '…'} onKeyDown={e => e.key === 'Enter' && handleAdd()} />
           <button className="mcp-eye-btn" type="button" onClick={() => setShowNewSecret(v => !v)}>{showNewSecret ? '🙈' : '👁'}</button>
         </div>
-        <input className="admin-item-input" style={inputStyle} type="text" value={newCred.url} onChange={e => setNewCred(p => ({ ...p, url: e.target.value }))} placeholder="MCP server URL…" onKeyDown={e => e.key === 'Enter' && handleAdd()} />
         <button className="admin-save-btn" onClick={handleAdd}>{t('add', lang)}</button>
       </div>
     </div>
