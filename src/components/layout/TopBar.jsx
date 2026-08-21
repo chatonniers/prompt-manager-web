@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { t } from '../../lib/i18n.js';
 
-export default function TopBar({ sidebarCollapsed, onToggleSidebar }) {
+export default function TopBar({ sidebarCollapsed, onToggleSidebar, onHelp }) {
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
   const importRef = useRef(null);
@@ -65,6 +65,11 @@ export default function TopBar({ sidebarCollapsed, onToggleSidebar }) {
         <button className="tb-btn" onClick={() => importRef.current?.click()}>{t('import', lang)}</button>
         <button className="tb-btn" onClick={handleExport}>{t('export', lang)}</button>
         <input type="file" ref={importRef} accept=".json" style={{ display:'none' }} onChange={handleImportFile} />
+        <button
+          className="tb-btn tb-btn-icon"
+          onClick={onHelp}
+          title="Help"
+        >?</button>
         <div className="tb-divider" />
         <button
           className={`tb-btn tb-btn-icon${state.currentView === 'settings' ? ' tb-btn-active' : ''}`}
