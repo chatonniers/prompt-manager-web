@@ -51,14 +51,6 @@ export default function TopBar({ sidebarCollapsed, onToggleSidebar }) {
   return (
     <header id="top-bar">
       <div id="top-bar-left">
-        <button
-          className="tb-btn tb-btn-icon"
-          onClick={onToggleSidebar}
-          title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          aria-label="Toggle sidebar"
-        >
-          {sidebarCollapsed ? '▶' : '◀'}
-        </button>
         <div id="app-title">
           <span className="title-main">Prompt Manager Web</span>
         </div>
