@@ -120,7 +120,7 @@ export default function PromptCard({ prompt: p }) {
 
       {/* Meta pills */}
       <div className="prompt-card-meta">
-        {p.category && <span className="pill category">{p.category.replace('Autonomous ', '')}</span>}
+        {p.category && <span className="pill category">{p.category}</span>}
         {(p.solutions || []).map(s => <span key={s} className="pill">{s}</span>)}
         {p.storyFlow && <span className="pill flow">{p.storyFlow}</span>}
         {(p.tags || []).slice(0, 3).map(tag => <span key={tag} className="pill tag">#{tag}</span>)}

@@ -96,7 +96,7 @@ export default function PromptModal() {
       setPendingFiles([]);
     }
     setPendingDeletes([]); setPendingFiles([]); setErrors({});
-  }, [editingPromptId]);
+  }, [editingPromptId, isModalOpen]);
 
   useEffect(() => {
     function onKey(e) {
