@@ -370,7 +370,7 @@ export default function PromptCard({ prompt: p }) {
       style={frontHeight ? { minHeight: frontHeight } : undefined}
     >
       {/* Front face */}
-      <div className="prompt-card prompt-card-face prompt-card-front" ref={frontRef}>
+      <div className="prompt-card prompt-card-face prompt-card-front" ref={frontRef} onClick={() => setFlipped(true)}>
         <div className="prompt-card-header">
           <div className="prompt-card-title">{p.title}</div>
           <button
@@ -390,7 +390,7 @@ export default function PromptCard({ prompt: p }) {
                   {!isSingle && <div className="prompt-item-label">{item.label || `#${idx + 1}`}</div>}
                   <div className="prompt-item-preview">{body}</div>
                 </div>
-                <button className="prompt-item-copy-btn" title={t('copy', lang)} onClick={() => handleCopyItem(item)}>
+                <button className="prompt-item-copy-btn" title={t('copy', lang)} onClick={e => { e.stopPropagation(); handleCopyItem(item); }}>
                   {t('copy', lang)}
                 </button>
               </div>
@@ -424,9 +424,8 @@ export default function PromptCard({ prompt: p }) {
         )}
 
         <div className="prompt-card-actions">
-          <button className="card-action-btn" onClick={handleDuplicate} title="Duplicate">⧉</button>
-          <button className="card-action-btn edit" onClick={() => setFlipped(true)}>{t('edit', lang)}</button>
-          <button className="card-action-btn del" onClick={handleDelete}>{t('del', lang)}</button>
+          <button className="card-action-btn" onClick={e => { e.stopPropagation(); handleDuplicate(); }} title="Duplicate">⧉</button>
+          <button className="card-action-btn del" onClick={e => { e.stopPropagation(); handleDelete(); }}>{t('del', lang)}</button>
         </div>
       </div>
 

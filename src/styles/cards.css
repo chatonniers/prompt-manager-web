@@ -71,6 +71,7 @@
 
 .prompt-card-front {
   transform: rotateY(0deg);
+  cursor: pointer;
 }
 
 .prompt-card-back {
