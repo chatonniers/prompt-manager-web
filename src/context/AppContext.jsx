@@ -9,7 +9,7 @@ const initialState = {
   currentView: 'all',
   currentFilter: null,
   searchQuery: '',
-  sortOrder: 'updated',
+  sortOrder: 'title',
   sapContext: null,
   isModalOpen: false,
   editingPromptId: undefined,
