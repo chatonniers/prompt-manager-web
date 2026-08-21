@@ -4,10 +4,10 @@ import PromptGrid from './PromptGrid.jsx';
 
 const STEP = 0.1;
 
-export default function PromptListView() {
+export default function PromptListView({ zoom = 1 }) {
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
-  const { searchQuery, sapContext, zoom = 1 } = state;
+  const { searchQuery, sapContext } = state;
   const zoomPct = Math.round(zoom * 100);
 
   function zoomIn()    { dispatch({ type: 'SET_ZOOM', payload: zoom + STEP }); }
@@ -16,6 +16,7 @@ export default function PromptListView() {
 
   return (
     <>
+      {/* Toolbar — sticky, outside the zoom scaler */}
       <div id="list-toolbar">
         <input
           id="list-search"
@@ -39,17 +40,19 @@ export default function PromptListView() {
         </div>
       </div>
 
-      {sapContext?.detected && (
-        <div className="sap-context-banner">
-          <span>{t('sapContextBanner', lang, sapContext.solution)}</span>
-          <button className="banner-clear-btn" onClick={() => dispatch({ type: 'SET_SAP_CONTEXT', payload: null })}>
-            {t('clearFilter', lang)}
-          </button>
+      {/* Scaled content */}
+      <div id="content-scaler" style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', width: `${100 / zoom}%` }}>
+        {sapContext?.detected && (
+          <div className="sap-context-banner">
+            <span>{t('sapContextBanner', lang, sapContext.solution)}</span>
+            <button className="banner-clear-btn" onClick={() => dispatch({ type: 'SET_SAP_CONTEXT', payload: null })}>
+              {t('clearFilter', lang)}
+            </button>
+          </div>
+        )}
+        <div id="view-list">
+          <PromptGrid />
         </div>
-      )}
-
-      <div id="view-list">
-        <PromptGrid />
       </div>
     </>
   );

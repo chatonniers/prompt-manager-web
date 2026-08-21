@@ -118,6 +118,12 @@
   align-items: center;
   gap: 10px;
   margin-bottom: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #F0F2F8;
+  padding: 14px 0 12px;
+  margin-top: -14px;
 }
 
 #list-search {

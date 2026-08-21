@@ -62,9 +62,7 @@ function AppInner() {
       <div id="main-layout">
         <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(v => !v)} />
         <main id="content">
-          <div id="content-scaler" style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', width: `${100 / zoom}%` }}>
-            <MainContent />
-          </div>
+          <MainContent />
         </main>
       </div>
       {state.isModalOpen && <PromptModal />}
