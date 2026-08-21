@@ -242,27 +242,69 @@
   display: block;
 }
 
-/* Tooltip */
-.prompt-item-tooltip {
-  display: none;
+/* Tooltip — removed, replaced by portal popover */
+
+/* ── Prompt popover (portal) ─────────────────────────────────────────── */
+.prompt-popover {
   position: fixed;
   z-index: 9999;
-  background: #0A0F1E;
-  color: #E8ECFF;
-  font-size: 12px;
-  line-height: 1.65;
-  padding: 14px 16px;
+  width: 380px;
+  max-height: 320px;
+  background: #ffffff;
+  border: 1.5px solid var(--pm-border2);
   border-radius: 12px;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
-  white-space: pre-wrap;
-  word-break: break-word;
-  width: 360px;
-  max-height: 300px;
-  overflow-y: auto;
-  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 8px 32px rgba(10,15,30,0.18), 0 2px 8px rgba(10,15,30,0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   pointer-events: none;
 }
-.prompt-item-preview-wrap:hover .prompt-item-tooltip { display: block; }
+
+.prompt-popover-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--pm-accent);
+  padding: 10px 14px 6px;
+  border-bottom: 1px solid var(--pm-border);
+  background: var(--pm-accent-bg);
+  flex-shrink: 0;
+}
+
+.prompt-popover-body {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--pm-text1);
+  padding: 12px 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Arrow pointing left (popover is to the right of the card) */
+.prompt-popover-arrow {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #ffffff;
+  border: 1.5px solid var(--pm-border2);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
+.prompt-popover-arrow-left {
+  left: -6px;
+  border-right: none;
+  border-top: none;
+}
+
+.prompt-popover-arrow-right {
+  right: -6px;
+  border-left: none;
+  border-bottom: none;
+}
 
 /* Per-item copy button */
 .prompt-item-copy-btn {
@@ -492,20 +534,20 @@
 .card-sys-chip.flipped .card-sys-front { display: none; }
 .card-sys-chip.flipped .card-sys-back  { display: flex; }
 
-.card-sys-back-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-.card-sys-back-title  { font-size: 12px; font-weight: 700; color: #A5B4FC; }
-.card-sys-back-close  { background: none; border: none; cursor: pointer; color: #555; padding: 0 2px; transition: color 0.12s; }
+.card-sys-back-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.card-sys-back-title  { font-size: 14px; font-weight: 700; color: #A5B4FC; }
+.card-sys-back-close  { background: none; border: none; cursor: pointer; color: #666; padding: 2px 4px; transition: color 0.12s; font-size: 16px; line-height: 1; }
 .card-sys-back-close:hover { color: #E8ECFF; }
-.card-sys-back-row    { display: flex; flex-direction: column; gap: 3px; }
-.card-sys-back-label  { font-size: 9px; font-weight: 700; color: #555; letter-spacing: 0.8px; text-transform: uppercase; }
-.card-sys-back-value  { display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.06); border-radius: 5px; padding: 4px 8px; }
-.card-sys-back-code   { flex: 1; font-size: 10px; color: #C7D2FE; font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.card-sys-back-url    { flex: 1; font-size: 10px; color: #818CF8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
+.card-sys-back-row    { display: flex; flex-direction: column; gap: 4px; }
+.card-sys-back-label  { font-size: 10px; font-weight: 700; color: #777; letter-spacing: 0.8px; text-transform: uppercase; }
+.card-sys-back-value  { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.08); border-radius: 6px; padding: 6px 10px; }
+.card-sys-back-code   { flex: 1; font-size: 12px; color: #C7D2FE; font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-sys-back-url    { flex: 1; font-size: 12px; color: #818CF8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
 .card-sys-back-url:hover { text-decoration: underline; }
-.card-sys-copy-btn    { flex-shrink: 0; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; padding: 2px 6px; font-size: 9px; font-weight: 700; cursor: pointer; color: #C7D2FE; transition: background 0.12s; }
-.card-sys-copy-btn:hover { background: rgba(255,255,255,0.2); }
-.card-sys-endpoint    { border-top: 1px solid rgba(255,255,255,0.07); padding-top: 6px; display: flex; flex-direction: column; gap: 4px; }
-.card-sys-ep-label    { font-size: 9px; font-weight: 800; color: #818CF8; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; }
+.card-sys-copy-btn    { flex-shrink: 0; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); border-radius: 5px; padding: 3px 8px; font-size: 11px; font-weight: 700; cursor: pointer; color: #C7D2FE; transition: background 0.12s; }
+.card-sys-copy-btn:hover { background: rgba(255,255,255,0.22); }
+.card-sys-endpoint    { border-top: 1px solid rgba(255,255,255,0.07); padding-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+.card-sys-ep-label    { font-size: 10px; font-weight: 800; color: #818CF8; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; }
 
 /* ── Demo links ──────────────────────────────────────────────────────── */
 .card-section-label {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useApp } from '../../context/AppContext.jsx';
+import { createPortal } from 'react-dom';
 import { StorageAPI } from '../../lib/storage.js';
 import { AttachmentsDB } from '../../lib/attachments.js';
 import { t } from '../../lib/i18n.js';
@@ -474,6 +474,68 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
   );
 }
 
+function PromptItemRow({ item, idx, label, body, isCopied, lang, onCopy }) {
+  const rowRef = useRef(null);
+  const [popover, setPopover] = useState(null); // { top, left, arrowTop, side }
+
+  function showPopover() {
+    if (!rowRef.current) return;
+    const r = rowRef.current.getBoundingClientRect();
+    const popW = 380;
+    const popMaxH = 320;
+    const margin = 12;
+    const arrowTop = Math.min(Math.max(r.top + r.height / 2, r.top + 16), r.bottom - 16);
+
+    // Try right side first
+    if (r.right + margin + popW <= window.innerWidth - margin) {
+      let top = r.top + r.height / 2 - 60;
+      top = Math.max(margin, Math.min(top, window.innerHeight - popMaxH - margin));
+      setPopover({ top, left: r.right + margin, arrowTop: arrowTop - top, side: 'left' });
+    } else {
+      // Fall back to left side
+      let top = r.top + r.height / 2 - 60;
+      top = Math.max(margin, Math.min(top, window.innerHeight - popMaxH - margin));
+      setPopover({ top, left: r.left - margin - popW, arrowTop: arrowTop - top, side: 'right' });
+    }
+  }
+
+  return (
+    <div ref={rowRef} className="prompt-item-row"
+      onMouseEnter={showPopover}
+      onMouseLeave={() => setPopover(null)}
+    >
+      <div className="prompt-item-content">
+        <span className="prompt-item-num">{idx + 1}</span>
+        <div className="prompt-item-preview-wrap">
+          <span className="prompt-item-preview">{label}</span>
+        </div>
+      </div>
+      <button
+        className={`prompt-item-copy-btn${isCopied ? ' copied' : ''}`}
+        title={t('copy', lang)}
+        onClick={onCopy}
+        style={isCopied ? { background: 'var(--pm-success)', borderColor: 'var(--pm-success)', color: '#fff' } : {}}
+      >
+        {isCopied
+          ? <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          : <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2H3.5A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+        }
+      </button>
+      {popover && createPortal(
+        <div className="prompt-popover" style={{ top: popover.top, left: popover.left }}>
+          <div
+            className={`prompt-popover-arrow prompt-popover-arrow-${popover.side}`}
+            style={{ top: popover.arrowTop }}
+          />
+          {label && <div className="prompt-popover-label">{label}</div>}
+          <div className="prompt-popover-body">{body}</div>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+}
+
 export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
@@ -610,47 +672,23 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
         {/* Notes */}
         {p.notes && <div className="prompt-card-notes">{p.notes}</div>}
 
-        {/* Prompt items — label + number badge only (no body text) */}
+        {/* Prompt items */}
         <div className="prompt-items-list">
           {promptItems.map((item, idx) => {
             const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;
             const label = item.label || (isSingle ? t('copy', lang) : `Prompt ${idx + 1}`);
             const isCopied = copiedItemId === item.id;
             return (
-              <div key={item.id} className="prompt-item-row">
-                <div className="prompt-item-content">
-                  <span className="prompt-item-num">{idx + 1}</span>
-                  <div
-                    className="prompt-item-preview-wrap"
-                    onMouseEnter={e => {
-                      const tip = e.currentTarget.querySelector('.prompt-item-tooltip');
-                      if (!tip) return;
-                      const r = e.currentTarget.getBoundingClientRect();
-                      tip.style.left = r.left + 'px';
-                      tip.style.top = (r.bottom + 8) + 'px';
-                      // Clamp to viewport right edge
-                      const tipW = 360;
-                      if (r.left + tipW > window.innerWidth - 12) {
-                        tip.style.left = (window.innerWidth - tipW - 12) + 'px';
-                      }
-                    }}
-                  >
-                    <span className="prompt-item-preview">{label}</span>
-                    <div className="prompt-item-tooltip">{body}</div>
-                  </div>
-                </div>
-                <button
-                    className={`prompt-item-copy-btn${isCopied ? ' copied' : ''}`}
-                    title={t('copy', lang)}
-                    onClick={e => { e.stopPropagation(); handleCopyItem(item, false); }}
-                    style={isCopied ? { background: 'var(--pm-success)', borderColor: 'var(--pm-success)', color: '#fff' } : {}}
-                  >
-                    {isCopied
-                      ? <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      : <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2H3.5A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                    }
-                  </button>
-              </div>
+              <PromptItemRow
+                key={item.id}
+                item={item}
+                idx={idx}
+                label={label}
+                body={body}
+                isCopied={isCopied}
+                lang={lang}
+                onCopy={e => { e.stopPropagation(); handleCopyItem(item, false); }}
+              />
             );
           })}
         </div>
