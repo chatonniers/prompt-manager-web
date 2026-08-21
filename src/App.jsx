@@ -42,7 +42,7 @@ function AppInner() {
         const catalog = await StorageAPI.getCatalog();
         dispatch({ type: 'SET_PROMPTS', payload: prompts });
         dispatch({ type: 'SET_CATALOG', payload: catalog });
-        dispatch({ type: 'SHOW_TOAST', payload: `✓ Imported ${result.imported} prompts from shared URL` });
+        dispatch({ type: 'SHOW_TOAST', payload: `Imported ${result.imported} prompts from shared URL` });
       } catch { /* silent */ }
       history.replaceState(null, '', window.location.pathname + window.location.search);
     });

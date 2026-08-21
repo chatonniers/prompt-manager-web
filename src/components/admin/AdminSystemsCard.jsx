@@ -24,7 +24,7 @@ function SystemCard({ sys, lang, onEdit, onDelete, usageCount }) {
           {sys.description && <div className="admin-sys-front-desc">{sys.description}</div>}
           {sys.url && (
             <a className="admin-sys-front-url" href={sys.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>
-              🔗 {sys.url}
+              {sys.url}
             </a>
           )}
         </div>
@@ -36,7 +36,7 @@ function SystemCard({ sys, lang, onEdit, onDelete, usageCount }) {
         </div>
         <div className="admin-sys-front-actions">
           {sys.endpoints.length > 0 && (
-            <button className="admin-sys-flip-btn" onClick={() => setFlipped(true)}>{t('connectionDetails', lang)} ▶</button>
+            <button className="admin-sys-flip-btn" onClick={() => setFlipped(true)}>{t('connectionDetails', lang)}</button>
           )}
           <button className="admin-save-btn" onClick={() => onEdit(sys)}>{t('editBtn', lang)}</button>
           {confirmDelete ? (
@@ -45,7 +45,7 @@ function SystemCard({ sys, lang, onEdit, onDelete, usageCount }) {
               <button className="admin-del-btn" onClick={() => setConfirmDelete(false)}>{t('cancel', lang)}</button>
             </>
           ) : (
-            <button className="admin-del-btn" onClick={() => setConfirmDelete(true)}>✕</button>
+            <button className="admin-del-btn" onClick={() => setConfirmDelete(true)}>Remove</button>
           )}
         </div>
       </div>
@@ -127,7 +127,7 @@ function SystemEditForm({ initial, lang, onSave, onCancel }) {
             <div key={ep.id} className="admin-sys-edit-ep">
               <div className="admin-sys-edit-ep-header">
                 <span className="admin-sys-edit-ep-num">{t('endpointNum', lang, i + 1)}</span>
-                <button className="admin-del-btn" onClick={() => removeEndpoint(ep.id)}>✕</button>
+                <button className="admin-del-btn" onClick={() => removeEndpoint(ep.id)}>Remove</button>
               </div>
               <input className="admin-item-input" value={ep.label} onChange={e => updateEp(ep.id, 'label', e.target.value)} placeholder={t('epLabelPlaceholder', lang)} />
               <input className="admin-item-input" value={ep.url} onChange={e => updateEp(ep.id, 'url', e.target.value)} placeholder={t('epUrlPlaceholder', lang)} />
@@ -141,7 +141,7 @@ function SystemEditForm({ initial, lang, onSave, onCancel }) {
                   placeholder={t('epSecretPlaceholder', lang)}
                 />
                 <button className="mcp-eye-btn" type="button" onClick={() => setShowSecrets(s => ({ ...s, [ep.id]: !s[ep.id] }))}>
-                  {showSecrets[ep.id] ? '🙈' : '👁'}
+                  {showSecrets[ep.id] ? 'Hide' : 'Show'}
                 </button>
               </div>
             </div>

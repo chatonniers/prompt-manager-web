@@ -4,6 +4,11 @@ import { useSidebarResize } from '../../hooks/useSidebarResize.js';
 import { t } from '../../lib/i18n.js';
 import { getFlowColor } from '../../lib/flowColors.js';
 
+const IconChevronDown  = () => <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const IconChevronRight = () => <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3.5 2l3 3-3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const IconChevronLeft  = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M7.5 2.5l-4 3.5 4 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const IconChevronRightLg = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4.5 2.5l4 3.5-4 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+
 export default function Sidebar({ collapsed, onToggle }) {
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
@@ -35,7 +40,9 @@ export default function Sidebar({ collapsed, onToggle }) {
   if (collapsed) {
     return (
       <nav id="sidebar" className="sidebar-collapsed" ref={sidebarRef}>
-        <button className="sidebar-toggle-btn" onClick={onToggle} title="Expand sidebar">›</button>
+        <button className="sidebar-toggle-btn" onClick={onToggle} title="Expand sidebar">
+          <IconChevronRightLg />
+        </button>
       </nav>
     );
   }
@@ -44,20 +51,18 @@ export default function Sidebar({ collapsed, onToggle }) {
     <>
       <nav id="sidebar" ref={sidebarRef}>
         <button className={`nav-item${isActive('all') ? ' active' : ''}`} onClick={() => setView('all')}>
-          <span className="nav-icon">≡</span>
           <span style={{ flex: 1 }}>{t('allPrompts', lang)}</span>
           <span className="nav-badge">{prompts.length}</span>
         </button>
 
         <button className={`nav-item${isActive('most-used') ? ' active' : ''}`} onClick={() => setView('most-used')}>
-          <span className="nav-icon">🔥</span>
           <span style={{ flex: 1 }}>{t('mostUsed', lang)}</span>
           <span className="nav-badge">{mostUsedCount}</span>
         </button>
 
         <button className="nav-section-label nav-section-toggle" onClick={() => toggleSection('categories')}>
           {t('byCategory', lang)}
-          <span className="nav-section-chevron">{openSections.categories ? '▾' : '▸'}</span>
+          <span className="nav-section-chevron">{openSections.categories ? <IconChevronDown /> : <IconChevronRight />}</span>
         </button>
         {openSections.categories && (
           <div id="nav-categories">
@@ -69,7 +74,6 @@ export default function Sidebar({ collapsed, onToggle }) {
                   className={`nav-item${isActive('category', cat) ? ' active' : ''}`}
                   onClick={() => setView('category', { storyFlow: null, solution: null, category: cat })}
                 >
-                  <span className="nav-icon">◉</span>
                   <span style={{ flex: 1 }}>{cat}</span>
                   <span className="nav-badge">{cnt}</span>
                 </button>
@@ -80,7 +84,7 @@ export default function Sidebar({ collapsed, onToggle }) {
 
         <button className="nav-section-label nav-section-toggle" onClick={() => toggleSection('flows')}>
           {t('byStoryFlow', lang)}
-          <span className="nav-section-chevron">{openSections.flows ? '▾' : '▸'}</span>
+          <span className="nav-section-chevron">{openSections.flows ? <IconChevronDown /> : <IconChevronRight />}</span>
         </button>
         {openSections.flows && (
           <div id="nav-flows">
@@ -106,7 +110,7 @@ export default function Sidebar({ collapsed, onToggle }) {
 
         <button className="nav-section-label nav-section-toggle" onClick={() => toggleSection('solutions')}>
           {t('bySolution', lang)}
-          <span className="nav-section-chevron">{openSections.solutions ? '▾' : '▸'}</span>
+          <span className="nav-section-chevron">{openSections.solutions ? <IconChevronDown /> : <IconChevronRight />}</span>
         </button>
         {openSections.solutions && (
           <div id="nav-solutions">
@@ -118,7 +122,6 @@ export default function Sidebar({ collapsed, onToggle }) {
                   className={`nav-item${isActive('solution', sol) ? ' active' : ''}`}
                   onClick={() => setView('solution', { storyFlow: null, solution: sol, category: null })}
                 >
-                  <span className="nav-icon">◆</span>
                   <span style={{ flex: 1 }}>{sol}</span>
                   <span className="nav-badge">{cnt}</span>
                 </button>
@@ -129,7 +132,9 @@ export default function Sidebar({ collapsed, onToggle }) {
         <div className="sidebar-version">
           v{__APP_VERSION__} · {__BUILD_DATE__}<br />by Sylvain C.
         </div>
-        <button className="sidebar-toggle-btn sidebar-toggle-collapse" onClick={onToggle} title="Collapse sidebar">‹</button>
+        <button className="sidebar-toggle-btn sidebar-toggle-collapse" onClick={onToggle} title="Collapse sidebar">
+          <IconChevronLeft />
+        </button>
       </nav>
       <div id="sidebar-resizer" ref={resizerRef} />
     </>

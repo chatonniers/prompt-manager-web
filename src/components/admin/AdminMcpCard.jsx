@@ -71,21 +71,21 @@ export default function AdminMcpCard() {
                     onChange={e => setEditVal(p => ({ ...p, clientSecret: e.target.value }))}
                     placeholder={t('mcpClientSecret', lang)}
                   />
-                  <button className="mcp-eye-btn" type="button" onClick={() => setShowSecret(s => ({ ...s, [idx]: !s[idx] }))}>{showSecret[idx] ? '🙈' : '👁'}</button>
+                  <button className="mcp-eye-btn" type="button" onClick={() => setShowSecret(s => ({ ...s, [idx]: !s[idx] }))}>{showSecret[idx] ? 'Hide' : 'Show'}</button>
                 </div>
                 <input className="admin-item-input" value={editVal.url || ''} onChange={e => setEditVal(p => ({ ...p, url: e.target.value }))} placeholder="MCP server URL (optional)…" />
                 <div style={{ display: 'flex', gap: 4 }}>
-                  <button className="admin-save-btn" onClick={() => handleSaveEdit(idx)}>✓</button>
-                  <button className="admin-del-btn" onClick={() => setEditingIdx(null)}>✕</button>
+                  <button className="admin-save-btn" onClick={() => handleSaveEdit(idx)}>Save</button>
+                  <button className="admin-del-btn" onClick={() => setEditingIdx(null)}>Cancel</button>
                 </div>
               </div>
             ) : (
               <>
                 <div className="admin-mcp-display" onClick={() => { setEditingIdx(idx); setEditVal({ label: cred.label || '', clientId: cred.clientId || '', clientSecret: cred.clientSecret || '', url: cred.url || '' }); }}>
-                  <span className="admin-mcp-label">🔑 {cred.label || cred.clientId || '(unnamed)'}</span>
+                  <span className="admin-mcp-label">{cred.label || cred.clientId || '(unnamed)'}</span>
                   <span className="admin-mcp-id">{cred.clientId}{cred.url ? ` · ${cred.url}` : ''}</span>
                 </div>
-                <button className="admin-del-btn" onClick={() => handleDelete(idx)}>✕</button>
+                <button className="admin-del-btn" onClick={() => handleDelete(idx)}>Remove</button>
               </>
             )}
           </div>
@@ -99,7 +99,7 @@ export default function AdminMcpCard() {
         <input className="admin-item-input" style={inputStyle} type="text" value={newCred.clientId} onChange={e => setNewCred(p => ({ ...p, clientId: e.target.value }))} placeholder={t('mcpClientId', lang) + '…'} />
         <div style={{ flex: 2, display: 'flex', gap: 4 }}>
           <input className="admin-item-input" style={{ ...inputStyle, flex: 1 }} type={showNewSecret ? 'text' : 'password'} value={newCred.clientSecret} onChange={e => setNewCred(p => ({ ...p, clientSecret: e.target.value }))} placeholder={t('mcpClientSecret', lang) + '…'} onKeyDown={e => e.key === 'Enter' && handleAdd()} />
-          <button className="mcp-eye-btn" type="button" onClick={() => setShowNewSecret(v => !v)}>{showNewSecret ? '🙈' : '👁'}</button>
+          <button className="mcp-eye-btn" type="button" onClick={() => setShowNewSecret(v => !v)}>{showNewSecret ? 'Hide' : 'Show'}</button>
         </div>
         <button className="admin-save-btn" onClick={handleAdd}>{t('add', lang)}</button>
       </div>

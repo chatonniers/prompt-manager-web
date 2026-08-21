@@ -115,7 +115,7 @@ export default function BulkActionBar({ visibleIds }) {
         <button className="bulk-action-btn bulk-action-del" onClick={() => setConfirmDelete(true)}>{t('del', lang)}</button>
       )}
 
-      <button className="bulk-action-btn bulk-action-clear" onClick={clearAll}>✕ {t('bulkClear', lang)}</button>
+      <button className="bulk-action-btn bulk-action-clear" onClick={clearAll}>{t('bulkClear', lang)}</button>
     </div>
   );
 }

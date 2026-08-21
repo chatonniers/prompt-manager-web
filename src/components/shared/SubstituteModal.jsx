@@ -28,7 +28,9 @@ export default function SubstituteModal({ text, onCopy, onClose, lang }) {
       <div className="subst-modal" onClick={e => e.stopPropagation()}>
         <div className="subst-header">
           <span className="subst-title">{t('varSubstTitle', lang)}</span>
-          <button className="subst-close" onClick={onClose}>✕</button>
+          <button className="subst-close" onClick={onClose}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+          </button>
         </div>
         <div className="subst-vars">
           {vars.map(v => (

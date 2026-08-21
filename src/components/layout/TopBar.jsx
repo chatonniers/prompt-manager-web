@@ -104,7 +104,14 @@ export default function TopBar({ onHelp }) {
         </button>
         <button className="tb-btn" onClick={() => importRef.current?.click()}>{t('import', lang)}</button>
         <button className="tb-btn" onClick={handleExport}>{t('export', lang)}</button>
-        <button className="tb-btn" onClick={handleShareUrl} title={t('shareUrl', lang)}>🔗</button>
+        <button className="tb-btn" onClick={handleShareUrl} title={t('shareUrl', lang)}>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ verticalAlign: 'middle' }}>
+            <circle cx="12" cy="3" r="1.5" stroke="currentColor" strokeWidth="1.4"/>
+            <circle cx="12" cy="13" r="1.5" stroke="currentColor" strokeWidth="1.4"/>
+            <circle cx="4" cy="8" r="1.5" stroke="currentColor" strokeWidth="1.4"/>
+            <path d="M10.5 3.8L5.5 7M10.5 12.2L5.5 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+          </svg>
+        </button>
         <input type="file" ref={importRef} accept=".json" style={{ display:'none' }} onChange={handleImportFile} />
 
         {importData && (
@@ -133,7 +140,12 @@ export default function TopBar({ onHelp }) {
           className={`tb-btn tb-btn-icon${state.currentView === 'settings' ? ' tb-btn-active' : ''}`}
           onClick={() => dispatch({ type: 'SET_VIEW', payload: { view: 'settings' } })}
           title={t('settings', lang)}
-        >⚙</button>
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ verticalAlign: 'middle' }}>
+            <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.4"/>
+            <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.42 1.42M11.53 11.53l1.42 1.42M3.05 12.95l1.42-1.42M11.53 4.47l1.42-1.42" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+          </svg>
+        </button>
       </div>
     </header>
   );

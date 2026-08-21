@@ -119,7 +119,7 @@ export default function PromptGrid() {
         <div id="prompt-grid-outer">
           {favs.length > 0 && (
             <div className="category-block">
-              <div className="grid-section-label">★ {t('favorites', lang)}</div>
+              <div className="grid-section-label">{t('favorites', lang)}</div>
               <div className="category-flat-grid">
                 {favs.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
               </div>

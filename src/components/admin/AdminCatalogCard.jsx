@@ -184,8 +184,8 @@ export default function AdminCatalogCard({ titleKey, descKey, addKey, items, pro
                         onKeyDown={e => { if (e.key === 'Enter') handleRename(idx); if (e.key === 'Escape') setEditingIdx(null); }}
                       />
                     </div>
-                    <button className="admin-save-btn" onClick={() => handleRename(idx)}>✓</button>
-                    <button className="admin-del-btn" onClick={() => setEditingIdx(null)}>✕</button>
+                    <button className="admin-save-btn" onClick={() => handleRename(idx)}>Save</button>
+                    <button className="admin-del-btn" onClick={() => setEditingIdx(null)}>Cancel</button>
                   </>
                 ) : (
                   <>
@@ -196,8 +196,8 @@ export default function AdminCatalogCard({ titleKey, descKey, addKey, items, pro
                       onKeyDown={e => { if (e.key === 'Enter') handleRename(idx); if (e.key === 'Escape') setEditingIdx(null); }}
                       autoFocus
                     />
-                    <button className="admin-save-btn" onClick={() => handleRename(idx)}>✓</button>
-                    <button className="admin-del-btn" onClick={() => setEditingIdx(null)}>✕</button>
+                    <button className="admin-save-btn" onClick={() => handleRename(idx)}>Save</button>
+                    <button className="admin-del-btn" onClick={() => setEditingIdx(null)}>Cancel</button>
                   </>
                 )
               ) : confirmIdx === idx ? (
@@ -224,7 +224,7 @@ export default function AdminCatalogCard({ titleKey, descKey, addKey, items, pro
                     <span className="admin-item-input" style={{ flex: 1, padding: '5px 8px', cursor: 'pointer' }} onClick={() => { setEditingIdx(idx); setEditValue(item); }}>{item}</span>
                   )}
                   <span className={`admin-in-use${cnt > 0 ? ' has-uses' : ''}`}>{cnt > 0 ? t('promptsCount', lang, cnt) : t('unused', lang)}</span>
-                  <button className={`admin-del-btn${cnt > 0 ? ' has-uses' : ''}`} title={cnt > 0 ? t('usedBy', lang, cnt) : t('del', lang)} onClick={() => setConfirmIdx(idx)}>✕</button>
+                  <button className={`admin-del-btn${cnt > 0 ? ' has-uses' : ''}`} title={cnt > 0 ? t('usedBy', lang, cnt) : t('del', lang)} onClick={() => setConfirmIdx(idx)}>Remove</button>
                 </>
               )}
             </div>

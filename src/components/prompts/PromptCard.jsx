@@ -8,13 +8,7 @@ import { extractVars } from '../../lib/substitution.js';
 import SubstituteModal from '../shared/SubstituteModal.jsx';
 
 function fileIcon(type) {
-  if (!type) return '📄';
-  if (type.startsWith('image/')) return '🖼';
-  if (type.includes('pdf')) return '📕';
-  if (type.includes('zip') || type.includes('compressed')) return '🗜';
-  if (type.includes('spreadsheet') || type.includes('excel')) return '📊';
-  if (type.includes('presentation') || type.includes('powerpoint')) return '📑';
-  return '📄';
+  return null;
 }
 
 function fmtSize(bytes) {
@@ -65,12 +59,12 @@ function SystemChip({ sys, lang, onCopied }) {
       <div className="card-sys-face card-sys-front" onClick={() => hasEndpoints && setFlipped(true)}>
         {sys.url && !hasEndpoints ? (
           <a className="card-sys-link" href={sys.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>
-            🔗 {sys.name || sys.url}
+            {sys.name || sys.url}
           </a>
         ) : (
           <span className="card-sys-name">
-            {hasEndpoints ? '🔑 ' : '🔗 '}{sys.name || sys.url}
-            {hasEndpoints && <span className="card-sys-flip-hint"> ▶</span>}
+            {sys.name || sys.url}
+            {hasEndpoints && <span className="card-sys-flip-hint"> ›</span>}
           </span>
         )}
       </div>
@@ -80,7 +74,9 @@ function SystemChip({ sys, lang, onCopied }) {
         <div className="card-sys-face card-sys-back">
           <div className="card-sys-back-header">
             <span className="card-sys-back-title">{sys.name}</span>
-            <button className="card-sys-back-close" onClick={() => setFlipped(false)}>✕</button>
+            <button className="card-sys-back-close" onClick={() => setFlipped(false)}>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+            </button>
           </div>
           {sys.url && (
             <div className="card-sys-back-row">
@@ -268,8 +264,12 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
       <div className="card-edit-header">
         <span className="card-edit-title">{t('editPromptTitle', lang)}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <button className="card-edit-close" onClick={onDuplicate} title={t('duplicateTitle', lang)}>⧉</button>
-          <button className="card-edit-close" onClick={onCancel}>✕</button>
+          <button className="card-edit-close" onClick={onDuplicate} title={t('duplicateTitle', lang)}>
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.4"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2H3.5A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+          </button>
+          <button className="card-edit-close" onClick={onCancel}>
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+          </button>
         </div>
       </div>
 
@@ -404,7 +404,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
                     selected ? prev.filter(x => x !== persona) : [...prev, persona]
                   )}
                 >
-                  {selected ? '✓ ' : ''}{persona}
+                  {selected ? '· ' : ''}{persona}
                 </button>
               );
             })}
@@ -463,8 +463,8 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
                     selected ? prev.filter(s => s.id !== sys.id) : [...prev, sys]
                   )}
                 >
-                  {selected ? '✓ ' : ''}{sys.name || sys.url}
-                  {sys.endpoints?.length > 0 && <span style={{ opacity: 0.6, marginLeft: 3 }}>🔑</span>}
+                  {selected ? '· ' : ''}{sys.name || sys.url}
+                  {sys.endpoints?.length > 0 && <span style={{ opacity: 0.6, marginLeft: 3, fontSize: 10 }}>cred</span>}
                 </button>
               );
             })}
@@ -626,14 +626,17 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
             className={`prompt-card-fav${p.isFavorite ? ' active' : ''}`}
             title={p.isFavorite ? t('removeFromFav', lang) : t('addToFav', lang)}
             onClick={e => { e.stopPropagation(); handleToggleFav(); }}
-          >★</button>
+          >
+            <svg width="13" height="13" viewBox="0 0 16 16" fill={p.isFavorite ? 'currentColor' : 'none'} xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 1.5l1.8 3.6 4 .58-2.9 2.83.68 3.99L8 10.35l-3.58 1.88.68-3.99L2.2 5.68l4-.58L8 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+            </svg>
+          </button>
           <div className="prompt-card-title-area">
             <div className="prompt-card-title">{p.title}</div>
             {(p.personas || []).length > 0 && (
               <div className="prompt-card-personas">
                 {p.personas.map(persona => (
                   <span key={persona} className="pill persona">
-                    <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" style={{ flexShrink: 0 }}><circle cx="8" cy="5" r="3.5"/><path d="M1.5 14c0-3.038 2.91-5.5 6.5-5.5s6.5 2.462 6.5 5.5"/></svg>
                     {persona}
                   </span>
                 ))}
@@ -675,7 +678,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
           {p.storyFlow && (() => { const c = getFlowColor(p.storyFlow); return <span className="pill flow" style={{ background: c.bg, color: c.text }}>{p.storyFlow}</span>; })()}
           {(p.tags || []).slice(0, 3).map(tag => <span key={tag} className="pill tag">#{tag}</span>)}
           {langBadge}
-          {attachCount > 0 && <span className="attach-count-pill">📎 {attachCount}</span>}
+          {attachCount > 0 && <span className="attach-count-pill">{attachCount} file{attachCount > 1 ? 's' : ''}</span>}
         </div>
 
         {/* Systems — flippable chips */}
@@ -701,7 +704,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
                 rel="noopener noreferrer"
                 onClick={e => e.stopPropagation()}
               >
-                🔗 {link.desc || link.url}
+                {link.desc || link.url}
               </a>
             ))}
           </div>

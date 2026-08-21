@@ -5,13 +5,7 @@ import { AttachmentsDB } from '../../lib/attachments.js';
 import { t } from '../../lib/i18n.js';
 
 function fileIcon(type) {
-  if (!type) return '📄';
-  if (type.startsWith('image/')) return '🖼';
-  if (type.includes('pdf')) return '📕';
-  if (type.includes('zip') || type.includes('compressed')) return '🗜';
-  if (type.includes('spreadsheet') || type.includes('excel')) return '📊';
-  if (type.includes('presentation') || type.includes('powerpoint')) return '📑';
-  return '📄';
+  return null;
 }
 
 function fmtSize(bytes) {
@@ -250,7 +244,9 @@ export default function PromptModal() {
       <div id="modal">
         <div id="modal-header">
           <h2 id="modal-title">{isNew ? t('newPrompt', lang) : t('edit', lang)}</h2>
-          <button className="modal-close-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>✕</button>
+          <button className="modal-close-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+          </button>
         </div>
         <div id="modal-body">
 
@@ -281,7 +277,9 @@ export default function PromptModal() {
                         placeholder={t('labelOptionalPlaceholder', lang)}
                       />
                       {promptItems.length > 1 && (
-                        <button className="prompt-item-delete-btn" title={t('removePrompt', lang)} onClick={() => removeItem(item.id)}>✕</button>
+                        <button className="prompt-item-delete-btn" title={t('removePrompt', lang)} onClick={() => removeItem(item.id)}>
+                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                        </button>
                       )}
                     </div>
                     <div className="body-tabs">
@@ -368,7 +366,7 @@ export default function PromptModal() {
                       prev.includes(persona) ? prev.filter(x => x !== persona) : [...prev, persona]
                     )}
                   >
-                    {personas.includes(persona) ? '✓ ' : ''}{persona}
+                    {personas.includes(persona) ? '· ' : ''}{persona}
                   </button>
                 ))}
               </div>
@@ -417,8 +415,8 @@ export default function PromptModal() {
                         }
                       }}
                     >
-                      {selected ? '✓ ' : ''}{sys.name || sys.url}
-                      {sys.endpoints?.length > 0 && <span style={{ opacity: 0.7, marginLeft: 4 }}>🔑</span>}
+                      {selected ? '· ' : ''}{sys.name || sys.url}
+                      {sys.endpoints?.length > 0 && <span style={{ opacity: 0.6, marginLeft: 4, fontSize: 10 }}>cred</span>}
                     </button>
                   );
                 })}

@@ -116,8 +116,8 @@ export default function AdminCategoriesCard() {
                     onKeyDown={e => { if (e.key === 'Enter') handleRename(idx); if (e.key === 'Escape') setEditingIdx(null); }}
                     autoFocus
                   />
-                  <button className="admin-save-btn" onClick={() => handleRename(idx)}>✓</button>
-                  <button className="admin-del-btn" onClick={() => setEditingIdx(null)}>✕</button>
+                  <button className="admin-save-btn" onClick={() => handleRename(idx)}>Save</button>
+                  <button className="admin-del-btn" onClick={() => setEditingIdx(null)}>Cancel</button>
                 </>
               ) : confirmIdx === idx ? (
                 <>
@@ -141,7 +141,7 @@ export default function AdminCategoriesCard() {
                     className={`admin-del-btn${cnt > 0 ? ' has-uses' : ''}`}
                     title={cnt > 0 ? t('usedBy', lang, cnt) : t('del', lang)}
                     onClick={() => setConfirmIdx(idx)}
-                  >✕</button>
+                  >Remove</button>
                 </>
               )}
             </div>

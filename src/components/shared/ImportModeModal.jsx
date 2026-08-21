@@ -18,7 +18,9 @@ export default function ImportModeModal({ data, existingCount, lang, onConfirm, 
       <div className="import-mode-modal" onClick={e => e.stopPropagation()}>
         <div className="import-mode-header">
           <span className="import-mode-title">{t('importModeTitle', lang)}</span>
-          <button className="import-mode-close" onClick={onClose}>✕</button>
+          <button className="import-mode-close" onClick={onClose}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+          </button>
         </div>
 
         {!confirming ? (
