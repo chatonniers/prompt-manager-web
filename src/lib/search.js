@@ -5,9 +5,11 @@ function scorePrompt(prompt, query) {
   const fields = [
     { value: prompt.title, weight: 10 },
     { value: (prompt.tags || []).join(" "), weight: 8 },
+    { value: (prompt.promptItems || []).map(i => i.label || '').join(" "), weight: 8 },
     { value: (prompt.solutions || []).join(" "), weight: 7 },
     { value: prompt.storyFlow || "", weight: 6 },
     { value: prompt.body, weight: 5 },
+    { value: (prompt.promptItems || []).map(i => (i.body || '') + ' ' + (i.body_fr || '')).join(" "), weight: 5 },
     { value: (prompt.landscapes || []).join(" "), weight: 3 },
     { value: prompt.notes || "", weight: 2 }
   ];

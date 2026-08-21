@@ -17,6 +17,7 @@ const initialState = {
   pendingDeleteId: null,
   toastMsg: null,
   initialized: false,
+  selectedIds: new Set(),
 };
 
 function reducer(state, action) {
@@ -59,6 +60,18 @@ function reducer(state, action) {
       return { ...state, toastMsg: action.payload ?? action.msg };
     case 'CLEAR_TOAST':
       return { ...state, toastMsg: null };
+    case 'TOGGLE_SELECT': {
+      const next = new Set(state.selectedIds);
+      if (next.has(action.payload)) next.delete(action.payload);
+      else next.add(action.payload);
+      return { ...state, selectedIds: next };
+    }
+    case 'CLEAR_SELECT':
+      return { ...state, selectedIds: new Set() };
+    case 'SELECT_ALL': {
+      const all = new Set([...state.selectedIds, ...(action.payload || [])]);
+      return { ...state, selectedIds: all };
+    }
     default:
       return state;
   }

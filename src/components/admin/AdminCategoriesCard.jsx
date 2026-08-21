@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { t } from '../../lib/i18n.js';
@@ -11,6 +11,9 @@ export default function AdminCategoriesCard() {
   const [newItem, setNewItem] = useState('');
   const [editingIdx, setEditingIdx] = useState(null);
   const [editValue, setEditValue] = useState('');
+  const [dragOverIdx, setDragOverIdx] = useState(null);
+  const [confirmIdx, setConfirmIdx] = useState(null);
+  const dragSrcIdx = useRef(null);
 
   function usageCount(cat) {
     return state.prompts.filter(p => p.category === cat).length;
@@ -53,11 +56,22 @@ export default function AdminCategoriesCard() {
     setEditingIdx(null);
   }
 
+  async function handleDrop(toIdx) {
+    const fromIdx = dragSrcIdx.current;
+    if (fromIdx == null || fromIdx === toIdx) { setDragOverIdx(null); return; }
+    const reordered = [...categories];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    await saveCatalog(reordered);
+    dragSrcIdx.current = null;
+    setDragOverIdx(null);
+  }
+
   async function handleDelete(idx) {
     const cat = categories[idx];
     const cnt = usageCount(cat);
+    setConfirmIdx(null);
     if (cnt > 0) {
-      if (!window.confirm(t('deleteConfirm', lang, cat, cnt))) return;
       const updatedPrompts = state.prompts.map(p =>
         p.category === cat ? { ...p, category: null } : p
       );
@@ -83,7 +97,15 @@ export default function AdminCategoriesCard() {
         {categories.map((cat, idx) => {
           const cnt = usageCount(cat);
           return (
-            <div key={idx} className="admin-row">
+            <div
+              key={idx}
+              className={`admin-row${dragOverIdx === idx ? ' drag-over' : ''}`}
+              draggable="true"
+              onDragStart={() => { dragSrcIdx.current = idx; }}
+              onDragOver={e => { e.preventDefault(); setDragOverIdx(idx); }}
+              onDragLeave={() => setDragOverIdx(null)}
+              onDrop={() => handleDrop(idx)}
+            >
               <span className="admin-drag-handle">⠿</span>
               {editingIdx === idx ? (
                 <>
@@ -96,6 +118,14 @@ export default function AdminCategoriesCard() {
                   />
                   <button className="admin-save-btn" onClick={() => handleRename(idx)}>✓</button>
                   <button className="admin-del-btn" onClick={() => setEditingIdx(null)}>✕</button>
+                </>
+              ) : confirmIdx === idx ? (
+                <>
+                  <span className="admin-item-input" style={{ flex: 1, padding: '5px 8px', color: 'var(--pm-danger)', fontWeight: 600 }}>
+                    {t('deleteConfirmInline', lang, cat)}
+                  </span>
+                  <button className="admin-save-btn" style={{ background: 'var(--pm-danger)' }} onClick={() => handleDelete(idx)}>{t('del', lang)}</button>
+                  <button className="admin-del-btn" onClick={() => setConfirmIdx(null)}>{t('cancel', lang)}</button>
                 </>
               ) : (
                 <>
@@ -110,7 +140,7 @@ export default function AdminCategoriesCard() {
                   <button
                     className={`admin-del-btn${cnt > 0 ? ' has-uses' : ''}`}
                     title={cnt > 0 ? t('usedBy', lang, cnt) : t('del', lang)}
-                    onClick={() => handleDelete(idx)}
+                    onClick={() => setConfirmIdx(idx)}
                   >✕</button>
                 </>
               )}
@@ -126,7 +156,7 @@ export default function AdminCategoriesCard() {
           value={newItem}
           onChange={e => setNewItem(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleAdd()}
-          placeholder="Category name…"
+          placeholder={t('addCategory', lang).replace('+ ', '')}
         />
         <button className="admin-save-btn" onClick={handleAdd}>{t('add', lang)}</button>
       </div>

@@ -6,9 +6,10 @@ import { t } from '../../lib/i18n.js';
 const EMPTY_ENDPOINT = () => ({ id: crypto.randomUUID(), label: '', url: '', clientId: '', clientSecret: '' });
 const EMPTY_SYSTEM   = () => ({ id: crypto.randomUUID(), name: '', description: '', url: '', endpoints: [] });
 
-function SystemCard({ sys, onEdit, onDelete, usageCount }) {
+function SystemCard({ sys, lang, onEdit, onDelete, usageCount }) {
   const [flipped, setFlipped] = useState(false);
   const [showSecrets, setShowSecrets] = useState({});
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   async function copyText(text) {
     try { await navigator.clipboard.writeText(text); } catch { /* ignore */ }
@@ -19,7 +20,7 @@ function SystemCard({ sys, onEdit, onDelete, usageCount }) {
       {/* Front */}
       <div className="admin-sys-face admin-sys-front">
         <div className="admin-sys-front-header">
-          <div className="admin-sys-front-name">{sys.name || '(unnamed)'}</div>
+          <div className="admin-sys-front-name">{sys.name || t('unnamed', lang)}</div>
           {sys.description && <div className="admin-sys-front-desc">{sys.description}</div>}
           {sys.url && (
             <a className="admin-sys-front-url" href={sys.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>
@@ -29,23 +30,30 @@ function SystemCard({ sys, onEdit, onDelete, usageCount }) {
         </div>
         <div className="admin-sys-front-meta">
           {sys.endpoints.length > 0 && (
-            <span className="admin-sys-endpoint-count">{sys.endpoints.length} endpoint{sys.endpoints.length !== 1 ? 's' : ''}</span>
+            <span className="admin-sys-endpoint-count">{t('endpointsCount', lang, sys.endpoints.length)}</span>
           )}
-          {usageCount > 0 && <span className="admin-in-use has-uses">{usageCount} prompt{usageCount !== 1 ? 's' : ''}</span>}
+          {usageCount > 0 && <span className="admin-in-use has-uses">{t('promptsCount', lang, usageCount)}</span>}
         </div>
         <div className="admin-sys-front-actions">
           {sys.endpoints.length > 0 && (
-            <button className="admin-sys-flip-btn" onClick={() => setFlipped(true)}>Connection Details ▶</button>
+            <button className="admin-sys-flip-btn" onClick={() => setFlipped(true)}>{t('connectionDetails', lang)} ▶</button>
           )}
-          <button className="admin-save-btn" onClick={() => onEdit(sys)}>Edit</button>
-          <button className="admin-del-btn" onClick={() => onDelete(sys)}>✕</button>
+          <button className="admin-save-btn" onClick={() => onEdit(sys)}>{t('editBtn', lang)}</button>
+          {confirmDelete ? (
+            <>
+              <button className="admin-save-btn" style={{ background: 'var(--pm-danger)' }} onClick={() => { setConfirmDelete(false); onDelete(sys); }}>{t('del', lang)}</button>
+              <button className="admin-del-btn" onClick={() => setConfirmDelete(false)}>{t('cancel', lang)}</button>
+            </>
+          ) : (
+            <button className="admin-del-btn" onClick={() => setConfirmDelete(true)}>✕</button>
+          )}
         </div>
       </div>
 
       {/* Back — connection details */}
       <div className="admin-sys-face admin-sys-back">
         <div className="admin-sys-back-header">
-          <span className="admin-sys-back-title">Connection Details</span>
+          <span className="admin-sys-back-title">{t('connectionDetails', lang)}</span>
           <span className="admin-sys-back-subtitle">{sys.name}</span>
         </div>
         <div className="admin-sys-endpoints">
@@ -54,44 +62,44 @@ function SystemCard({ sys, onEdit, onDelete, usageCount }) {
               {ep.label && <div className="admin-sys-ep-label">{ep.label.toUpperCase()}</div>}
               {ep.url && (
                 <div className="admin-sys-ep-field">
-                  <span className="admin-sys-ep-field-label">ENDPOINT</span>
+                  <span className="admin-sys-ep-field-label">{t('endpoint', lang)}</span>
                   <div className="admin-sys-ep-field-value">
                     <code>{ep.url}</code>
-                    <button className="admin-sys-copy-btn" onClick={() => copyText(ep.url)}>COPY</button>
+                    <button className="admin-sys-copy-btn" onClick={() => copyText(ep.url)}>{t('copyBtn', lang)}</button>
                   </div>
                 </div>
               )}
               {ep.clientId && (
                 <div className="admin-sys-ep-field">
-                  <span className="admin-sys-ep-field-label">CLIENT ID</span>
+                  <span className="admin-sys-ep-field-label">{t('clientId', lang)}</span>
                   <div className="admin-sys-ep-field-value">
                     <code>{ep.clientId}</code>
-                    <button className="admin-sys-copy-btn" onClick={() => copyText(ep.clientId)}>COPY</button>
+                    <button className="admin-sys-copy-btn" onClick={() => copyText(ep.clientId)}>{t('copyBtn', lang)}</button>
                   </div>
                 </div>
               )}
               {ep.clientSecret && (
                 <div className="admin-sys-ep-field">
-                  <span className="admin-sys-ep-field-label">CLIENT SECRET</span>
+                  <span className="admin-sys-ep-field-label">{t('clientSecret', lang)}</span>
                   <div className="admin-sys-ep-field-value">
                     <code>{showSecrets[ep.id] ? ep.clientSecret : '••••••••'}</code>
                     <button className="admin-sys-copy-btn" onClick={() => setShowSecrets(s => ({ ...s, [ep.id]: !s[ep.id] }))}>
-                      {showSecrets[ep.id] ? 'HIDE' : 'SHOW'}
+                      {showSecrets[ep.id] ? t('hideBtn', lang) : t('showBtn', lang)}
                     </button>
-                    <button className="admin-sys-copy-btn" onClick={() => copyText(ep.clientSecret)}>COPY</button>
+                    <button className="admin-sys-copy-btn" onClick={() => copyText(ep.clientSecret)}>{t('copyBtn', lang)}</button>
                   </div>
                 </div>
               )}
             </div>
           ))}
         </div>
-        <button className="admin-sys-flip-back-btn" onClick={() => setFlipped(false)}>◀ Back</button>
+        <button className="admin-sys-flip-back-btn" onClick={() => setFlipped(false)}>{t('back', lang)}</button>
       </div>
     </div>
   );
 }
 
-function SystemEditForm({ initial, onSave, onCancel }) {
+function SystemEditForm({ initial, lang, onSave, onCancel }) {
   const [sys, setSys] = useState(initial ?? EMPTY_SYSTEM());
   const [showSecrets, setShowSecrets] = useState({});
 
@@ -108,9 +116,9 @@ function SystemEditForm({ initial, onSave, onCancel }) {
   return (
     <div className="admin-sys-edit-form">
       <div className="admin-sys-edit-fields">
-        <input className="admin-item-input admin-sys-edit-input" value={sys.name} onChange={e => setSys(s => ({ ...s, name: e.target.value }))} placeholder="System name…" autoFocus />
-        <input className="admin-item-input admin-sys-edit-input" value={sys.description} onChange={e => setSys(s => ({ ...s, description: e.target.value }))} placeholder="Description (optional)…" />
-        <input className="admin-item-input admin-sys-edit-input" value={sys.url} onChange={e => setSys(s => ({ ...s, url: e.target.value }))} placeholder="System URL (optional)…" />
+        <input className="admin-item-input admin-sys-edit-input" value={sys.name} onChange={e => setSys(s => ({ ...s, name: e.target.value }))} placeholder={t('sysNamePlaceholder', lang)} autoFocus />
+        <input className="admin-item-input admin-sys-edit-input" value={sys.description} onChange={e => setSys(s => ({ ...s, description: e.target.value }))} placeholder={t('sysDescPlaceholder', lang)} />
+        <input className="admin-item-input admin-sys-edit-input" value={sys.url} onChange={e => setSys(s => ({ ...s, url: e.target.value }))} placeholder={t('sysUrlPlaceholder', lang)} />
       </div>
 
       {sys.endpoints.length > 0 && (
@@ -118,19 +126,19 @@ function SystemEditForm({ initial, onSave, onCancel }) {
           {sys.endpoints.map((ep, i) => (
             <div key={ep.id} className="admin-sys-edit-ep">
               <div className="admin-sys-edit-ep-header">
-                <span className="admin-sys-edit-ep-num">Endpoint #{i + 1}</span>
+                <span className="admin-sys-edit-ep-num">{t('endpointNum', lang, i + 1)}</span>
                 <button className="admin-del-btn" onClick={() => removeEndpoint(ep.id)}>✕</button>
               </div>
-              <input className="admin-item-input" value={ep.label} onChange={e => updateEp(ep.id, 'label', e.target.value)} placeholder="Label (e.g. S/4HANA, SuccessFactors)…" />
-              <input className="admin-item-input" value={ep.url} onChange={e => updateEp(ep.id, 'url', e.target.value)} placeholder="Endpoint URL…" />
-              <input className="admin-item-input" value={ep.clientId} onChange={e => updateEp(ep.id, 'clientId', e.target.value)} placeholder="Client ID…" />
+              <input className="admin-item-input" value={ep.label} onChange={e => updateEp(ep.id, 'label', e.target.value)} placeholder={t('epLabelPlaceholder', lang)} />
+              <input className="admin-item-input" value={ep.url} onChange={e => updateEp(ep.id, 'url', e.target.value)} placeholder={t('epUrlPlaceholder', lang)} />
+              <input className="admin-item-input" value={ep.clientId} onChange={e => updateEp(ep.id, 'clientId', e.target.value)} placeholder={t('epClientIdPlaceholder', lang)} />
               <div className="admin-mcp-secret-row">
                 <input
                   className="admin-item-input"
                   type={showSecrets[ep.id] ? 'text' : 'password'}
                   value={ep.clientSecret}
                   onChange={e => updateEp(ep.id, 'clientSecret', e.target.value)}
-                  placeholder="Client Secret…"
+                  placeholder={t('epSecretPlaceholder', lang)}
                 />
                 <button className="mcp-eye-btn" type="button" onClick={() => setShowSecrets(s => ({ ...s, [ep.id]: !s[ep.id] }))}>
                   {showSecrets[ep.id] ? '🙈' : '👁'}
@@ -141,11 +149,11 @@ function SystemEditForm({ initial, onSave, onCancel }) {
         </div>
       )}
 
-      <button className="add-row-btn" style={{ marginTop: 6 }} onClick={addEndpoint}>+ Add Endpoint</button>
+      <button className="add-row-btn" style={{ marginTop: 6 }} onClick={addEndpoint}>{t('addEndpoint', lang)}</button>
 
       <div className="admin-sys-edit-actions">
-        <button className="admin-save-btn" onClick={() => onSave(sys)}>Save</button>
-        <button className="admin-del-btn" onClick={onCancel}>Cancel</button>
+        <button className="admin-save-btn" onClick={() => onSave(sys)}>{t('saveBtn', lang)}</button>
+        <button className="admin-del-btn" onClick={onCancel}>{t('cancel', lang)}</button>
       </div>
     </div>
   );
@@ -156,7 +164,7 @@ export default function AdminSystemsCard() {
   const lang = state.settings?.lang || 'en';
   const systems = state.catalog.systems || [];
 
-  const [editingSys, setEditingSys] = useState(null); // null | 'new' | system object
+  const [editingSys, setEditingSys] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
   function usageCount(sysId) {
@@ -170,21 +178,20 @@ export default function AdminSystemsCard() {
   }
 
   async function handleSave(sys) {
-    const v = sys.name.trim() ? sys : { ...sys, name: sys.url || '(unnamed)' };
+    const v = sys.name.trim() ? sys : { ...sys, name: sys.url || t('unnamed', lang) };
     const exists = systems.find(s => s.id === v.id);
     if (exists) {
       await saveCatalog(systems.map(s => s.id === v.id ? v : s));
     } else {
       await saveCatalog([...systems, v]);
     }
-    dispatch({ type: 'SHOW_TOAST', payload: exists ? `"${v.name}" updated` : `"${v.name}" added` });
+    dispatch({ type: 'SHOW_TOAST', payload: exists ? t('promptUpdated', lang) : t('added', lang, v.name) });
     setShowForm(false);
     setEditingSys(null);
   }
 
   async function handleDelete(sys) {
     const cnt = usageCount(sys.id);
-    if (cnt > 0 && !window.confirm(`"${sys.name}" is used by ${cnt} prompt${cnt !== 1 ? 's' : ''}. Remove it?`)) return;
     if (cnt > 0) {
       const updated = state.prompts.map(p =>
         (p.systems || []).some(s => s.id === sys.id)
@@ -197,7 +204,7 @@ export default function AdminSystemsCard() {
       dispatch({ type: 'SET_PROMPTS', payload: allPrompts });
     }
     await saveCatalog(systems.filter(s => s.id !== sys.id));
-    dispatch({ type: 'SHOW_TOAST', payload: `"${sys.name}" deleted` });
+    dispatch({ type: 'SHOW_TOAST', payload: t('deleted', lang, sys.name) });
   }
 
   return (
@@ -219,6 +226,7 @@ export default function AdminSystemsCard() {
             <SystemEditForm
               key={sys.id}
               initial={editingSys}
+              lang={lang}
               onSave={handleSave}
               onCancel={() => { setShowForm(false); setEditingSys(null); }}
             />
@@ -226,16 +234,16 @@ export default function AdminSystemsCard() {
             <SystemCard
               key={sys.id}
               sys={sys}
+              lang={lang}
               usageCount={usageCount(sys.id)}
               onEdit={s => { setEditingSys(s); setShowForm(true); }}
               onDelete={handleDelete}
             />
           )
         ))}
-
-        {showForm && !editingSys?.id && (
+        {showForm && !editingSys && (
           <SystemEditForm
-            initial={null}
+            lang={lang}
             onSave={handleSave}
             onCancel={() => { setShowForm(false); setEditingSys(null); }}
           />
@@ -243,11 +251,7 @@ export default function AdminSystemsCard() {
       </div>
 
       {!showForm && (
-        <button
-          className="add-row-btn"
-          style={{ marginTop: 8 }}
-          onClick={() => { setEditingSys(null); setShowForm(true); }}
-        >
+        <button className="admin-save-btn" style={{ marginTop: 12 }} onClick={() => { setEditingSys(null); setShowForm(true); }}>
           {t('addSystem', lang)}
         </button>
       )}

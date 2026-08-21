@@ -4,6 +4,8 @@ import { StorageAPI } from '../../lib/storage.js';
 import { AttachmentsDB } from '../../lib/attachments.js';
 import { t } from '../../lib/i18n.js';
 import { getFlowColor } from '../../lib/flowColors.js';
+import { extractVars } from '../../lib/substitution.js';
+import SubstituteModal from '../shared/SubstituteModal.jsx';
 
 function fileIcon(type) {
   if (!type) return '📄';
@@ -21,15 +23,15 @@ function fmtSize(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
-function relTime(iso) {
+function relTime(iso, lang) {
   if (!iso) return '';
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
-  if (m < 2) return 'just now';
-  if (m < 60) return `${m}m ago`;
+  if (m < 2) return t('justNow', lang);
+  if (m < 60) return t('mAgo', lang, m);
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
+  if (h < 24) return t('hAgo', lang, h);
+  return t('dAgo', lang, Math.floor(h / 24));
 }
 
 async function copyText(text) {
@@ -82,10 +84,10 @@ function SystemChip({ sys, lang, onCopied }) {
           </div>
           {sys.url && (
             <div className="card-sys-back-row">
-              <span className="card-sys-back-label">SYSTEM URL</span>
+              <span className="card-sys-back-label">{t('sysUrl', lang)}</span>
               <div className="card-sys-back-value">
                 <a href={sys.url} target="_blank" rel="noopener noreferrer" className="card-sys-back-url">{sys.url}</a>
-                <button className="card-sys-copy-btn" onClick={() => handleCopy(sys.url)}>COPY</button>
+                <button className="card-sys-copy-btn" onClick={() => handleCopy(sys.url)}>{t('copyBtn', lang)}</button>
               </div>
             </div>
           )}
@@ -94,31 +96,31 @@ function SystemChip({ sys, lang, onCopied }) {
               {ep.label && <div className="card-sys-ep-label">{ep.label.toUpperCase()}</div>}
               {ep.url && (
                 <div className="card-sys-back-row">
-                  <span className="card-sys-back-label">ENDPOINT</span>
+                  <span className="card-sys-back-label">{t('endpoint', lang)}</span>
                   <div className="card-sys-back-value">
                     <code className="card-sys-back-code">{ep.url}</code>
-                    <button className="card-sys-copy-btn" onClick={() => handleCopy(ep.url)}>COPY</button>
+                    <button className="card-sys-copy-btn" onClick={() => handleCopy(ep.url)}>{t('copyBtn', lang)}</button>
                   </div>
                 </div>
               )}
               {ep.clientId && (
                 <div className="card-sys-back-row">
-                  <span className="card-sys-back-label">CLIENT ID</span>
+                  <span className="card-sys-back-label">{t('clientId', lang)}</span>
                   <div className="card-sys-back-value">
                     <code className="card-sys-back-code">{ep.clientId}</code>
-                    <button className="card-sys-copy-btn" onClick={() => handleCopy(ep.clientId)}>COPY</button>
+                    <button className="card-sys-copy-btn" onClick={() => handleCopy(ep.clientId)}>{t('copyBtn', lang)}</button>
                   </div>
                 </div>
               )}
               {ep.clientSecret && (
                 <div className="card-sys-back-row">
-                  <span className="card-sys-back-label">CLIENT SECRET</span>
+                  <span className="card-sys-back-label">{t('clientSecret', lang)}</span>
                   <div className="card-sys-back-value">
                     <code className="card-sys-back-code">{showSecrets[ep.id] ? ep.clientSecret : '••••••••'}</code>
                     <button className="card-sys-copy-btn" onClick={() => setShowSecrets(s => ({ ...s, [ep.id]: !s[ep.id] }))}>
-                      {showSecrets[ep.id] ? 'HIDE' : 'SHOW'}
+                      {showSecrets[ep.id] ? t('hideBtn', lang) : t('showBtn', lang)}
                     </button>
-                    <button className="card-sys-copy-btn" onClick={() => handleCopy(ep.clientSecret)}>COPY</button>
+                    <button className="card-sys-copy-btn" onClick={() => handleCopy(ep.clientSecret)}>{t('copyBtn', lang)}</button>
                   </div>
                 </div>
               )}
@@ -258,54 +260,82 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
   return (
     <div className="card-edit-back" onClick={e => e.stopPropagation()}>
       <div className="card-edit-header">
-        <span className="card-edit-title">Edit Prompt</span>
+        <span className="card-edit-title">{t('editPromptTitle', lang)}</span>
         <button className="card-edit-close" onClick={onCancel}>✕</button>
       </div>
 
       {/* Title */}
       <div className="card-edit-field">
-        <label className="card-edit-label">Title</label>
+        <label className="card-edit-label">{t('titleLabel', lang)}</label>
         <input
           className="card-edit-input"
           type="text"
           value={title}
           onChange={e => setTitle(e.target.value)}
-          placeholder="Title…"
+          placeholder={t('titlePlaceholder', lang)}
           maxLength={120}
         />
       </div>
 
       {/* Prompt items selector + body */}
-      {items.length > 1 && (
-        <div className="card-edit-item-tabs">
-          {items.map((item, idx) => (
-            <button
-              key={item.id}
-              className={`card-edit-item-tab${activeItemId === item.id ? ' active' : ''}`}
-              onClick={() => setActiveItemId(item.id)}
-            >
-              {item.label || `#${idx + 1}`}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="card-edit-item-tabs">
+        {items.map((item, idx) => (
+          <button
+            key={item.id}
+            className={`card-edit-item-tab${activeItemId === item.id ? ' active' : ''}`}
+            onClick={() => setActiveItemId(item.id)}
+          >
+            {item.label || `#${idx + 1}`}
+          </button>
+        ))}
+        <button
+          className="card-edit-item-tab"
+          style={{ opacity: 0.7 }}
+          onClick={() => {
+            const newItem = makeItem();
+            setItems(prev => [...prev, newItem]);
+            setActiveItemId(newItem.id);
+          }}
+          title={t('addPromptItem', lang)}
+        >+</button>
+        {items.length > 1 && (
+          <button
+            className="card-edit-item-tab"
+            style={{ opacity: 0.7, color: 'var(--pm-danger)' }}
+            onClick={() => {
+              const remaining = items.filter(i => i.id !== activeItemId);
+              setItems(remaining);
+              setActiveItemId(remaining[remaining.length - 1]?.id);
+            }}
+            title={t('removePrompt', lang)}
+          >−</button>
+        )}
+      </div>
 
       {activeItem && (
         <div className="card-edit-field">
           <div className="card-edit-lang-row">
-            <label className="card-edit-label">Body</label>
+            <label className="card-edit-label">{t('bodyLabel', lang)}</label>
             <div className="card-edit-lang-btns">
               <button className={`card-edit-lang-btn${itemTab === 'en' ? ' active' : ''}`} onClick={() => setItemTab('en')}>EN</button>
               <button className={`card-edit-lang-btn${itemTab === 'fr' ? ' active' : ''}`} onClick={() => setItemTab('fr')}>FR</button>
             </div>
           </div>
+          <input
+            className="card-edit-input"
+            type="text"
+            value={activeItem.label}
+            onChange={e => updateItemBody(activeItem.id, 'label', e.target.value)}
+            placeholder={t('promptItemLabel', lang)}
+            style={{ marginBottom: 4, fontSize: 12 }}
+          />
           {itemTab === 'en' ? (
             <textarea
               className="card-edit-textarea"
               value={activeItem.body}
               onChange={e => updateItemBody(activeItem.id, 'body', e.target.value)}
               rows={4}
-              placeholder="Prompt text…"
+              placeholder={t('bodyEnPlaceholder', lang)}
             />
           ) : (
             <textarea
@@ -313,7 +343,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
               value={activeItem.body_fr || ''}
               onChange={e => updateItemBody(activeItem.id, 'body_fr', e.target.value)}
               rows={4}
-              placeholder="Texte du prompt (FR)…"
+              placeholder={t('bodyFrPlaceholder', lang)}
             />
           )}
         </div>
@@ -322,16 +352,16 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
       {/* Category + Story Flow */}
       <div className="card-edit-2col">
         <div className="card-edit-field">
-          <label className="card-edit-label">Category</label>
+          <label className="card-edit-label">{t('category', lang)}</label>
           <select className="card-edit-select" value={category} onChange={e => setCategory(e.target.value)}>
-            <option value="">— None —</option>
+            <option value="">{t('selectNone', lang)}</option>
             {(catalog.categories || []).map(cat => <option key={cat} value={cat}>{cat}</option>)}
           </select>
         </div>
         <div className="card-edit-field">
-          <label className="card-edit-label">Story Flow</label>
+          <label className="card-edit-label">{t('storyFlow', lang)}</label>
           <select className="card-edit-select" value={storyFlow} onChange={e => setStoryFlow(e.target.value)}>
-            <option value="">— None —</option>
+            <option value="">{t('selectNone', lang)}</option>
             {(catalog.storyFlows || []).map(f => <option key={f} value={f}>{f}</option>)}
           </select>
         </div>
@@ -364,19 +394,19 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
 
       {/* Notes */}
       <div className="card-edit-field">
-        <label className="card-edit-label">Notes</label>
+        <label className="card-edit-label">{t('notesLabel', lang)}</label>
         <textarea
           className="card-edit-textarea"
           value={notes}
           onChange={e => setNotes(e.target.value)}
           rows={2}
-          placeholder="Demo tips, context…"
+          placeholder={t('notesPlaceholderCard', lang)}
         />
       </div>
 
       {/* Attachments */}
       <div className="card-edit-field">
-        <label className="card-edit-label">Attachments</label>
+        <label className="card-edit-label">{t('attachmentsLabel', lang)}</label>
         <div className="card-edit-attachments">
           {attachments.filter(a => !pendingDeletes.includes(a.id)).map(att => (
             <div key={att.id} className="card-edit-att-row">
@@ -398,7 +428,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
             type="button"
             className="card-edit-att-add"
             onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}
-          >+ Add file</button>
+          >+ {t('addFileBtn', lang)}</button>
           <input
             type="file"
             ref={fileInputRef}
@@ -412,19 +442,21 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
       <div className="card-edit-actions">
         <button className="card-edit-cancel-btn" onClick={onCancel}>{t('cancel', lang)}</button>
         <button className="card-edit-save-btn" onClick={handleSave} disabled={saving}>
-          {saving ? 'Saving…' : t('save', lang)}
+          {saving ? t('savingLabel', lang) : t('save', lang)}
         </button>
       </div>
     </div>
   );
 }
 
-export default function PromptCard({ prompt: p }) {
+export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
   const catalog = state.catalog;
 
   const [flipped, setFlipped] = useState(false);
+  const [flashSaved, setFlashSaved] = useState(false);
+  const [substItem, setSubstItem] = useState(null);
 
   const promptItems = p.promptItems?.length
     ? p.promptItems
@@ -434,7 +466,16 @@ export default function PromptCard({ prompt: p }) {
 
   async function handleCopyItem(item) {
     const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;
-    await copyText(body);
+    const vars = extractVars(body);
+    if (vars.length > 0) {
+      setSubstItem({ item, body });
+      return;
+    }
+    await doCopy(body, item);
+  }
+
+  async function doCopy(text, item) {
+    await copyText(text);
     await StorageAPI.incrementUsage(p.id);
     const prompts = await StorageAPI.getAllPrompts();
     dispatch({ type: 'SET_PROMPTS', payload: prompts });
@@ -457,7 +498,7 @@ export default function PromptCard({ prompt: p }) {
     const dupe = {
       ...p,
       id: crypto.randomUUID(),
-      title: p.title + ' (copy)',
+      title: p.title + ' ' + t('copyDuplicate', lang),
       isFavorite: false,
       usageCount: 0,
       lastUsedAt: null,
@@ -467,7 +508,7 @@ export default function PromptCard({ prompt: p }) {
     await StorageAPI.upsertPrompt(dupe);
     const prompts = await StorageAPI.getAllPrompts();
     dispatch({ type: 'SET_PROMPTS', payload: prompts });
-    dispatch({ type: 'SHOW_TOAST', payload: `"${dupe.title}" created` });
+    dispatch({ type: 'SHOW_TOAST', payload: t('promptCreated', lang) });
   }
 
   async function handleEditSave() {
@@ -475,6 +516,8 @@ export default function PromptCard({ prompt: p }) {
     dispatch({ type: 'SET_PROMPTS', payload: prompts });
     dispatch({ type: 'SHOW_TOAST', payload: t('promptUpdated', lang) });
     setFlipped(false);
+    setFlashSaved(true);
+    setTimeout(() => setFlashSaved(false), 700);
   }
 
   function handleDelete() {
@@ -484,21 +527,37 @@ export default function PromptCard({ prompt: p }) {
   const langBadge = lang === 'fr'
     ? (p.body_fr || promptItems.some(i => i.body_fr)
         ? <span className="pill lang-badge fr">FR</span>
-        : <span className="pill lang-missing">EN only</span>)
+        : <span className="pill lang-missing">{t('enOnly', lang)}</span>)
     : null;
 
   const attachCount = p.attachments?.length || 0;
   const isSingle = promptItems.length === 1;
 
   return (
-    <div className={`prompt-card-flip-wrapper${flipped ? ' flipped' : ''}`}>
+    <div className={`prompt-card-flip-wrapper${flipped ? ' flipped' : ''}${flashSaved ? ' card--flash-saved' : ''}`}>
       {/* Front face */}
-      <div className="prompt-card prompt-card-face prompt-card-front" onClick={() => setFlipped(true)}>
+      <div
+        className="prompt-card prompt-card-face prompt-card-front"
+        tabIndex={0}
+        onClick={() => setFlipped(true)}
+        onKeyDown={e => { if (e.key === 'Enter') setFlipped(true); }}
+      >
+        {/* Checkbox for bulk select */}
+        {onToggleSelect && (
+          <input
+            type="checkbox"
+            className={`card-checkbox${isSelected ? ' checked' : ''}`}
+            checked={!!isSelected}
+            onClick={e => e.stopPropagation()}
+            onChange={e => { e.stopPropagation(); onToggleSelect(p.id); }}
+            title="Select"
+          />
+        )}
         <div className="prompt-card-header">
           <div className="prompt-card-title">{p.title}</div>
           <button
             className={`prompt-card-fav${p.isFavorite ? ' active' : ''}`}
-            title={p.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            title={p.isFavorite ? t('removeFromFav', lang) : t('addToFav', lang)}
             onClick={e => { e.stopPropagation(); handleToggleFav(); }}
           >★</button>
         </div>
@@ -508,7 +567,7 @@ export default function PromptCard({ prompt: p }) {
           {promptItems.map((item, idx) => {
             const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;
             return (
-              <div key={item.id} className="prompt-item-row">
+              <div key={item.id} className={`prompt-item-row${idx % 2 === 1 ? ' even' : ''}`}>
                 <div className="prompt-item-content">
                   {!isSingle && <div className="prompt-item-label">{item.label || `#${idx + 1}`}</div>}
                   <div className="prompt-item-preview-wrap">
@@ -548,18 +607,21 @@ export default function PromptCard({ prompt: p }) {
 
         {p.usageCount > 0 && (
           <div className="usage-hint">
-            Used {p.usageCount}×{p.lastUsedAt ? ` · ${relTime(p.lastUsedAt)}` : ''}
+          Used {t('usedCount', lang, p.usageCount)}{p.lastUsedAt ? ` · ${relTime(p.lastUsedAt, lang)}` : ''}
           </div>
         )}
 
         <div className="prompt-card-actions">
-          <button className="card-action-btn" onClick={e => { e.stopPropagation(); handleDuplicate(); }} title="Duplicate">⧉</button>
+          <button className="card-action-btn" onClick={e => { e.stopPropagation(); handleDuplicate(); }} title={t('duplicateTitle', lang)}>⧉</button>
           <button className="card-action-btn del" onClick={e => { e.stopPropagation(); handleDelete(); }}>{t('del', lang)}</button>
         </div>
       </div>
 
       {flipped && (
-        <div className="prompt-card prompt-card-face prompt-card-back">
+        <div
+          className="prompt-card prompt-card-face prompt-card-back"
+          onKeyDown={e => { if (e.key === 'Escape') setFlipped(false); }}
+        >
           <CardEditBack
             prompt={p}
             catalog={catalog}
@@ -568,6 +630,15 @@ export default function PromptCard({ prompt: p }) {
             onCancel={() => setFlipped(false)}
           />
         </div>
+      )}
+
+      {substItem && (
+        <SubstituteModal
+          text={substItem.body}
+          lang={lang}
+          onCopy={text => doCopy(text, substItem.item)}
+          onClose={() => setSubstItem(null)}
+        />
       )}
     </div>
   );

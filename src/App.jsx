@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AppProvider, useApp } from './context/AppContext.jsx'
 import { useStorage } from './hooks/useStorage.js'
 import TopBar from './components/layout/TopBar.jsx'
@@ -8,6 +8,8 @@ import PromptModal from './components/editor/PromptModal.jsx'
 import ConfirmModal from './components/shared/ConfirmModal.jsx'
 import Toast from './components/shared/Toast.jsx'
 import HelpModal from './components/layout/HelpModal.jsx'
+import { StorageAPI } from './lib/storage.js'
+import { decodeShareUrl } from './lib/share.js'
 import './styles/variables.css'
 import './styles/base.css'
 import './styles/layout.css'
@@ -22,8 +24,36 @@ import './styles/help.css'
 
 function AppInner() {
   useStorage()
-  const { state } = useApp()
+  const { state, dispatch } = useApp()
   const [helpOpen, setHelpOpen] = useState(false)
+  const [zoom, setZoom] = useState(() => {
+    const saved = parseFloat(localStorage.getItem('pm-zoom'));
+    return (saved && saved >= 0.5 && saved <= 2) ? saved : 1;
+  })
+
+  const STEP = 0.1
+  function zoomIn()    { setZoom(z => { const v = Math.min(2, Math.round((z + STEP) * 10) / 10); localStorage.setItem('pm-zoom', v); return v; }) }
+  function zoomOut()   { setZoom(z => { const v = Math.max(0.5, Math.round((z - STEP) * 10) / 10); localStorage.setItem('pm-zoom', v); return v; }) }
+  function zoomReset() { setZoom(1); localStorage.setItem('pm-zoom', 1); }
+
+  // Handle share URL on mount
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash.startsWith('#share=')) return;
+    const encoded = hash.slice(7);
+    decodeShareUrl(encoded).then(async data => {
+      if (!data) return;
+      try {
+        const result = await StorageAPI.importAll(data, 'merge');
+        const prompts = await StorageAPI.getAllPrompts();
+        const catalog = await StorageAPI.getCatalog();
+        dispatch({ type: 'SET_PROMPTS', payload: prompts });
+        dispatch({ type: 'SET_CATALOG', payload: catalog });
+        dispatch({ type: 'SHOW_TOAST', payload: `✓ Imported ${result.imported} prompts from shared URL` });
+      } catch { /* silent */ }
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!state.initialized) {
     return (
@@ -34,10 +64,14 @@ function AppInner() {
   }
   return (
     <>
-      <TopBar onHelp={() => setHelpOpen(true)} />
+      <TopBar onHelp={() => setHelpOpen(true)} zoom={zoom} onZoomIn={zoomIn} onZoomOut={zoomOut} onZoomReset={zoomReset} />
       <div id="main-layout">
         <Sidebar />
-        <MainContent />
+        <main id="content">
+          <div id="content-scaler" style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', width: `${100 / zoom}%` }}>
+            <MainContent />
+          </div>
+        </main>
       </div>
       {state.isModalOpen && <PromptModal />}
       {state.isConfirmOpen && <ConfirmModal />}

@@ -184,9 +184,9 @@ export default function PromptModal() {
   }
 
   async function handleSave() {
-    if (!title.trim()) { setErrors({ title: 'Title is required' }); return; }
+    if (!title.trim()) { setErrors({ title: t('titleRequired', lang) }); return; }
     const validItems = promptItems.filter(item => item.body.trim());
-    if (validItems.length === 0) { setErrors({ body: 'At least one prompt body is required' }); return; }
+    if (validItems.length === 0) { setErrors({ body: t('bodyRequired', lang) }); return; }
     setSaving(true);
 
     const promptId = existing?.id || crypto.randomUUID();
@@ -249,13 +249,13 @@ export default function PromptModal() {
           {/* Title */}
           <div className="field-row">
             <label>Title <span className="req">*</span></label>
-            <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Short display name…" maxLength={120} className={errors.title ? 'input-error' : ''} />
+            <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('titlePlaceholder', lang)} maxLength={120} className={errors.title ? 'input-error' : ''} />
             {errors.title && <span className="field-error">{errors.title}</span>}
           </div>
 
           {/* Prompt Items */}
           <div className="field-row">
-            <label>Prompt Bodies <span className="req">*</span> <span className="hint">(one Copy button per prompt)</span></label>
+            <label>{t('promptBodiesLabel', lang)} <span className="req">*</span> <span className="hint">({t('promptBodiesCopyHint', lang)})</span></label>
             {errors.body && <span className="field-error">{errors.body}</span>}
             <div className="prompt-items-editor">
               {promptItems.map((item, idx) => {
@@ -270,33 +270,33 @@ export default function PromptModal() {
                         className="prompt-item-label-input"
                         value={item.label}
                         onChange={e => updateItem(item.id, 'label', e.target.value)}
-                        placeholder="Label (optional, e.g. 'Step 1')…"
+                        placeholder={t('labelOptionalPlaceholder', lang)}
                       />
                       {promptItems.length > 1 && (
-                        <button className="prompt-item-delete-btn" title="Remove this prompt" onClick={() => removeItem(item.id)}>✕</button>
+                        <button className="prompt-item-delete-btn" title={t('removePrompt', lang)} onClick={() => removeItem(item.id)}>✕</button>
                       )}
                     </div>
                     <div className="body-tabs">
                       <button className={`body-tab${tab === 'en' ? ' active-tab' : ''}`} onClick={() => setItemTab(item.id, 'en')}>EN</button>
                       <button className={`body-tab${tab === 'fr' ? ' active-tab' : ''}`} onClick={() => setItemTab(item.id, 'fr')}>FR</button>
-                      <span className="body-tab-hint">EN is required · FR is optional</span>
+                      <span className="body-tab-hint">{t('enRequired', lang)}</span>
                     </div>
                     {tab === 'en' ? (
                       <textarea
                         value={item.body}
                         onChange={e => updateItem(item.id, 'body', e.target.value)}
-                        placeholder="The full prompt text that will be copied to clipboard…"
+                        placeholder={t('bodyEnPlaceholder', lang)}
                         rows={5}
                       />
                     ) : (
                       <textarea
                         value={item.body_fr || ''}
                         onChange={e => updateItem(item.id, 'body_fr', e.target.value)}
-                        placeholder="Le texte complet du prompt qui sera copié dans le presse-papier…"
+                        placeholder={t('bodyFrPlaceholder', lang)}
                         rows={5}
                       />
                     )}
-                    <span className="char-count">{activeBody.length} chars</span>
+                    <span className="char-count">{t('charCount', lang, activeBody.length)}</span>
                   </div>
                 );
               })}
@@ -318,24 +318,24 @@ export default function PromptModal() {
           {/* Story Flow + Favorite */}
           <div className="field-row-2col">
             <div className="field-col">
-              <label>Story Flow</label>
+              <label>{t('storyFlow', lang)}</label>
               <select value={storyFlow} onChange={e => setStoryFlow(e.target.value)}>
-                <option value="">— Select —</option>
+                <option value="">{t('selectFlowNone', lang)}</option>
                 {catalog.storyFlows.map(f => <option key={f} value={f}>{f}</option>)}
               </select>
             </div>
             <div className="field-col">
-              <label>Favorite</label>
+              <label>{t('favLabel', lang)}</label>
               <label className="toggle-label">
                 <input type="checkbox" checked={isFavorite} onChange={e => setIsFavorite(e.target.checked)} />
-                <span> Mark as Favorite ★</span>
+                <span> {t('markFav', lang)}</span>
               </label>
             </div>
           </div>
 
           {/* Solutions */}
           <div className="field-row">
-            <label>Solutions</label>
+            <label>{t('solutionsLabel', lang)}</label>
             <div className="checkbox-group">
               {catalog.solutions.map(sol => (
                 <label key={sol} className="checkbox-label">
@@ -348,7 +348,7 @@ export default function PromptModal() {
 
           {/* Tags */}
           <div className="field-row">
-            <label>Tags <span className="hint">(press Enter to add)</span></label>
+            <label>{t('tagsLabel', lang)} <span className="hint">({t('tagHint', lang)})</span></label>
             <div className="tag-input-wrap">
               {tags.map(tag => (
                 <span key={tag} className="tag-chip">
@@ -361,14 +361,14 @@ export default function PromptModal() {
                 value={tagInput}
                 onChange={e => setTagInput(e.target.value)}
                 onKeyDown={handleTagKey}
-                placeholder={tags.length === 0 ? 'Add a tag…' : ''}
+                placeholder={tags.length === 0 ? t('tagPlaceholder', lang) : ''}
               />
             </div>
           </div>
 
           {/* Systems */}
           <div className="field-row">
-            <label>{t('systems', lang)} <span className="hint">(landscapes + MCP endpoints)</span></label>
+            <label>{t('systems', lang)} <span className="hint">({t('systemsHint', lang)})</span></label>
             {(catalog.systems || []).length > 0 ? (
               <div className="catalog-picker">
                 {catalog.systems.map(sys => {
@@ -393,19 +393,19 @@ export default function PromptModal() {
                 })}
               </div>
             ) : (
-              <p className="field-hint-text">No systems in catalog yet — add them in ⚙ Settings.</p>
+              <p className="field-hint-text">{t('noSystemsYet', lang)}</p>
             )}
           </div>
 
           {/* Notes */}
           <div className="field-row">
-            <label>Notes <span className="hint">(internal, not copied)</span></label>
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Demo tips, context notes…" rows={3} />
+            <label>{t('notes', lang)} <span className="hint">({t('notesHintModal', lang)})</span></label>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={t('notesPlaceholder', lang)} rows={3} />
           </div>
 
           {/* Attachments */}
           <div className="field-row">
-            <label>Attachments <span className="hint">(files / ZIP — stored locally)</span></label>
+            <label>{t('attachments', lang)} <span className="hint">({t('attHint', lang)})</span></label>
             <div
               ref={dropRef}
               className="attach-drop-zone"
@@ -414,8 +414,8 @@ export default function PromptModal() {
               onDrop={handleDrop}
             >
               <span className="attach-drop-hint">
-                Drop files here or{' '}
-                <button type="button" className="attach-browse-link" onClick={() => fileInputRef.current?.click()}>browse</button>
+                {t('dropHere', lang)}{' '}
+                <button type="button" className="attach-browse-link" onClick={() => fileInputRef.current?.click()}>{t('browse', lang)}</button>
               </span>
               <input type="file" ref={fileInputRef} multiple style={{ display:'none' }} onChange={e => addFiles(e.target.files)} />
             </div>
@@ -442,7 +442,7 @@ export default function PromptModal() {
 
         <div id="modal-footer">
           <button className="action-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>{t('cancel', lang)}</button>
-          <button className="action-btn primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : t('save', lang)}</button>
+          <button className="action-btn primary" onClick={handleSave} disabled={saving}>{saving ? t('savingLabel', lang) : t('save', lang)}</button>
         </div>
       </div>
     </div>

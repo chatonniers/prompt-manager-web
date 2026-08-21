@@ -4,6 +4,7 @@ import { t } from '../../lib/i18n.js';
 import { getFlowColor } from '../../lib/flowColors.js';
 import PromptCard from './PromptCard.jsx';
 import EmptyState from './EmptyState.jsx';
+import BulkActionBar from './BulkActionBar.jsx';
 
 function applyViewFilter(prompts, view, filter) {
   if (view === 'favorites') return prompts.filter(p => p.isFavorite);
@@ -24,7 +25,7 @@ function applySortOrder(prompts, order) {
 }
 
 // Render a category block: full-width label + flow columns below
-function CategoryBlock({ label, prompts, storyFlows, lang }) {
+function CategoryBlock({ label, prompts, storyFlows, lang, selectedIds, onToggleSelect }) {
   // Collect flows that actually have prompts, preserving catalog order
   const usedFlows = storyFlows.filter(f => prompts.some(p => p.storyFlow === f));
   const noFlow = prompts.filter(p => !p.storyFlow);
@@ -37,7 +38,7 @@ function CategoryBlock({ label, prompts, storyFlows, lang }) {
       <div className="category-block">
         <div className="grid-section-label">{label}</div>
         <div className="category-flat-grid">
-          {prompts.map(p => <PromptCard key={p.id} prompt={p} />)}
+          {prompts.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
         </div>
       </div>
     );
@@ -62,7 +63,7 @@ function CategoryBlock({ label, prompts, storyFlows, lang }) {
               >
                 {col.label}
               </div>
-              {col.prompts.map(p => <PromptCard key={p.id} prompt={p} />)}
+              {col.prompts.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
             </div>
           );
         })}
@@ -72,8 +73,8 @@ function CategoryBlock({ label, prompts, storyFlows, lang }) {
 }
 
 export default function PromptGrid() {
-  const { state } = useApp();
-  const { prompts, currentView, currentFilter, searchQuery, sortOrder, sapContext, settings, catalog } = state;
+  const { state, dispatch } = useApp();
+  const { prompts, currentView, currentFilter, searchQuery, sortOrder, sapContext, settings, catalog, selectedIds } = state;
   const lang = settings?.lang || 'en';
   const categories = catalog.categories || [];
   const storyFlows = catalog.storyFlows || [];
@@ -89,6 +90,12 @@ export default function PromptGrid() {
     if (currentView !== 'most-used') {
       ranked = applySortOrder(ranked, sortOrder);
     }
+  }
+
+  const visibleIds = ranked.map(p => p.id);
+
+  function onToggleSelect(id) {
+    dispatch({ type: 'TOGGLE_SELECT', payload: id });
   }
 
   if (ranked.length === 0) return <EmptyState />;
@@ -107,40 +114,50 @@ export default function PromptGrid() {
     const uncategorized = ranked.filter(p => !p.isFavorite && !p.category);
 
     return (
-      <div id="prompt-grid-outer">
-        {favs.length > 0 && (
-          <div className="category-block">
-            <div className="grid-section-label">★ {t('favorites', lang)}</div>
-            <div className="category-flat-grid">
-              {favs.map(p => <PromptCard key={p.id} prompt={p} />)}
+      <>
+        <BulkActionBar visibleIds={visibleIds} />
+        <div id="prompt-grid-outer">
+          {favs.length > 0 && (
+            <div className="category-block">
+              <div className="grid-section-label">★ {t('favorites', lang)}</div>
+              <div className="category-flat-grid">
+                {favs.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
+              </div>
             </div>
-          </div>
-        )}
-        {categoryBlocks.map(block => (
-          <CategoryBlock
-            key={block.key}
-            label={block.label}
-            prompts={block.prompts}
-            storyFlows={storyFlows}
-            lang={lang}
-          />
-        ))}
-        {uncategorized.length > 0 && (
-          <CategoryBlock
-            key="__uncategorized__"
-            label={t('noCategory', lang)}
-            prompts={uncategorized}
-            storyFlows={storyFlows}
-            lang={lang}
-          />
-        )}
-      </div>
+          )}
+          {categoryBlocks.map(block => (
+            <CategoryBlock
+              key={block.key}
+              label={block.label}
+              prompts={block.prompts}
+              storyFlows={storyFlows}
+              lang={lang}
+              selectedIds={selectedIds}
+              onToggleSelect={onToggleSelect}
+            />
+          ))}
+          {uncategorized.length > 0 && (
+            <CategoryBlock
+              key="__uncategorized__"
+              label={t('noCategory', lang)}
+              prompts={uncategorized}
+              storyFlows={storyFlows}
+              lang={lang}
+              selectedIds={selectedIds}
+              onToggleSelect={onToggleSelect}
+            />
+          )}
+        </div>
+      </>
     );
   }
 
   return (
-    <div id="prompt-grid">
-      {ranked.map(p => <PromptCard key={p.id} prompt={p} />)}
-    </div>
+    <>
+      <BulkActionBar visibleIds={visibleIds} />
+      <div id="prompt-grid">
+        {ranked.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
+      </div>
+    </>
   );
 }

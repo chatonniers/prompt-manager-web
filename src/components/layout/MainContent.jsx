@@ -7,7 +7,7 @@ export default function MainContent() {
   const { state } = useApp();
   const { currentView } = state;
 
-  if (currentView === 'import-export') return <main id="content"><ImportExportView /></main>;
-  if (currentView === 'settings') return <main id="content"><SettingsView /></main>;
-  return <main id="content"><PromptListView /></main>;
+  if (currentView === 'import-export') return <ImportExportView />;
+  if (currentView === 'settings') return <SettingsView />;
+  return <PromptListView />;
 }

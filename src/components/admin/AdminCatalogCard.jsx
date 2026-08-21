@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { t } from '../../lib/i18n.js';
@@ -13,6 +13,9 @@ export default function AdminCatalogCard({ titleKey, descKey, addKey, items, pro
   const [editingIdx, setEditingIdx] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [editLandscape, setEditLandscape] = useState({ name: '', url: '' });
+  const [dragOverIdx, setDragOverIdx] = useState(null);
+  const [confirmIdx, setConfirmIdx] = useState(null);
+  const dragSrcIdx = useRef(null);
 
   function getItemLabel(item) {
     if (isLandscape && typeof item === 'object') return item.name || item.url || '(unnamed)';
@@ -44,6 +47,17 @@ export default function AdminCatalogCard({ titleKey, descKey, addKey, items, pro
     await StorageAPI.saveCatalog(catalog);
     dispatch({ type: 'SET_CATALOG', payload: catalog });
     return catalog;
+  }
+
+  async function handleDrop(toIdx) {
+    const fromIdx = dragSrcIdx.current;
+    if (fromIdx == null || fromIdx === toIdx) { setDragOverIdx(null); return; }
+    const reordered = [...items];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    await saveNewCatalog(reordered);
+    dragSrcIdx.current = null;
+    setDragOverIdx(null);
   }
 
   async function handleAdd() {
@@ -109,8 +123,8 @@ export default function AdminCatalogCard({ titleKey, descKey, addKey, items, pro
     const item = items[idx];
     const label = getItemLabel(item);
     const cnt = getUsageCount(item);
+    setConfirmIdx(null);
     if (cnt > 0) {
-      if (!window.confirm(t('deleteConfirm', lang, label, cnt))) return;
       const updated = state.prompts.map(p => {
         if (isArray && Array.isArray(p[promptField])) {
           const filtered = p[promptField].filter(v => {
@@ -143,8 +157,13 @@ export default function AdminCatalogCard({ titleKey, descKey, addKey, items, pro
         {items.map((item, idx) => {
           const cnt = getUsageCount(item);
           return (
-            <div key={idx} className="admin-row" draggable="true">
-              <span className="admin-drag-handle" title="Drag to reorder">⠿</span>
+            <div key={idx} className={`admin-row${dragOverIdx === idx ? ' drag-over' : ''}`} draggable="true"
+              onDragStart={() => { dragSrcIdx.current = idx; }}
+              onDragOver={e => { e.preventDefault(); setDragOverIdx(idx); }}
+              onDragLeave={() => setDragOverIdx(null)}
+              onDrop={() => handleDrop(idx)}
+            >
+              <span className="admin-drag-handle" title={t('dragToReorder', lang)}>⠿</span>
               {editingIdx === idx ? (
                 isLandscape ? (
                   <>
@@ -180,6 +199,14 @@ export default function AdminCatalogCard({ titleKey, descKey, addKey, items, pro
                     <button className="admin-del-btn" onClick={() => setEditingIdx(null)}>✕</button>
                   </>
                 )
+              ) : confirmIdx === idx ? (
+                <>
+                  <span className="admin-item-input" style={{ flex: 1, padding: '5px 8px', color: 'var(--pm-danger)', fontWeight: 600 }}>
+                    {t('deleteConfirmInline', lang, getItemLabel(item))}
+                  </span>
+                  <button className="admin-save-btn" style={{ background: 'var(--pm-danger)' }} onClick={() => handleDelete(idx)}>{t('del', lang)}</button>
+                  <button className="admin-del-btn" onClick={() => setConfirmIdx(null)}>{t('cancel', lang)}</button>
+                </>
               ) : (
                 <>
                   {isLandscape ? (
@@ -196,8 +223,7 @@ export default function AdminCatalogCard({ titleKey, descKey, addKey, items, pro
                     <span className="admin-item-input" style={{ flex: 1, padding: '5px 8px', cursor: 'pointer' }} onClick={() => { setEditingIdx(idx); setEditValue(item); }}>{item}</span>
                   )}
                   <span className={`admin-in-use${cnt > 0 ? ' has-uses' : ''}`}>{cnt > 0 ? t('promptsCount', lang, cnt) : t('unused', lang)}</span>
-                  <button className="admin-save-btn" style={{ visibility: 'hidden', display: 'none' }}>✓</button>
-                  <button className={`admin-del-btn${cnt > 0 ? ' has-uses' : ''}`} title={cnt > 0 ? t('usedBy', lang, cnt) : t('del', lang)} onClick={() => handleDelete(idx)}>✕</button>
+                  <button className={`admin-del-btn${cnt > 0 ? ' has-uses' : ''}`} title={cnt > 0 ? t('usedBy', lang, cnt) : t('del', lang)} onClick={() => setConfirmIdx(idx)}>✕</button>
                 </>
               )}
             </div>

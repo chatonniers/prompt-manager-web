@@ -28,13 +28,15 @@ export default function SettingsView() {
       dispatch({ type: 'SHOW_TOAST', payload: t('detectedContext', lang, ctx.solution) });
       dispatch({ type: 'SET_VIEW', payload: { view: 'all', filter: { storyFlow: null, solution: null } } });
     } else {
-      dispatch({ type: 'SHOW_TOAST', payload: 'No SAP solution detected for that URL.' });
+      dispatch({ type: 'SHOW_TOAST', payload: t('noSapDetected', lang) });
     }
   }
 
   return (
     <div id="view-settings">
       <div className="settings-grid">
+
+        {/* Col 1: Extension settings + Categories */}
         <div className="settings-col">
           <div className="view-card">
             <h2>{t('settingsTitle', lang)}</h2>
@@ -62,12 +64,16 @@ export default function SettingsView() {
             </div>
             <button className="action-btn primary" style={{ marginTop: 16 }} onClick={handleSave}>{t('saveSettings', lang)}</button>
           </div>
-
           <AdminCategoriesCard />
         </div>
 
+        {/* Col 2: Systems */}
         <div className="settings-col">
           <AdminSystemsCard />
+        </div>
+
+        {/* Col 3: Solutions + Story Flows */}
+        <div className="settings-col">
           <AdminCatalogCard
             titleKey="solutionsAdmin"
             descKey="solutionsDesc"
@@ -85,6 +91,7 @@ export default function SettingsView() {
             isArray={false}
           />
         </div>
+
       </div>
     </div>
   );

@@ -18,7 +18,6 @@ export default function Sidebar({ collapsed }) {
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
   }
 
-  const favCount = prompts.filter(p => p.isFavorite).length;
   const mostUsedCount = prompts.filter(p => (p.usageCount || 0) > 0).length;
 
   function setView(view, filter) {
@@ -40,18 +39,12 @@ export default function Sidebar({ collapsed }) {
   return (
     <>
       <nav id="sidebar" ref={sidebarRef}>
-        <div className="nav-section-label">LIBRARY</div>
+        <div className="nav-section-label">{t('libraryLabel', lang)}</div>
 
         <button className={`nav-item${isActive('all') ? ' active' : ''}`} onClick={() => setView('all')}>
           <span className="nav-icon">≡</span>
           <span style={{ flex: 1 }}>{t('allPrompts', lang)}</span>
           <span className="nav-badge">{prompts.length}</span>
-        </button>
-
-        <button className={`nav-item${isActive('favorites') ? ' active' : ''}`} onClick={() => setView('favorites')}>
-          <span className="nav-icon">★</span>
-          <span style={{ flex: 1 }}>{t('favorites', lang)}</span>
-          <span className="nav-badge">{favCount}</span>
         </button>
 
         <button className={`nav-item${isActive('most-used') ? ' active' : ''}`} onClick={() => setView('most-used')}>

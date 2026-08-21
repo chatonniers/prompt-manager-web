@@ -113,10 +113,10 @@
   flex-shrink: 0;
 }
 
-/* ── Settings two-column layout ───────────────────────────────────────── */
+/* ── Settings three-column layout ─────────────────────────────────────── */
 .settings-grid {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
   gap: 16px;
   align-items: start;
 }
