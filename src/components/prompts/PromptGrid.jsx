@@ -22,19 +22,45 @@ function applySortOrder(prompts, order) {
   return copy;
 }
 
-const CAT_ICONS = {
-  'Autonomous Finance':       '💰',
-  'Autonomous Supply Chain':  '🔗',
-  'Autonomous Spend':         '🛒',
-  'Autonomous HCM':           '👥',
-  'Autonomous CX':            '💬',
-};
+// Render a category block: full-width label + flow columns below
+function CategoryBlock({ label, prompts, storyFlows, lang }) {
+  // Collect flows that actually have prompts, preserving catalog order
+  const usedFlows = storyFlows.filter(f => prompts.some(p => p.storyFlow === f));
+  const noFlow = prompts.filter(p => !p.storyFlow);
+
+  // Only one flow (or none) — just render a flat grid, no columns
+  const columns = [
+    ...usedFlows.map(f => ({ key: f, label: f, prompts: prompts.filter(p => p.storyFlow === f) })),
+    ...(noFlow.length > 0 ? [{ key: '__none__', label: null, prompts: noFlow }] : []),
+  ];
+
+  return (
+    <div className="category-block">
+      <div className="grid-section-label">{label}</div>
+      {columns.length <= 1 ? (
+        <div className="category-flat-grid">
+          {prompts.map(p => <PromptCard key={p.id} prompt={p} />)}
+        </div>
+      ) : (
+        <div className="category-flow-columns">
+          {columns.map(col => (
+            <div key={col.key} className="flow-column">
+              {col.label && <div className="flow-column-label">{col.label}</div>}
+              {col.prompts.map(p => <PromptCard key={p.id} prompt={p} />)}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function PromptGrid() {
   const { state } = useApp();
   const { prompts, currentView, currentFilter, searchQuery, sortOrder, sapContext, settings, catalog } = state;
   const lang = settings?.lang || 'en';
   const categories = catalog.categories || [];
+  const storyFlows = catalog.storyFlows || [];
 
   let pool = applyViewFilter(prompts, currentView, currentFilter);
 
@@ -51,46 +77,47 @@ export default function PromptGrid() {
 
   if (ranked.length === 0) return <EmptyState />;
 
-  // "All Prompts" view without search: group by category then favorites
+  // "All Prompts" view without search: category blocks with flow columns
   if (currentView === 'all' && !searchQuery.trim()) {
-    const groups = [];
-
-    // Favorites first
     const favs = ranked.filter(p => p.isFavorite);
-    if (favs.length > 0) {
-      groups.push({ label: `★ ${t('favorites', lang)}`, prompts: favs });
-    }
+    const categoryBlocks = [];
 
-    // Then group by category
     for (const cat of categories) {
       const catPrompts = ranked.filter(p => !p.isFavorite && p.category === cat);
       if (catPrompts.length > 0) {
-        groups.push({ label: cat, prompts: catPrompts });
+        categoryBlocks.push({ key: cat, label: cat, prompts: catPrompts });
       }
     }
-
-    // Uncategorized last
     const uncategorized = ranked.filter(p => !p.isFavorite && !p.category);
-    if (uncategorized.length > 0) {
-      groups.push({ label: t('noCategory', lang), prompts: uncategorized });
-    }
-
-    if (groups.length <= 1) {
-      return (
-        <div id="prompt-grid">
-          {ranked.map(p => <PromptCard key={p.id} prompt={p} />)}
-        </div>
-      );
-    }
 
     return (
-      <div id="prompt-grid">
-        {groups.map(group => (
-          <>
-            <div key={group.label} className="grid-section-label">{group.label}</div>
-            {group.prompts.map(p => <PromptCard key={p.id} prompt={p} />)}
-          </>
+      <div id="prompt-grid-outer">
+        {favs.length > 0 && (
+          <div className="category-block">
+            <div className="grid-section-label">★ {t('favorites', lang)}</div>
+            <div className="category-flat-grid">
+              {favs.map(p => <PromptCard key={p.id} prompt={p} />)}
+            </div>
+          </div>
+        )}
+        {categoryBlocks.map(block => (
+          <CategoryBlock
+            key={block.key}
+            label={block.label}
+            prompts={block.prompts}
+            storyFlows={storyFlows}
+            lang={lang}
+          />
         ))}
+        {uncategorized.length > 0 && (
+          <CategoryBlock
+            key="__uncategorized__"
+            label={t('noCategory', lang)}
+            prompts={uncategorized}
+            storyFlows={storyFlows}
+            lang={lang}
+          />
+        )}
       </div>
     );
   }

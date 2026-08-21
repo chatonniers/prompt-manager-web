@@ -5,6 +5,56 @@
   gap: 10px;
 }
 
+/* Category + flow-column layout */
+#prompt-grid-outer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.category-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.category-flat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px;
+}
+
+.category-flow-columns {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.flow-column {
+  flex: 1;
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.flow-column-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--pm-text3);
+  padding: 4px 8px;
+  background: var(--pm-bg);
+  border-radius: 6px;
+  border-left: 3px solid var(--pm-accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .prompt-card {
   background: var(--pm-surface);
   border: 1.5px solid var(--pm-border);
