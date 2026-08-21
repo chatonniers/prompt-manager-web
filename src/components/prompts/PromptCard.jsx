@@ -276,6 +276,24 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
       </div>
 
       <div className="card-edit-field">
+        <label className="card-edit-label">{t('personasLabel', lang)}</label>
+        {(catalog.personas || []).length > 0 ? (
+          <div className="card-edit-systems">
+            {catalog.personas.map(persona => {
+              const selected = personas.includes(persona);
+              return (
+                <button key={persona} type="button" className={`card-edit-sys-chip${selected ? ' selected' : ''}`} onClick={() => setPersonas(prev => selected ? prev.filter(x => x !== persona) : [...prev, persona])}>
+                  {selected ? '· ' : ''}{persona}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="card-edit-hint">{t('noPersonasYet', lang)}</p>
+        )}
+      </div>
+
+      <div className="card-edit-field">
         <label className="card-edit-label">{t('notesLabel', lang)}</label>
         <textarea className="card-edit-textarea" value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder={t('notesPlaceholderCard', lang)} />
       </div>
@@ -341,24 +359,6 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
             </button>
           ))}
         </div>
-      </div>
-
-      <div className="card-edit-field">
-        <label className="card-edit-label">{t('personasLabel', lang)}</label>
-        {(catalog.personas || []).length > 0 ? (
-          <div className="card-edit-systems">
-            {catalog.personas.map(persona => {
-              const selected = personas.includes(persona);
-              return (
-                <button key={persona} type="button" className={`card-edit-sys-chip${selected ? ' selected' : ''}`} onClick={() => setPersonas(prev => selected ? prev.filter(x => x !== persona) : [...prev, persona])}>
-                  {selected ? '· ' : ''}{persona}
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="card-edit-hint">{t('noPersonasYet', lang)}</p>
-        )}
       </div>
 
       <div className="card-edit-field">
