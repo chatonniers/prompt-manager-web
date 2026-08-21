@@ -69,16 +69,14 @@ export default function AdminCategoriesCard() {
 
   async function handleDelete(idx) {
     const cat = categories[idx];
-    const cnt = usageCount(cat);
     setConfirmIdx(null);
-    if (cnt > 0) {
-      const updatedPrompts = state.prompts.map(p =>
-        p.category === cat ? { ...p, category: null } : p
-      );
-      const changed = updatedPrompts.filter((p, i) => p !== state.prompts[i]);
+    const updatedPrompts = state.prompts.map(p =>
+      p.category === cat ? { ...p, category: null } : p
+    );
+    const changed = updatedPrompts.filter((p, i) => p !== state.prompts[i]);
+    if (changed.length > 0) {
       await Promise.all(changed.map(p => StorageAPI.upsertPrompt(p)));
-      const allPrompts = await StorageAPI.getAllPrompts();
-      dispatch({ type: 'SET_PROMPTS', payload: allPrompts });
+      dispatch({ type: 'SET_PROMPTS', payload: await StorageAPI.getAllPrompts() });
     }
     await saveCatalog(categories.filter((_, i) => i !== idx));
     dispatch({ type: 'SHOW_TOAST', payload: t('deleted', lang, cat) });

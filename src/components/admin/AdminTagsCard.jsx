@@ -59,12 +59,12 @@ export default function AdminTagsCard() {
 
   async function handleDelete(tag) {
     setConfirmTag(null);
-    // Remove from catalog
     await saveCatalogTags(catalogTags.filter(t => t !== tag));
-    // Remove from all prompts
     const toUpdate = state.prompts.filter(p => (p.tags || []).includes(tag));
-    await Promise.all(toUpdate.map(p => StorageAPI.upsertPrompt({ ...p, tags: p.tags.filter(t => t !== tag) })));
-    if (toUpdate.length > 0) dispatch({ type: 'SET_PROMPTS', payload: await StorageAPI.getAllPrompts() });
+    if (toUpdate.length > 0) {
+      await Promise.all(toUpdate.map(p => StorageAPI.upsertPrompt({ ...p, tags: p.tags.filter(t => t !== tag) })));
+      dispatch({ type: 'SET_PROMPTS', payload: await StorageAPI.getAllPrompts() });
+    }
     dispatch({ type: 'SHOW_TOAST', payload: t('deleted', lang, tag) });
   }
 

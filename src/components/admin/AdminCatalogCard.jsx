@@ -123,23 +123,22 @@ export default function AdminCatalogCard({ titleKey, descKey, addKey, items, pro
   async function handleDelete(idx) {
     const item = items[idx];
     const label = getItemLabel(item);
-    const cnt = getUsageCount(item);
     setConfirmIdx(null);
-    if (cnt > 0) {
-      const updated = state.prompts.map(p => {
-        if (isArray && Array.isArray(p[promptField])) {
-          const filtered = p[promptField].filter(v => {
-            if (isLandscape && typeof v === 'object') return !(v.name === item.name && v.url === item.url);
-            return v !== item;
-          });
-          if (filtered.length !== p[promptField].length) return { ...p, [promptField]: filtered };
-        }
-        if (!isArray && p[promptField] === item) return { ...p, [promptField]: '' };
-        return p;
-      });
-      await Promise.all(updated.filter((p, i) => p !== state.prompts[i]).map(p => StorageAPI.upsertPrompt(p)));
-      const allPrompts = await StorageAPI.getAllPrompts();
-      dispatch({ type: 'SET_PROMPTS', payload: allPrompts });
+    const updated = state.prompts.map(p => {
+      if (isArray && Array.isArray(p[promptField])) {
+        const filtered = p[promptField].filter(v => {
+          if (isLandscape && typeof v === 'object') return !(v.name === item.name && v.url === item.url);
+          return v !== item;
+        });
+        if (filtered.length !== p[promptField].length) return { ...p, [promptField]: filtered };
+      }
+      if (!isArray && p[promptField] === item) return { ...p, [promptField]: '' };
+      return p;
+    });
+    const changed = updated.filter((p, i) => p !== state.prompts[i]);
+    if (changed.length > 0) {
+      await Promise.all(changed.map(p => StorageAPI.upsertPrompt(p)));
+      dispatch({ type: 'SET_PROMPTS', payload: await StorageAPI.getAllPrompts() });
     }
     await saveNewCatalog(items.filter((_, i) => i !== idx));
     dispatch({ type: 'SHOW_TOAST', payload: t('deleted', lang, label) });
