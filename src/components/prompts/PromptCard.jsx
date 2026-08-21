@@ -493,8 +493,9 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
   }
 
   async function handleEditSave() {
-    const prompts = await StorageAPI.getAllPrompts();
+    const [prompts, catalog] = await Promise.all([StorageAPI.getAllPrompts(), StorageAPI.getCatalog()]);
     dispatch({ type: 'SET_PROMPTS', payload: prompts });
+    dispatch({ type: 'SET_CATALOG', payload: catalog });
     dispatch({ type: 'SHOW_TOAST', payload: t('promptUpdated', lang) });
     setFlipped(false);
     setFlashSaved(true);
