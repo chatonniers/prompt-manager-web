@@ -17,7 +17,7 @@ export default function Sidebar({ collapsed, onToggle }) {
   const sidebarRef = useRef(null);
   const resizerRef = useSidebarResize(sidebarRef, collapsed);
 
-  const [openSections, setOpenSections] = useState({ categories: true, flows: true, solutions: true });
+  const [openSections, setOpenSections] = useState({ categories: true, flows: true, solutions: false });
 
   function toggleSection(key) {
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
