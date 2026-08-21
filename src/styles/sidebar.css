@@ -4,9 +4,9 @@
   min-width: 160px;
   max-width: 400px;
   flex-shrink: 0;
-  background: #0F1629;
-  border-right: none;
-  padding: 12px 0 16px;
+  background: linear-gradient(180deg, #0D1225 0%, #0A0F1E 100%);
+  border-right: 1px solid rgba(255,255,255,0.04);
+  padding: 16px 0 16px;
   overflow-y: auto;
   overflow-x: hidden;
   transition: width 0.2s ease;
@@ -14,7 +14,6 @@
   flex-direction: column;
   scrollbar-width: none;
 }
-
 #sidebar::-webkit-scrollbar { display: none; }
 
 #sidebar.sidebar-collapsed {
@@ -25,7 +24,6 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  background: #0F1629;
 }
 
 /* ── Nav item base ────────────────────────────────────────────────────── */
@@ -41,38 +39,31 @@
   font-size: 13px;
   font-weight: 500;
   font-family: inherit;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255,255,255,0.45);
   cursor: pointer;
   text-align: left;
   transition: background 0.12s, color 0.12s;
   width: calc(100% - 16px);
   line-height: 1.3;
 }
-
-.nav-item:hover {
-  background: rgba(255,255,255,0.07);
-  color: rgba(255,255,255,0.9);
-}
-
+.nav-item:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.85); }
 .nav-item.active {
-  background: rgba(99,102,241,0.2);
+  background: rgba(79,70,229,0.22);
   color: #fff;
   font-weight: 600;
+  border-left: 2px solid var(--pm-accent3);
+  padding-left: 10px;
 }
+.nav-item.active .nav-badge { background: var(--pm-accent); color: #fff; }
 
-.nav-item.active .nav-badge {
-  background: var(--pm-accent);
-  color: #fff;
-}
-
-/* ── Section header ───────────────────────────────────────────────────── */
+/* ── Section header ──────────────────────────────────────────────────── */
 .nav-section-label {
   font-size: 9px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 1.6px;
-  color: rgba(255,255,255,0.25);
-  padding: 16px 20px 5px;
+  letter-spacing: 1.8px;
+  color: rgba(255,255,255,0.2);
+  padding: 18px 20px 5px;
 }
 
 .nav-section-toggle {
@@ -86,25 +77,21 @@
   font-size: 9px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 1.6px;
-  color: rgba(255,255,255,0.25);
-  padding: 16px 20px 5px;
+  letter-spacing: 1.8px;
+  color: rgba(255,255,255,0.2);
+  padding: 18px 20px 5px;
   text-align: left;
   transition: color 0.12s;
 }
+.nav-section-toggle:hover { color: rgba(255,255,255,0.45); }
 
-.nav-section-toggle:hover { color: rgba(255,255,255,0.5); }
-
-.nav-section-chevron {
-  margin-left: auto;
-  opacity: 0.4;
-}
+.nav-section-chevron { margin-left: auto; opacity: 0.4; }
 
 /* ── Badge ────────────────────────────────────────────────────────────── */
 .nav-badge {
   margin-left: auto;
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.35);
   font-size: 10px;
   font-weight: 700;
   padding: 2px 7px;
@@ -114,57 +101,39 @@
   text-align: center;
 }
 
-/* ── Flow items ───────────────────────────────────────────────────────── */
+/* ── Flow items ──────────────────────────────────────────────────────── */
 .nav-item-flow { padding-left: 10px; }
 .nav-item-flow.active { font-weight: 600; }
 
-.nav-flow-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  opacity: 0.85;
-}
+.nav-flow-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; opacity: 0.85; }
 
-/* ── Divider ──────────────────────────────────────────────────────────── */
-.nav-divider {
-  height: 1px;
-  background: rgba(255,255,255,0.06);
-  margin: 8px 16px;
-}
+/* ── Divider ─────────────────────────────────────────────────────────── */
+.nav-divider { height: 1px; background: rgba(255,255,255,0.05); margin: 8px 16px; }
 
-/* ── Version footer ───────────────────────────────────────────────────── */
+/* ── Version footer ──────────────────────────────────────────────────── */
 .sidebar-version {
   margin-top: auto;
-  padding: 14px 20px 6px;
+  padding: 16px 20px 6px;
   font-size: 10px;
-  color: rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.16);
   font-weight: 500;
   letter-spacing: 0.3px;
   user-select: none;
   line-height: 1.7;
 }
 
-/* ── Toggle buttons ───────────────────────────────────────────────────── */
+/* ── Toggle buttons ──────────────────────────────────────────────────── */
 .sidebar-toggle-btn {
   background: none;
   border: none;
   cursor: pointer;
-  color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.25);
   line-height: 1;
   padding: 8px 7px;
   border-radius: 7px;
   transition: background 0.12s, color 0.12s;
   font-family: inherit;
 }
+.sidebar-toggle-btn:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.7); }
 
-.sidebar-toggle-btn:hover {
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.8);
-}
-
-.sidebar-toggle-collapse {
-  width: 100%;
-  text-align: center;
-  padding: 6px 0 10px;
-}
+.sidebar-toggle-collapse { width: 100%; text-align: center; padding: 6px 0 10px; }

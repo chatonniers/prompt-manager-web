@@ -1,4 +1,4 @@
-* { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   font-family: var(--pm-font);
@@ -9,4 +9,7 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Subtle dot-grid texture — adds depth without distraction */
+  background-image: radial-gradient(circle, var(--pm-border) 1px, transparent 1px);
+  background-size: 24px 24px;
 }

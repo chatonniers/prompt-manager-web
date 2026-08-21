@@ -1,33 +1,55 @@
 :root {
-  --pm-accent:    #5B6AF0;
-  --pm-accent2:   #4755E8;
-  --pm-accent-bg: #ECEFFE;
-  --pm-bg:        #F0F2F8;
+  /* Brand */
+  --pm-accent:    #4F46E5;
+  --pm-accent2:   #3730A3;
+  --pm-accent3:   #6366F1;
+  --pm-accent-bg: #EEF2FF;
+  --pm-accent-glow: rgba(79,70,229,0.22);
+
+  /* Surface */
+  --pm-bg:        #F1F3F9;
+  --pm-bg2:       #E8EBF4;
   --pm-surface:   #FFFFFF;
-  --pm-border:    #E0E4F0;
-  --pm-border2:   #C8CEDF;
-  --pm-text1:     #0C1225;
-  --pm-text2:     #3E4A68;
-  --pm-text3:     #8792B2;
-  --pm-fav:       #F59E0B;
-  --pm-success:   #10B981;
-  --pm-success-bg:#ECFDF5;
-  --pm-warn:      #F97316;
-  --pm-warn-bg:   #FFF7ED;
-  --pm-danger:    #EF4444;
-  --pm-danger-bg: #FEF2F2;
-  --pm-flow-bg:   #ECFDF5;
-  --pm-flow-text: #059669;
+  --pm-surface2:  #FAFBFF;
 
-  --pm-shadow-xs: 0 1px 3px rgba(12,18,37,0.06), 0 1px 2px rgba(12,18,37,0.04);
-  --pm-shadow-sm: 0 2px 8px rgba(12,18,37,0.08), 0 1px 3px rgba(12,18,37,0.05);
-  --pm-shadow-md: 0 8px 28px rgba(12,18,37,0.12), 0 3px 10px rgba(12,18,37,0.07);
-  --pm-shadow-lg: 0 24px 64px rgba(12,18,37,0.18), 0 8px 24px rgba(12,18,37,0.10);
-  --pm-shadow-card-hover: 0 12px 40px rgba(91,106,240,0.18), 0 4px 12px rgba(12,18,37,0.10);
+  /* Borders */
+  --pm-border:    #DDE1F0;
+  --pm-border2:   #C4CADF;
 
-  --pm-radius:    16px;
-  --pm-radius-sm: 10px;
+  /* Text */
+  --pm-text1:     #0A0F1E;
+  --pm-text2:     #374168;
+  --pm-text3:     #7B85A8;
+  --pm-text4:     #A8B0CC;
+
+  /* Semantic */
+  --pm-fav:        #F59E0B;
+  --pm-success:    #059669;
+  --pm-success-bg: #D1FAE5;
+  --pm-warn:       #D97706;
+  --pm-warn-bg:    #FEF3C7;
+  --pm-danger:     #DC2626;
+  --pm-danger-bg:  #FEE2E2;
+  --pm-flow-bg:    #ECFDF5;
+  --pm-flow-text:  #059669;
+
+  /* Shadows */
+  --pm-shadow-xs: 0 1px 2px rgba(10,15,30,0.06);
+  --pm-shadow-sm: 0 2px 8px rgba(10,15,30,0.08), 0 1px 3px rgba(10,15,30,0.05);
+  --pm-shadow-md: 0 8px 24px rgba(10,15,30,0.10), 0 2px 8px rgba(10,15,30,0.06);
+  --pm-shadow-lg: 0 20px 60px rgba(10,15,30,0.18), 0 8px 24px rgba(10,15,30,0.10);
+  --pm-shadow-card: 0 2px 8px rgba(10,15,30,0.07), 0 0 0 1px rgba(10,15,30,0.04);
+  --pm-shadow-card-hover: 0 12px 36px rgba(79,70,229,0.16), 0 4px 12px rgba(10,15,30,0.08);
+  --pm-shadow-card-focus: 0 0 0 3px var(--pm-accent-glow);
+
+  /* Shape */
+  --pm-radius:    14px;
+  --pm-radius-sm: 9px;
   --pm-radius-xs: 6px;
-  --pm-font:      "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --pm-card-strip: 5px;
+
+  /* Type */
+  --pm-font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* Card accent strip */
+  --pm-card-strip: 3px;
 }

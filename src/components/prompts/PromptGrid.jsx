@@ -40,7 +40,7 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
   if (!hasAnyFlow) {
     return (
       <DropZone className="category-block" onDrop={id => onDrop(id, { isFavorite: false, category: catKey, storyFlow: null })}>
-        <div className="grid-section-label">{label}</div>
+        <div className="grid-section-label">{label}<span className="section-count">{prompts.length}</span></div>
         <div className="category-flat-grid">
           {prompts.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
         </div>
@@ -55,7 +55,7 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
 
   return (
     <DropZone className="category-block" onDrop={id => onDrop(id, { isFavorite: false, category: catKey, storyFlow: null })}>
-      <div className="grid-section-label">{label}</div>
+      <div className="grid-section-label">{label}<span className="section-count">{prompts.length}</span></div>
       <div className="category-flow-columns">
         {columns.map(col => {
           const color = col.key !== '__none__' ? getFlowColor(col.label) : null;
@@ -136,13 +136,13 @@ export default function PromptGrid() {
         <div id="prompt-grid-outer">
           {/* Favorites zone */}
           <DropZone className="category-block" onDrop={id => handleDrop(id, { isFavorite: true })}>
-            <div className="grid-section-label">{t('favorites', lang)}</div>
+            <div className="grid-section-label">{t('favorites', lang)}<span className="section-count">{favs.length}</span></div>
             {favs.length > 0 ? (
               <div className="category-flat-grid">
                 {favs.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
               </div>
             ) : (
-              <p style={{ fontSize: 13, color: 'var(--pm-text3)', padding: '8px 2px', fontStyle: 'italic' }}>No favorites yet — drag a card here or click the star.</p>
+              <p style={{ fontSize: 12, color: 'var(--pm-text3)', padding: '8px 2px', fontStyle: 'italic' }}>No favorites yet — drag a card here or click ★</p>
             )}
           </DropZone>
 

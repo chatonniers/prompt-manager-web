@@ -3,10 +3,24 @@ import { useApp } from '../../context/AppContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { t } from '../../lib/i18n.js';
 
+function LogoMark() {
+  return (
+    <svg className="app-logo-mark" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Outer hexagonal card stack */}
+      <rect x="4" y="7" width="22" height="22" rx="5" fill="rgba(99,102,241,0.25)" stroke="rgba(99,102,241,0.5)" strokeWidth="1.2"/>
+      <rect x="7" y="4" width="22" height="22" rx="5" fill="rgba(99,102,241,0.35)" stroke="rgba(99,102,241,0.6)" strokeWidth="1.2"/>
+      <rect x="10" y="8" width="20" height="20" rx="4" fill="#4F46E5" stroke="#6366F1" strokeWidth="1"/>
+      {/* Lightning bolt / prompt symbol */}
+      <path d="M21 10l-5 7h4l-2 7 6-9h-4l1-5z" fill="white" opacity="0.92"/>
+    </svg>
+  );
+}
+
 export default function TopBar({ onHelp }) {
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
+  const promptCount = state.prompts?.length || 0;
 
   useEffect(() => {
     function onChange() { setIsFullscreen(!!document.fullscreenElement); }
@@ -32,10 +46,19 @@ export default function TopBar({ onHelp }) {
   return (
     <header id="top-bar">
       <div id="top-bar-left">
-        <div id="app-title" style={{ cursor: 'pointer' }} onClick={() => dispatch({ type: 'SET_VIEW', payload: { view: 'all', filter: { storyFlow: null, solution: null, category: null } } })}>
-          <span className="title-main">{t('appTitle', lang)}</span>
+        <div id="app-title" onClick={() => dispatch({ type: 'SET_VIEW', payload: { view: 'all', filter: { storyFlow: null, solution: null, category: null } } })}>
+          <LogoMark />
+          <div className="app-wordmark">
+            <span className="title-main">{t('appTitle', lang)}</span>
+            <span className="title-sub">AI Prompt Library · SAP</span>
+          </div>
+        </div>
+        <div className="tb-stat-pill">
+          <span className="tb-stat-dot" />
+          {promptCount} {promptCount === 1 ? 'prompt' : 'prompts'}
         </div>
       </div>
+
       <div id="top-bar-right">
         <button className="tb-btn tb-btn-lang" onClick={handleLangToggle} title="Switch language">
           {lang === 'en' ? 'FR' : 'EN'}
@@ -43,7 +66,13 @@ export default function TopBar({ onHelp }) {
 
         <div className="tb-divider" />
 
-        <button className="tb-btn tb-btn-icon" onClick={onHelp} title="Help">?</button>
+        <button className="tb-btn tb-btn-icon" onClick={onHelp} title="Help">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ verticalAlign: 'middle' }}>
+            <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/>
+            <path d="M6.2 6.2c0-1 .8-1.7 1.8-1.7s1.8.7 1.8 1.7c0 .8-.5 1.3-1.2 1.7-.4.2-.6.5-.6.9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+            <circle cx="8" cy="11" r="0.7" fill="currentColor"/>
+          </svg>
+        </button>
         <button className="tb-btn tb-btn-icon" onClick={handleFullscreen} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ verticalAlign: 'middle' }}>
             {isFullscreen
