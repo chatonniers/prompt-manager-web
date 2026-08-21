@@ -246,6 +246,12 @@
 .bulk-action-btn.bulk-action-clear { color: var(--pm-danger); border-color: var(--pm-danger-bg); }
 .bulk-action-btn.bulk-action-clear:hover { background: var(--pm-danger-bg); border-color: var(--pm-danger); }
 
+.bulk-action-btn.bulk-action-del { color: var(--pm-danger); border-color: var(--pm-danger-bg); }
+.bulk-action-btn.bulk-action-del:hover { background: var(--pm-danger-bg); border-color: var(--pm-danger); }
+
+.bulk-action-btn.bulk-action-del-confirm { background: var(--pm-danger); color: #fff; border-color: var(--pm-danger); }
+.bulk-action-btn.bulk-action-del-confirm:hover { background: #b91c1c; border-color: #b91c1c; }
+
 .bulk-action-select {
   border: 1.5px solid var(--pm-border);
   border-radius: 6px;

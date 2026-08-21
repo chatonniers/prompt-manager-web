@@ -163,7 +163,7 @@ function makeItem(body = '', body_fr = '') {
 }
 
 // Inline edit form rendered on card back face
-function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
+function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate }) {
   const [title, setTitle] = useState(p.title || '');
   const [items, setItems] = useState(() =>
     p.promptItems?.length
@@ -261,7 +261,10 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
     <div className="card-edit-back" onClick={e => e.stopPropagation()}>
       <div className="card-edit-header">
         <span className="card-edit-title">{t('editPromptTitle', lang)}</span>
-        <button className="card-edit-close" onClick={onCancel}>✕</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <button className="card-edit-close" onClick={onDuplicate} title={t('duplicateTitle', lang)}>⧉</button>
+          <button className="card-edit-close" onClick={onCancel}>✕</button>
+        </div>
       </div>
 
       {/* Title */}
@@ -612,8 +615,6 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
         )}
 
         <div className="prompt-card-actions">
-          <button className="card-action-btn" onClick={e => { e.stopPropagation(); handleDuplicate(); }} title={t('duplicateTitle', lang)}>⧉</button>
-          <button className="card-action-btn del" onClick={e => { e.stopPropagation(); handleDelete(); }}>{t('del', lang)}</button>
         </div>
       </div>
 
@@ -628,6 +629,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
             lang={lang}
             onSave={handleEditSave}
             onCancel={() => setFlipped(false)}
+            onDuplicate={() => { setFlipped(false); handleDuplicate(); }}
           />
         </div>
       )}

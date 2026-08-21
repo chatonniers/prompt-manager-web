@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { t } from '../../lib/i18n.js';
@@ -7,6 +8,7 @@ export default function BulkActionBar({ visibleIds }) {
   const lang = state.settings?.lang || 'en';
   const { selectedIds, catalog, prompts } = state;
   const count = selectedIds.size;
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (count === 0) return null;
 
@@ -16,6 +18,7 @@ export default function BulkActionBar({ visibleIds }) {
 
   function clearAll() {
     dispatch({ type: 'CLEAR_SELECT' });
+    setConfirmDelete(false);
   }
 
   async function exportSelected() {
@@ -46,6 +49,16 @@ export default function BulkActionBar({ visibleIds }) {
     dispatch({ type: 'SHOW_TOAST', payload: `Moved ${count} prompt${count !== 1 ? 's' : ''} to ${flow || 'No flow'}` });
   }
 
+  async function deleteSelected() {
+    const ids = [...selectedIds];
+    await Promise.all(ids.map(id => StorageAPI.deletePrompt(id)));
+    const updated = await StorageAPI.getAllPrompts();
+    dispatch({ type: 'SET_PROMPTS', payload: updated });
+    dispatch({ type: 'CLEAR_SELECT' });
+    dispatch({ type: 'SHOW_TOAST', payload: `${ids.length} prompt${ids.length !== 1 ? 's' : ''} deleted` });
+    setConfirmDelete(false);
+  }
+
   return (
     <div className="bulk-action-bar">
       <span className="bulk-count">{t('bulkSelected', lang, count)}</span>
@@ -71,6 +84,18 @@ export default function BulkActionBar({ visibleIds }) {
         <option value="__none__">— {t('selectNone', lang)} —</option>
         {(catalog.storyFlows || []).map(f => <option key={f} value={f}>{f}</option>)}
       </select>
+
+      {confirmDelete ? (
+        <>
+          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--pm-danger)' }}>
+            {t('deleteConfirmInline', lang, `${count} prompt${count !== 1 ? 's' : ''}`)}
+          </span>
+          <button className="bulk-action-btn bulk-action-del-confirm" onClick={deleteSelected}>{t('del', lang)}</button>
+          <button className="bulk-action-btn" onClick={() => setConfirmDelete(false)}>{t('cancel', lang)}</button>
+        </>
+      ) : (
+        <button className="bulk-action-btn bulk-action-del" onClick={() => setConfirmDelete(true)}>{t('del', lang)}</button>
+      )}
 
       <button className="bulk-action-btn bulk-action-clear" onClick={clearAll}>✕ {t('bulkClear', lang)}</button>
     </div>
