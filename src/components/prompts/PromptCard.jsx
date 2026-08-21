@@ -169,6 +169,8 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
   const [status, setStatus] = useState(p.status || '');
   const [personas, setPersonas] = useState(p.personas || []);
   const [notes, setNotes] = useState(p.notes || '');
+  const [tags, setTags] = useState(p.tags || []);
+  const [tagInput, setTagInput] = useState('');
   const [systems, setSystems] = useState(() => getSystems(p));
   const [demoLinks, setDemoLinks] = useState(() =>
     Array.isArray(p.demoLinks) ? p.demoLinks.map(l => ({ ...l })) : []
@@ -246,6 +248,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
       status: status || null,
       personas,
       notes: notes.trim(),
+      tags: tags.filter(t => t.trim()),
       systems,
       demoLinks: demoLinks.filter(l => l.url.trim()),
       attachments: attachmentsMeta,
@@ -298,6 +301,35 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
       <div className="card-edit-field">
         <label className="card-edit-label">{t('notesLabel', lang)}</label>
         <textarea className="card-edit-textarea" value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder={t('notesPlaceholderCard', lang)} />
+      </div>
+
+      <div className="card-edit-field">
+        <label className="card-edit-label">{t('tagsLabel', lang)}</label>
+        <div className="card-edit-tags">
+          {tags.map(tag => (
+            <span key={tag} className="card-edit-tag-chip">
+              #{tag}
+              <button type="button" className="card-edit-tag-del" onClick={() => setTags(prev => prev.filter(t => t !== tag))}>×</button>
+            </span>
+          ))}
+          <input
+            className="card-edit-tag-input"
+            type="text"
+            value={tagInput}
+            onChange={e => setTagInput(e.target.value)}
+            onKeyDown={e => {
+              if ((e.key === 'Enter' || e.key === ',') && tagInput.trim()) {
+                e.preventDefault();
+                const val = tagInput.trim().replace(/^#/, '');
+                if (val && !tags.includes(val)) setTags(prev => [...prev, val]);
+                setTagInput('');
+              } else if (e.key === 'Backspace' && !tagInput && tags.length) {
+                setTags(prev => prev.slice(0, -1));
+              }
+            }}
+            placeholder={tags.length === 0 ? t('tagPlaceholder', lang) : ''}
+          />
+        </div>
       </div>
 
       <div className="card-edit-item-tabs">

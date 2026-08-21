@@ -729,6 +729,52 @@
 .card-edit-demo-url  { flex: 2; }
 .card-edit-demo-desc { flex: 3; }
 
+.card-edit-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+  background: var(--pm-bg);
+  border: 1.5px solid var(--pm-border);
+  border-radius: var(--pm-radius-sm);
+  padding: 5px 8px;
+  min-height: 32px;
+  cursor: text;
+}
+.card-edit-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--pm-accent-bg);
+  color: var(--pm-accent);
+  border-radius: 20px;
+  padding: 2px 8px 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.card-edit-tag-del {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--pm-accent);
+  font-size: 13px;
+  line-height: 1;
+  padding: 0 0 0 2px;
+  opacity: 0.7;
+  font-family: inherit;
+}
+.card-edit-tag-del:hover { opacity: 1; }
+.card-edit-tag-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--pm-text1);
+  min-width: 80px;
+  flex: 1;
+}
+
 /* ── Edit actions ─────────────────────────────────────────────────────── */
 .card-edit-actions {
   display: flex;
