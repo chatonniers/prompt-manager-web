@@ -35,8 +35,8 @@
 }
 
 .flow-column {
-  flex: 1;
-  min-width: 280px;
+  flex: 0 0 320px;
+  width: 320px;
   display: flex;
   flex-direction: column;
   gap: 8px;
