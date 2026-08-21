@@ -648,7 +648,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
         {/* Demo links */}
         {(p.demoLinks || []).filter(l => l.url).length > 0 && (
           <>
-            <div className="card-section-label">Demo</div>
+            <div className="card-section-label">Demo link(s)</div>
             <div className="card-demo-links">
             {(p.demoLinks).filter(l => l.url).map(link => (
               <a
