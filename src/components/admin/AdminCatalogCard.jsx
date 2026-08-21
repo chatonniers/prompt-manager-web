@@ -38,6 +38,7 @@ export default function AdminCatalogCard({ titleKey, descKey, addKey, items, pro
   function getListKey() {
     if (promptField === 'solutions') return 'solutions';
     if (promptField === 'storyFlow') return 'storyFlows';
+    if (promptField === 'personas') return 'personas';
     return 'landscapes';
   }
 
