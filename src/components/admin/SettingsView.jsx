@@ -4,8 +4,8 @@ import { StorageAPI } from '../../lib/storage.js';
 import { detectSAPContext } from '../../lib/url-detector.js';
 import { t } from '../../lib/i18n.js';
 import AdminCatalogCard from './AdminCatalogCard.jsx';
-import AdminMcpCard from './AdminMcpCard.jsx';
 import AdminCategoriesCard from './AdminCategoriesCard.jsx';
+import AdminSystemsCard from './AdminSystemsCard.jsx';
 
 export default function SettingsView() {
   const { state, dispatch } = useApp();
@@ -62,10 +62,12 @@ export default function SettingsView() {
             </div>
             <button className="action-btn primary" style={{ marginTop: 16 }} onClick={handleSave}>{t('saveSettings', lang)}</button>
           </div>
+
+          <AdminCategoriesCard />
         </div>
 
         <div className="settings-col">
-          <AdminCategoriesCard />
+          <AdminSystemsCard />
           <AdminCatalogCard
             titleKey="solutionsAdmin"
             descKey="solutionsDesc"
@@ -82,15 +84,6 @@ export default function SettingsView() {
             promptField="storyFlow"
             isArray={false}
           />
-          <AdminCatalogCard
-            titleKey="landscapesAdmin"
-            descKey="landscapesDesc"
-            addKey="addLandscape"
-            items={state.catalog.landscapes}
-            promptField="landscapes"
-            isArray
-          />
-          <AdminMcpCard />
         </div>
       </div>
     </div>

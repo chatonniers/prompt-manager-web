@@ -28,15 +28,125 @@ async function copyText(text) {
   }
 }
 
+function SystemChip({ sys, lang, onCopied }) {
+  const [flipped, setFlipped] = useState(false);
+  const [showSecrets, setShowSecrets] = useState({});
+
+  const hasEndpoints = sys.endpoints?.length > 0;
+
+  async function handleCopy(text) {
+    await copyText(text);
+    onCopied();
+  }
+
+  return (
+    <div className={`card-sys-chip${flipped ? ' flipped' : ''}`}>
+      {/* Front */}
+      <div className="card-sys-face card-sys-front" onClick={() => hasEndpoints && setFlipped(true)}>
+        {sys.url && !hasEndpoints ? (
+          <a className="card-sys-link" href={sys.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>
+            🔗 {sys.name || sys.url}
+          </a>
+        ) : (
+          <span className="card-sys-name">
+            {hasEndpoints ? '🔑 ' : '🔗 '}{sys.name || sys.url}
+            {hasEndpoints && <span className="card-sys-flip-hint"> ▶</span>}
+          </span>
+        )}
+      </div>
+
+      {/* Back — connection details */}
+      {hasEndpoints && (
+        <div className="card-sys-face card-sys-back">
+          <div className="card-sys-back-header">
+            <span className="card-sys-back-title">{sys.name}</span>
+            <button className="card-sys-back-close" onClick={() => setFlipped(false)}>✕</button>
+          </div>
+          {sys.url && (
+            <div className="card-sys-back-row">
+              <span className="card-sys-back-label">SYSTEM URL</span>
+              <div className="card-sys-back-value">
+                <a href={sys.url} target="_blank" rel="noopener noreferrer" className="card-sys-back-url">{sys.url}</a>
+                <button className="card-sys-copy-btn" onClick={() => handleCopy(sys.url)}>COPY</button>
+              </div>
+            </div>
+          )}
+          {sys.endpoints.map(ep => (
+            <div key={ep.id} className="card-sys-endpoint">
+              {ep.label && <div className="card-sys-ep-label">{ep.label.toUpperCase()}</div>}
+              {ep.url && (
+                <div className="card-sys-back-row">
+                  <span className="card-sys-back-label">ENDPOINT</span>
+                  <div className="card-sys-back-value">
+                    <code className="card-sys-back-code">{ep.url}</code>
+                    <button className="card-sys-copy-btn" onClick={() => handleCopy(ep.url)}>COPY</button>
+                  </div>
+                </div>
+              )}
+              {ep.clientId && (
+                <div className="card-sys-back-row">
+                  <span className="card-sys-back-label">CLIENT ID</span>
+                  <div className="card-sys-back-value">
+                    <code className="card-sys-back-code">{ep.clientId}</code>
+                    <button className="card-sys-copy-btn" onClick={() => handleCopy(ep.clientId)}>COPY</button>
+                  </div>
+                </div>
+              )}
+              {ep.clientSecret && (
+                <div className="card-sys-back-row">
+                  <span className="card-sys-back-label">CLIENT SECRET</span>
+                  <div className="card-sys-back-value">
+                    <code className="card-sys-back-code">{showSecrets[ep.id] ? ep.clientSecret : '••••••••'}</code>
+                    <button className="card-sys-copy-btn" onClick={() => setShowSecrets(s => ({ ...s, [ep.id]: !s[ep.id] }))}>
+                      {showSecrets[ep.id] ? 'HIDE' : 'SHOW'}
+                    </button>
+                    <button className="card-sys-copy-btn" onClick={() => handleCopy(ep.clientSecret)}>COPY</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Migrate legacy prompt data to systems array
+function getSystems(p) {
+  if (p.systems?.length) return p.systems;
+  const result = [];
+  for (const ls of (p.landscapes || [])) {
+    const name = typeof ls === 'string' ? ls : (ls.name || ls.url || '');
+    const url  = typeof ls === 'string' ? (ls.startsWith('http') ? ls : '') : (ls.url || '');
+    if (name || url) result.push({ id: `ls-${name}`, name, description: '', url, endpoints: [] });
+  }
+  const mcpList = p.mcpCredentials?.length
+    ? p.mcpCredentials
+    : p.mcpClientId
+      ? [{ id: 'legacy', label: '', clientId: p.mcpClientId, clientSecret: p.mcpClientSecret || '', url: '' }]
+      : [];
+  for (const c of mcpList) {
+    result.push({
+      id: c.id || `mcp-${c.clientId}`,
+      name: c.label || c.clientId || 'MCP',
+      description: '',
+      url: c.url || '',
+      endpoints: [{ id: `ep-${c.id}`, label: c.label || '', url: c.url || '', clientId: c.clientId || '', clientSecret: c.clientSecret || '' }],
+    });
+  }
+  return result;
+}
+
 export default function PromptCard({ prompt: p }) {
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
-  const [showAllLandscapes, setShowAllLandscapes] = useState(false);
 
-  // Normalize promptItems — migrate legacy single-body prompts
   const promptItems = p.promptItems?.length
     ? p.promptItems
     : [{ id: p.id + '-legacy', label: '', body: p.body || '', body_fr: p.body_fr || null }];
+
+  const systems = getSystems(p);
 
   async function handleCopyItem(item) {
     const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;
@@ -47,9 +157,7 @@ export default function PromptCard({ prompt: p }) {
     dispatch({ type: 'SHOW_TOAST', payload: t('copied', lang) });
   }
 
-  async function handleCopySecret(secret) {
-    if (!secret) return;
-    await copyText(secret);
+  function handleCopied() {
     dispatch({ type: 'SHOW_TOAST', payload: t('secretCopied', lang) });
   }
 
@@ -67,12 +175,6 @@ export default function PromptCard({ prompt: p }) {
   function handleDelete() {
     dispatch({ type: 'OPEN_CONFIRM', payload: p.id });
   }
-
-  // Normalize landscapes — migrate legacy strings
-  const landscapes = (p.landscapes || []).map(ls =>
-    typeof ls === 'string' ? { name: ls, url: ls.startsWith('http') ? ls : '' } : ls
-  );
-  const visibleLandscapes = showAllLandscapes ? landscapes : landscapes.slice(0, 2);
 
   const langBadge = lang === 'fr'
     ? (p.body_fr || promptItems.some(i => i.body_fr)
@@ -94,25 +196,19 @@ export default function PromptCard({ prompt: p }) {
         >★</button>
       </div>
 
-      {/* Prompt items list */}
+      {/* Prompt items */}
       <div className="prompt-items-list">
         {promptItems.map((item, idx) => {
           const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;
           return (
             <div key={item.id} className="prompt-item-row">
               <div className="prompt-item-content">
-                {!isSingle && (
-                  <div className="prompt-item-label">
-                    {item.label || `#${idx + 1}`}
-                  </div>
-                )}
+                {!isSingle && <div className="prompt-item-label">{item.label || `#${idx + 1}`}</div>}
                 <div className="prompt-item-preview">{body}</div>
               </div>
-              <button
-                className="prompt-item-copy-btn"
-                title={t('copy', lang)}
-                onClick={() => handleCopyItem(item)}
-              >{t('copy', lang)}</button>
+              <button className="prompt-item-copy-btn" title={t('copy', lang)} onClick={() => handleCopyItem(item)}>
+                {t('copy', lang)}
+              </button>
             </div>
           );
         })}
@@ -128,66 +224,14 @@ export default function PromptCard({ prompt: p }) {
         {attachCount > 0 && <span className="attach-count-pill">📎 {attachCount}</span>}
       </div>
 
-      {/* Landscapes */}
-      {landscapes.length > 0 && (
-        <div className="card-landscape-list">
-          {visibleLandscapes.map((ls, i) => (
-            <div key={i} className="card-landscape-item">
-              {ls.url ? (
-                <a
-                  className="card-landscape-link"
-                  href={ls.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={t('openSystem', lang)}
-                >
-                  🔗 {ls.name || ls.url}
-                </a>
-              ) : (
-                <span className="card-landscape-text">🔗 {ls.name}</span>
-              )}
-              {ls.url && ls.name && ls.name !== ls.url && (
-                <span className="card-landscape-url">{ls.url}</span>
-              )}
-            </div>
+      {/* Systems — flippable chips */}
+      {systems.length > 0 && (
+        <div className="card-systems-list">
+          {systems.map(sys => (
+            <SystemChip key={sys.id} sys={sys} lang={lang} onCopied={handleCopied} />
           ))}
-          {landscapes.length > 2 && (
-            <button
-              className="card-landscape-more"
-              onClick={() => setShowAllLandscapes(v => !v)}
-            >
-              {showAllLandscapes ? '▲ less' : `▼ +${landscapes.length - 2} more`}
-            </button>
-          )}
         </div>
       )}
-
-      {/* MCP Credentials */}
-      {(() => {
-        // Normalize: support new array and legacy single fields
-        const creds = p.mcpCredentials?.length
-          ? p.mcpCredentials
-          : p.mcpClientId
-            ? [{ id: 'legacy', label: '', clientId: p.mcpClientId, clientSecret: p.mcpClientSecret || '' }]
-            : [];
-        return creds.length > 0 && (
-          <div className="card-mcp-list">
-            {creds.map(cred => (
-              <div key={cred.id} className="card-mcp-row">
-                <span className="card-mcp-label">
-                  🔑 {cred.label ? <strong>{cred.label}:</strong> : 'MCP:'}{' '}
-                  <span className="card-mcp-id">{cred.clientId}</span>
-                </span>
-                {cred.clientSecret && (
-                  <button className="card-mcp-copy-btn" onClick={() => handleCopySecret(cred.clientSecret)}>
-                    {t('copySecret', lang)}
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        );
-      })()}
 
       {p.usageCount > 0 && (
         <div className="usage-hint">

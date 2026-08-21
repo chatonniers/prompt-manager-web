@@ -215,114 +215,188 @@
   border-color: var(--pm-accent);
 }
 
-/* ── Landscape list on card ───────────────────────────────────────────── */
-.card-landscape-list {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 3px 0 1px;
-  border-top: 1px solid var(--pm-border);
-}
-
-.card-landscape-item {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.card-landscape-link {
-  font-size: 11px;
-  color: var(--pm-accent);
-  text-decoration: none;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: color 0.12s;
-}
-
-.card-landscape-link:hover {
-  text-decoration: underline;
-  color: var(--pm-accent2);
-}
-
-.card-landscape-text {
-  font-size: 11px;
-  color: var(--pm-text2);
-  font-weight: 600;
-}
-
-.card-landscape-url {
-  font-size: 10px;
-  color: var(--pm-text3);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.card-landscape-more {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 10px;
-  color: var(--pm-text3);
-  padding: 0;
-  font-family: inherit;
-  font-weight: 600;
-  text-align: left;
-  transition: color 0.12s;
-}
-
-.card-landscape-more:hover { color: var(--pm-accent); }
-
-/* ── MCP credentials on card ─────────────────────────────────────────── */
-.card-mcp-list {
+/* ── System chips on card (flippable) ────────────────────────────────── */
+.card-systems-list {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  border-top: 1px solid var(--pm-border);
+  padding-top: 5px;
 }
 
-.card-mcp-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  padding: 4px 6px;
-  background: var(--pm-bg);
-  border: 1.5px solid var(--pm-border);
+.card-sys-chip {
+  position: relative;
+  min-height: 28px;
+  border-radius: 7px;
+  overflow: visible;
+}
+
+.card-sys-face {
   border-radius: 7px;
 }
 
-.card-mcp-label {
+/* Front face */
+.card-sys-front {
+  background: var(--pm-bg);
+  border: 1.5px solid var(--pm-border);
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.card-sys-chip:not(.flipped) .card-sys-front:hover {
+  border-color: var(--pm-accent);
+  background: var(--pm-accent-bg);
+  cursor: pointer;
+}
+
+.card-sys-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pm-text1);
   flex: 1;
-  color: var(--pm-text2);
-  font-weight: 500;
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.card-mcp-id {
-  font-weight: 700;
-  color: var(--pm-text1);
-}
-
-.card-mcp-copy-btn {
-  flex-shrink: 0;
-  background: none;
-  border: 1.5px solid var(--pm-border2);
-  border-radius: 5px;
-  padding: 2px 7px;
-  font-size: 10px;
+.card-sys-link {
+  font-size: 11px;
   font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  color: var(--pm-text2);
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  color: var(--pm-accent);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  transition: color 0.12s;
+}
+.card-sys-link:hover { text-decoration: underline; }
+
+.card-sys-flip-hint {
+  font-size: 9px;
+  color: var(--pm-text3);
+  margin-left: 4px;
+  font-weight: 400;
 }
 
-.card-mcp-copy-btn:hover {
-  background: var(--pm-accent-bg);
-  border-color: var(--pm-accent);
-  color: var(--pm-accent);
+/* Back face — connection details panel */
+.card-sys-back {
+  display: none;
+  background: #1E1B4B;
+  border: 1.5px solid #312E81;
+  color: #E0E7FF;
+  padding: 10px;
+  border-radius: 7px;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10;
+  position: relative;
+}
+
+.card-sys-chip.flipped .card-sys-front { display: none; }
+.card-sys-chip.flipped .card-sys-back  { display: flex; }
+
+.card-sys-back-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.card-sys-back-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #A5B4FC;
+  letter-spacing: 0.3px;
+}
+
+.card-sys-back-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6B7280;
+  font-size: 12px;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 0.12s;
+}
+.card-sys-back-close:hover { color: #E0E7FF; }
+
+.card-sys-back-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-sys-back-label {
+  font-size: 8px;
+  font-weight: 700;
+  color: #6B7280;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.card-sys-back-value {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 5px;
+  padding: 3px 6px;
+}
+
+.card-sys-back-code {
+  flex: 1;
+  font-size: 9px;
+  color: #C7D2FE;
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-sys-back-url {
+  flex: 1;
+  font-size: 9px;
+  color: #818CF8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.card-sys-back-url:hover { text-decoration: underline; }
+
+.card-sys-copy-btn {
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #C7D2FE;
+  letter-spacing: 0.5px;
+  transition: background 0.12s;
+}
+.card-sys-copy-btn:hover { background: rgba(255,255,255,0.2); }
+
+.card-sys-endpoint {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.card-sys-ep-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: #818CF8;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
 }

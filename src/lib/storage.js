@@ -12,12 +12,44 @@ const DEFAULT_CATALOG = {
   solutions:  ["S/4HANA","IBP","Ariba","Joule","Joule Studio","BTP","Datasphere","SuccessFactors","Digital Manufacturing"],
   storyFlows: ["Procure-to-Pay","Order-to-Cash","Plan-to-Inventory","Hire-to-Retire","Record-to-Report","Lead-to-Cash","Design-to-Operate","Other"],
   categories: DEFAULT_CATEGORIES,
-  landscapes: [],
-  mcpCredentials: [],
+  systems: [],
 };
 
-// Keep exporting for any legacy callers; resolved from catalog at runtime instead
 export const AUTONOMOUS_CATEGORIES = DEFAULT_CATEGORIES;
+
+// Migrate legacy landscapes + mcpCredentials into unified systems array
+function migrateSystems(data) {
+  if (data.systems) return data.systems;
+  const result = [];
+
+  // Convert legacy landscapes to systems (no endpoints)
+  const rawLandscapes = data.landscapes || [];
+  for (const ls of rawLandscapes) {
+    const name = typeof ls === 'string' ? ls : (ls.name || ls.url || '');
+    const url  = typeof ls === 'string' ? (ls.startsWith('http') ? ls : '') : (ls.url || '');
+    if (!name && !url) continue;
+    result.push({ id: crypto.randomUUID(), name, description: '', url, endpoints: [] });
+  }
+
+  // Convert legacy mcpCredentials to systems with one endpoint each
+  const rawMcp = data.mcpCredentials || [];
+  for (const c of rawMcp) {
+    result.push({
+      id: c.id || crypto.randomUUID(),
+      name: c.label || c.clientId || 'MCP',
+      description: '',
+      url: c.url || '',
+      endpoints: [{
+        id: crypto.randomUUID(),
+        label: c.label || '',
+        url: c.url || '',
+        clientId: c.clientId || '',
+        clientSecret: c.clientSecret || '',
+      }],
+    });
+  }
+  return result;
+}
 
 export const StorageAPI = {
   async getAllPrompts() {
@@ -28,19 +60,11 @@ export const StorageAPI = {
   async getCatalog() {
     const raw = localStorage.getItem("pm-catalog");
     const data = raw ? JSON.parse(raw) : {};
-    // Migrate legacy string landscapes to { name, url } objects
-    const rawLandscapes = data.landscapes ?? [...DEFAULT_CATALOG.landscapes];
-    const landscapes = rawLandscapes.map(ls =>
-      typeof ls === 'string'
-        ? { name: ls, url: ls.startsWith('http') ? ls : '' }
-        : ls
-    );
     return {
       solutions:  data.solutions  ?? [...DEFAULT_CATALOG.solutions],
       storyFlows: data.storyFlows ?? [...DEFAULT_CATALOG.storyFlows],
       categories: data.categories ?? [...DEFAULT_CATALOG.categories],
-      landscapes,
-      mcpCredentials: (data.mcpCredentials ?? []),
+      systems: migrateSystems(data),
     };
   },
 
@@ -116,7 +140,7 @@ export const StorageAPI = {
       settings,
       catalog,
       attachments,
-      exportVersion: "1.1",
+      exportVersion: "1.2",
       exportedAt: new Date().toISOString()
     };
   },
@@ -143,22 +167,18 @@ export const StorageAPI = {
 
     if (data.catalog) {
       const cur = await this.getCatalog();
-      // Normalize incoming landscapes to { name, url } objects
-      const incomingLandscapes = (data.catalog.landscapes || []).map(ls =>
-        typeof ls === 'string' ? { name: ls, url: ls.startsWith('http') ? ls : '' } : ls
-      );
-      const mergedLandscapes = [...cur.landscapes];
-      for (const incoming of incomingLandscapes) {
-        if (!mergedLandscapes.some(ex => ex.name === incoming.name && ex.url === incoming.url)) {
-          mergedLandscapes.push(incoming);
+      const incomingSystems = migrateSystems(data.catalog);
+      const mergedSystems = [...cur.systems];
+      for (const s of incomingSystems) {
+        if (!mergedSystems.some(ex => ex.id === s.id || ex.name === s.name)) {
+          mergedSystems.push(s);
         }
       }
       await this.saveCatalog({
         solutions:  [...new Set([...cur.solutions,  ...(data.catalog.solutions  || [])])],
         storyFlows: [...new Set([...cur.storyFlows, ...(data.catalog.storyFlows || [])])],
         categories: [...new Set([...cur.categories, ...(data.catalog.categories || [])])],
-        landscapes: mergedLandscapes,
-        mcpCredentials: cur.mcpCredentials ?? [],
+        systems: mergedSystems,
       });
     }
 
