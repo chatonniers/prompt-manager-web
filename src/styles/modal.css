@@ -313,6 +313,16 @@
 }
 .attach-remove:hover { color: var(--pm-danger); background: var(--pm-danger-bg); }
 
+/* Demo links in modal */
+.demo-link-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.demo-link-desc { flex: 3; }
+.demo-link-url  { flex: 2; }
+
 /* ── Prompt items editor ──────────────────────────────────────────────── */
 .prompt-items-editor {
   display: flex;

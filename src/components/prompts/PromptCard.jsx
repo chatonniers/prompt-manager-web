@@ -380,18 +380,18 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
         {demoLinks.map((link, idx) => (
           <div key={link.id} className="card-edit-demo-link-row">
             <input
-              className="card-edit-input card-edit-demo-url"
-              type="url"
-              value={link.url}
-              onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, url: e.target.value } : l))}
-              placeholder={t('demoLinkUrlPlaceholder', lang)}
-            />
-            <input
               className="card-edit-input card-edit-demo-desc"
               type="text"
               value={link.desc || ''}
               onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, desc: e.target.value } : l))}
               placeholder={t('demoLinkDescPlaceholder', lang)}
+            />
+            <input
+              className="card-edit-input card-edit-demo-url"
+              type="url"
+              value={link.url}
+              onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, url: e.target.value } : l))}
+              placeholder={t('demoLinkUrlPlaceholder', lang)}
             />
             <button
               type="button"

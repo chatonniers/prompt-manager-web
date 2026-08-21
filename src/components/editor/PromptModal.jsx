@@ -40,7 +40,8 @@ export default function PromptModal() {
   const [selectedSolutions, setSelectedSolutions] = useState([]);
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
-  const [systems, setSystems] = useState([]); // [{ id, name, description, url, endpoints }]
+  const [systems, setSystems] = useState([]);
+  const [demoLinks, setDemoLinks] = useState([]);
   const [notes, setNotes] = useState('');
   const [pendingFiles, setPendingFiles] = useState([]);
   const [existingAtts, setExistingAtts] = useState([]);
@@ -92,6 +93,7 @@ export default function PromptModal() {
         setSystems(legacySystems);
       }
       setNotes(existing.notes || '');
+      setDemoLinks(Array.isArray(existing.demoLinks) ? existing.demoLinks.map(l => ({ ...l })) : []);
       AttachmentsDB.getForPrompt(existing.id).then(atts => setExistingAtts(atts));
     } else {
       setTitle('');
@@ -103,6 +105,7 @@ export default function PromptModal() {
       setSelectedSolutions([]);
       setTags([]);
       setSystems([]);
+      setDemoLinks([]);
       setNotes('');
       setExistingAtts([]);
       setPendingFiles([]);
@@ -221,6 +224,7 @@ export default function PromptModal() {
       solutions: selectedSolutions,
       tags,
       systems,
+      demoLinks: demoLinks.filter(l => l.url.trim()),
       notes: notes.trim(),
       isFavorite,
       usageCount: existing?.usageCount || 0,
@@ -395,6 +399,39 @@ export default function PromptModal() {
             ) : (
               <p className="field-hint-text">{t('noSystemsYet', lang)}</p>
             )}
+          </div>
+
+          {/* Demo Links */}
+          <div className="field-row">
+            <label>{t('demoLinksLabel', lang)}</label>
+            {demoLinks.map((link, idx) => (
+              <div key={link.id} className="demo-link-row">
+                <input
+                  type="text"
+                  value={link.desc || ''}
+                  onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, desc: e.target.value } : l))}
+                  placeholder={t('demoLinkDescPlaceholder', lang)}
+                  className="demo-link-desc"
+                />
+                <input
+                  type="url"
+                  value={link.url}
+                  onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, url: e.target.value } : l))}
+                  placeholder={t('demoLinkUrlPlaceholder', lang)}
+                  className="demo-link-url"
+                />
+                <button
+                  type="button"
+                  className="attach-remove-btn"
+                  onClick={() => setDemoLinks(prev => prev.filter((_, i) => i !== idx))}
+                >×</button>
+              </div>
+            ))}
+            <button
+              type="button"
+              className="add-row-btn"
+              onClick={() => setDemoLinks(prev => [...prev, { id: crypto.randomUUID(), url: '', desc: '' }])}
+            >{t('addDemoLink', lang)}</button>
           </div>
 
           {/* Notes */}
