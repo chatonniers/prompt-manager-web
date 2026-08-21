@@ -91,9 +91,9 @@
 #content {
   flex: 1;
   overflow-y: auto;
-  overflow-x: hidden;
   padding: 14px 18px;
   min-width: 0;
+  max-width: 100%;
 }
 
 #view-list {

@@ -29,7 +29,9 @@
   gap: 16px;
   align-items: flex-start;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding-bottom: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .flow-column {

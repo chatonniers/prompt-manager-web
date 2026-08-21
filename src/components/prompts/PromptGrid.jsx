@@ -28,29 +28,36 @@ function CategoryBlock({ label, prompts, storyFlows, lang }) {
   const usedFlows = storyFlows.filter(f => prompts.some(p => p.storyFlow === f));
   const noFlow = prompts.filter(p => !p.storyFlow);
 
-  // Only one flow (or none) — just render a flat grid, no columns
+  const hasAnyFlow = usedFlows.length > 0;
+
+  // No prompts have story flows — just render a flat grid
+  if (!hasAnyFlow) {
+    return (
+      <div className="category-block">
+        <div className="grid-section-label">{label}</div>
+        <div className="category-flat-grid">
+          {prompts.map(p => <PromptCard key={p.id} prompt={p} />)}
+        </div>
+      </div>
+    );
+  }
+
   const columns = [
     ...usedFlows.map(f => ({ key: f, label: f, prompts: prompts.filter(p => p.storyFlow === f) })),
-    ...(noFlow.length > 0 ? [{ key: '__none__', label: null, prompts: noFlow }] : []),
+    ...(noFlow.length > 0 ? [{ key: '__none__', label: '—', prompts: noFlow }] : []),
   ];
 
   return (
     <div className="category-block">
       <div className="grid-section-label">{label}</div>
-      {columns.length <= 1 ? (
-        <div className="category-flat-grid">
-          {prompts.map(p => <PromptCard key={p.id} prompt={p} />)}
-        </div>
-      ) : (
-        <div className="category-flow-columns">
-          {columns.map(col => (
-            <div key={col.key} className="flow-column">
-              {col.label && <div className="flow-column-label">{col.label}</div>}
-              {col.prompts.map(p => <PromptCard key={p.id} prompt={p} />)}
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="category-flow-columns">
+        {columns.map(col => (
+          <div key={col.key} className="flow-column">
+            <div className="flow-column-label">{col.label}</div>
+            {col.prompts.map(p => <PromptCard key={p.id} prompt={p} />)}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
