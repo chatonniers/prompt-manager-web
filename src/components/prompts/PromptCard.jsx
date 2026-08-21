@@ -157,6 +157,8 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
   const [category, setCategory] = useState(p.category || '');
   const [storyFlow, setStoryFlow] = useState(p.storyFlow || '');
   const [isFavorite, setIsFavorite] = useState(p.isFavorite || false);
+  const [notes, setNotes] = useState(p.notes || '');
+  const [systems, setSystems] = useState(() => getSystems(p));
   const [saving, setSaving] = useState(false);
 
   function updateItemBody(id, field, value) {
@@ -178,6 +180,8 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
       category: category || null,
       storyFlow,
       isFavorite,
+      notes: notes.trim(),
+      systems,
     });
     setSaving(false);
     onSave();
@@ -265,6 +269,43 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
             {(catalog.storyFlows || []).map(f => <option key={f} value={f}>{f}</option>)}
           </select>
         </div>
+      </div>
+
+      {/* Systems */}
+      {(catalog.systems || []).length > 0 && (
+        <div className="card-edit-field">
+          <label className="card-edit-label">{t('systems', lang)}</label>
+          <div className="card-edit-systems">
+            {catalog.systems.map(sys => {
+              const selected = systems.some(s => s.id === sys.id);
+              return (
+                <button
+                  key={sys.id}
+                  type="button"
+                  className={`card-edit-sys-chip${selected ? ' selected' : ''}`}
+                  onClick={() => setSystems(prev =>
+                    selected ? prev.filter(s => s.id !== sys.id) : [...prev, sys]
+                  )}
+                >
+                  {selected ? '✓ ' : ''}{sys.name || sys.url}
+                  {sys.endpoints?.length > 0 && <span style={{ opacity: 0.6, marginLeft: 3 }}>🔑</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Notes */}
+      <div className="card-edit-field">
+        <label className="card-edit-label">Notes</label>
+        <textarea
+          className="card-edit-textarea"
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+          rows={2}
+          placeholder="Demo tips, context…"
+        />
       </div>
 
       {/* Favorite */}

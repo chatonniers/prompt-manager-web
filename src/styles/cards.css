@@ -266,6 +266,32 @@
 }
 .card-edit-select:focus { border-color: var(--pm-accent); }
 
+.card-edit-systems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.card-edit-sys-chip {
+  background: var(--pm-bg);
+  border: 1.5px solid var(--pm-border2);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pm-text2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.card-edit-sys-chip:hover,
+.card-edit-sys-chip.selected {
+  background: var(--pm-accent-bg);
+  border-color: var(--pm-accent);
+  color: var(--pm-accent);
+}
+
 .card-edit-fav-toggle {
   display: flex;
   align-items: center;
