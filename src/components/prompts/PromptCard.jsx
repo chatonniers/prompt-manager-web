@@ -511,10 +511,16 @@ export default function PromptCard({ prompt: p }) {
               <div key={item.id} className="prompt-item-row">
                 <div className="prompt-item-content">
                   {!isSingle && <div className="prompt-item-label">{item.label || `#${idx + 1}`}</div>}
-                  <div className="prompt-item-preview">{body}</div>
+                  <div className="prompt-item-preview-wrap">
+                    <div className="prompt-item-preview">{body}</div>
+                    <div className="prompt-item-tooltip">{body}</div>
+                  </div>
                 </div>
                 <button className="prompt-item-copy-btn" title={t('copy', lang)} onClick={e => { e.stopPropagation(); handleCopyItem(item); }}>
-                  {t('copy', lang)}
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+                    <path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2H3.5A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
                 </button>
               </div>
             );
