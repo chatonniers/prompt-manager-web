@@ -4,52 +4,44 @@
   min-width: 160px;
   max-width: 400px;
   flex-shrink: 0;
-  background: #F8F9FC;
-  border-right: 1px solid var(--pm-border);
-  padding: 16px 0 12px;
+  background: #0F1629;
+  border-right: none;
+  padding: 12px 0 16px;
   overflow-y: auto;
   overflow-x: hidden;
   transition: width 0.2s ease;
   display: flex;
   flex-direction: column;
+  scrollbar-width: none;
 }
 
+#sidebar::-webkit-scrollbar { display: none; }
+
 #sidebar.sidebar-collapsed {
-  width: 32px !important;
-  min-width: 32px;
-  padding: 0;
-  border-right: 1px solid var(--pm-border);
-  overflow: visible;
+  width: 52px !important;
+  min-width: 52px;
+  padding: 8px 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
+  background: #0F1629;
 }
 
-/* Section group header */
-.nav-section-label {
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1.4px;
-  color: var(--pm-text3);
-  padding: 18px 18px 6px;
-}
-
-/* Nav item base */
+/* ── Nav item base ────────────────────────────────────────────────────── */
 .nav-item {
   display: flex;
   align-items: center;
   gap: 10px;
   background: none;
   border: none;
-  border-radius: 10px;
-  padding: 9px 14px;
+  border-radius: 8px;
+  padding: 8px 12px;
   margin: 1px 8px;
   font-size: 13px;
   font-weight: 500;
   font-family: inherit;
-  color: var(--pm-text2);
+  color: rgba(255,255,255,0.55);
   cursor: pointer;
   text-align: left;
   transition: background 0.12s, color 0.12s;
@@ -58,47 +50,31 @@
 }
 
 .nav-item:hover {
-  background: rgba(91,106,240,0.06);
-  color: var(--pm-text1);
+  background: rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.9);
 }
 
-/* Active: filled chip — unmistakable */
 .nav-item.active {
-  background: var(--pm-accent);
+  background: rgba(99,102,241,0.2);
   color: #fff;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .nav-item.active .nav-badge {
-  background: rgba(255,255,255,0.2);
+  background: var(--pm-accent);
   color: #fff;
 }
 
-/* Flow items active: use their own color set inline */
-.nav-item-flow { padding-left: 10px; }
-.nav-item-flow.active { font-weight: 700; }
-
-.nav-flow-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  flex-shrink: 0;
+/* ── Section header ───────────────────────────────────────────────────── */
+.nav-section-label {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  color: rgba(255,255,255,0.25);
+  padding: 16px 20px 5px;
 }
 
-.nav-badge {
-  margin-left: auto;
-  background: #E8EAF2;
-  color: var(--pm-text3);
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 20px;
-  flex-shrink: 0;
-  min-width: 26px;
-  text-align: center;
-}
-
-/* Section toggle */
 .nav-section-toggle {
   display: flex;
   align-items: center;
@@ -107,48 +83,74 @@
   border: none;
   cursor: pointer;
   font-family: inherit;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 1.4px;
-  color: var(--pm-text3);
-  padding: 18px 18px 6px;
+  letter-spacing: 1.6px;
+  color: rgba(255,255,255,0.25);
+  padding: 16px 20px 5px;
   text-align: left;
   transition: color 0.12s;
 }
 
-.nav-section-toggle:hover { color: var(--pm-text1); }
+.nav-section-toggle:hover { color: rgba(255,255,255,0.5); }
 
 .nav-section-chevron {
   margin-left: auto;
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
-/* Divider */
+/* ── Badge ────────────────────────────────────────────────────────────── */
+.nav-badge {
+  margin-left: auto;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.4);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  flex-shrink: 0;
+  min-width: 22px;
+  text-align: center;
+}
+
+/* ── Flow items ───────────────────────────────────────────────────────── */
+.nav-item-flow { padding-left: 10px; }
+.nav-item-flow.active { font-weight: 600; }
+
+.nav-flow-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+/* ── Divider ──────────────────────────────────────────────────────────── */
 .nav-divider {
   height: 1px;
-  background: var(--pm-border);
+  background: rgba(255,255,255,0.06);
   margin: 8px 16px;
 }
 
-/* Version footer */
+/* ── Version footer ───────────────────────────────────────────────────── */
 .sidebar-version {
   margin-top: auto;
-  padding: 14px 18px 8px;
+  padding: 14px 20px 6px;
   font-size: 10px;
-  color: var(--pm-text3);
+  color: rgba(255,255,255,0.2);
   font-weight: 500;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.3px;
   user-select: none;
   line-height: 1.7;
 }
 
-/* Toggle buttons */
+/* ── Toggle buttons ───────────────────────────────────────────────────── */
 .sidebar-toggle-btn {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--pm-text3);
+  color: rgba(255,255,255,0.3);
   line-height: 1;
   padding: 8px 7px;
   border-radius: 7px;
@@ -157,12 +159,12 @@
 }
 
 .sidebar-toggle-btn:hover {
-  background: rgba(91,106,240,0.08);
-  color: var(--pm-accent);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.8);
 }
 
 .sidebar-toggle-collapse {
   width: 100%;
   text-align: center;
-  padding: 6px 0 12px;
+  padding: 6px 0 10px;
 }

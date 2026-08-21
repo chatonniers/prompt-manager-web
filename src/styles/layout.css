@@ -80,14 +80,15 @@
 #main-layout {
   display: flex;
   height: calc(100vh - 60px);
+  background: #F0F2F8;
 }
 
 /* ── Sidebar resize handle ────────────────────────────────────────────── */
 #sidebar-resizer {
-  width: 5px;
+  width: 4px;
   flex-shrink: 0;
   cursor: col-resize;
-  background: transparent;
+  background: rgba(255,255,255,0.04);
   transition: background 0.15s;
   position: relative;
   z-index: 10;

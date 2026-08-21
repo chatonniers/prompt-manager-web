@@ -547,9 +547,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
             return (
               <div key={item.id} className="prompt-item-row">
                 <div className="prompt-item-content">
-                  {!isSingle && (
-                    <span className="prompt-item-num">{idx + 1}</span>
-                  )}
+                  <span className="prompt-item-num">{idx + 1}</span>
                   <div className="prompt-item-preview-wrap">
                     <span className="prompt-item-preview">{label}</span>
                     <div className="prompt-item-tooltip">{body}</div>
@@ -579,7 +577,6 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
           {p.storyFlow && (() => { const c = getFlowColor(p.storyFlow); return <span className="pill flow" style={{ background: c.bg, color: c.text }}>{p.storyFlow}</span>; })()}
           {(p.tags || []).slice(0, 3).map(tag => <span key={tag} className="pill tag">#{tag}</span>)}
           {langBadge}
-          {attachCount > 0 && <span className="attach-count-pill">{attachCount} file{attachCount > 1 ? 's' : ''}</span>}
           {p.usageCount > 0 && <span className="usage-hint" style={{ marginLeft: 'auto' }}>Used {t('usedCount', lang, p.usageCount)}{p.lastUsedAt ? ` · ${relTime(p.lastUsedAt, lang)}` : ''}</span>}
         </div>
 

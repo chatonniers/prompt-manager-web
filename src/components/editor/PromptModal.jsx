@@ -187,6 +187,7 @@ export default function PromptModal() {
     if (!title.trim()) { setErrors({ title: t('titleRequired', lang) }); return; }
     const validItems = promptItems.filter(item => item.body.trim());
     if (validItems.length === 0) { setErrors({ body: t('bodyRequired', lang) }); return; }
+    if (validItems.some(item => !item.label.trim())) { setErrors({ label: true }); return; }
     setSaving(true);
 
     const promptId = existing?.id || crypto.randomUUID();
@@ -271,10 +272,10 @@ export default function PromptModal() {
                       <span className="prompt-item-editor-num">#{idx + 1}</span>
                       <input
                         type="text"
-                        className="prompt-item-label-input"
+                        className={`prompt-item-label-input${errors.label && !item.label.trim() ? ' input-error' : ''}`}
                         value={item.label}
                         onChange={e => updateItem(item.id, 'label', e.target.value)}
-                        placeholder={t('labelOptionalPlaceholder', lang)}
+                        placeholder={t('promptItemLabel', lang)}
                       />
                       {promptItems.length > 1 && (
                         <button className="prompt-item-delete-btn" title={t('removePrompt', lang)} onClick={() => removeItem(item.id)}>
@@ -319,60 +320,6 @@ export default function PromptModal() {
               <option value="">— {t('noCategory', lang)} —</option>
               {(catalog.categories || []).map(cat => <option key={cat} value={cat}>{cat}</option>)}
             </select>
-          </div>
-
-          {/* Story Flow + Favorite */}
-          <div className="field-row-2col">
-            <div className="field-col">
-              <label>{t('storyFlow', lang)}</label>
-              <select value={storyFlow} onChange={e => setStoryFlow(e.target.value)}>
-                <option value="">{t('selectFlowNone', lang)}</option>
-                {catalog.storyFlows.map(f => <option key={f} value={f}>{f}</option>)}
-              </select>
-            </div>
-            <div className="field-col">
-              <label>{t('favLabel', lang)}</label>
-              <label className="toggle-label">
-                <input type="checkbox" checked={isFavorite} onChange={e => setIsFavorite(e.target.checked)} />
-                <span> {t('markFav', lang)}</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Solutions */}
-          <div className="field-row">
-            <label>{t('solutionsLabel', lang)}</label>
-            <div className="checkbox-group">
-              {catalog.solutions.map(sol => (
-                <label key={sol} className="checkbox-label">
-                  <input type="checkbox" checked={selectedSolutions.includes(sol)} onChange={() => toggleSolution(sol)} />
-                  <span>{sol}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Personas */}
-          <div className="field-row">
-            <label>{t('personasLabel', lang)}</label>
-            {(catalog.personas || []).length > 0 ? (
-              <div className="catalog-picker">
-                {catalog.personas.map(persona => (
-                  <button
-                    key={persona}
-                    type="button"
-                    className={`catalog-chip${personas.includes(persona) ? ' selected' : ''}`}
-                    onClick={() => setPersonas(prev =>
-                      prev.includes(persona) ? prev.filter(x => x !== persona) : [...prev, persona]
-                    )}
-                  >
-                    {personas.includes(persona) ? '· ' : ''}{persona}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <p className="field-hint-text">{t('noPersonasYet', lang)}</p>
-            )}
           </div>
 
           {/* Tags */}
@@ -504,7 +451,7 @@ export default function PromptModal() {
 
         <div id="modal-footer">
           <button className="action-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>{t('cancel', lang)}</button>
-          <button className="action-btn primary" onClick={handleSave} disabled={saving}>{saving ? t('savingLabel', lang) : t('save', lang)}</button>
+          <button className="action-btn primary" onClick={handleSave} disabled={saving || promptItems.filter(i => i.body.trim()).some(i => !i.label.trim())}>{saving ? t('savingLabel', lang) : t('save', lang)}</button>
         </div>
       </div>
     </div>

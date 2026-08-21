@@ -26,6 +26,7 @@ function AppInner() {
   useStorage()
   const { state, dispatch } = useApp()
   const [helpOpen, setHelpOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const zoom = state.zoom ?? 1
   const STEP = 0.1
 
@@ -59,7 +60,7 @@ function AppInner() {
     <>
       <TopBar onHelp={() => setHelpOpen(true)} />
       <div id="main-layout">
-        <Sidebar />
+        <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(v => !v)} />
         <main id="content">
           <div id="content-scaler" style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', width: `${100 / zoom}%` }}>
             <MainContent />
