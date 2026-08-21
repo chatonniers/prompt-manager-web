@@ -166,6 +166,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
   const [itemTab, setItemTab] = useState('en');
   const [category, setCategory] = useState(p.category || '');
   const [storyFlow, setStoryFlow] = useState(p.storyFlow || '');
+  const [status, setStatus] = useState(p.status || '');
   const [personas, setPersonas] = useState(p.personas || []);
   const [notes, setNotes] = useState(p.notes || '');
   const [systems, setSystems] = useState(() => getSystems(p));
@@ -242,6 +243,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
       promptItems: finalItems,
       category: category || null,
       storyFlow,
+      status: status || null,
       personas,
       notes: notes.trim(),
       systems,
@@ -322,6 +324,22 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
             <option value="">{t('selectNone', lang)}</option>
             {(catalog.storyFlows || []).map(f => <option key={f} value={f}>{f}</option>)}
           </select>
+        </div>
+      </div>
+
+      <div className="card-edit-field">
+        <label className="card-edit-label">Status</label>
+        <div className="card-status-btns">
+          {['', 'draft', 'ready', 'validated'].map(s => (
+            <button
+              key={s}
+              type="button"
+              className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`}
+              onClick={() => setStatus(s)}
+            >
+              {s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -574,6 +592,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
           {(p.solutions || []).map(s => <span key={s} className="pill">{s}</span>)}
           {p.storyFlow && (() => { const c = getFlowColor(p.storyFlow); return <span className="pill flow" style={{ background: c.bg, color: c.text }}>{p.storyFlow}</span>; })()}
           {(p.tags || []).slice(0, 3).map(tag => <span key={tag} className="pill tag">#{tag}</span>)}
+          {p.status && <span className={`pill status-${p.status}`}>{p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span>}
           {langBadge}
           {p.usageCount > 0 && <span className="usage-hint" style={{ marginLeft: 'auto' }}>Used {t('usedCount', lang, p.usageCount)}{p.lastUsedAt ? ` · ${relTime(p.lastUsedAt, lang)}` : ''}</span>}
         </div>

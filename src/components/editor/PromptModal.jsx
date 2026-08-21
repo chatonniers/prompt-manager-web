@@ -38,6 +38,7 @@ export default function PromptModal() {
   const [systems, setSystems] = useState([]);
   const [demoLinks, setDemoLinks] = useState([]);
   const [notes, setNotes] = useState('');
+  const [status, setStatus] = useState('');
   const [pendingFiles, setPendingFiles] = useState([]);
   const [existingAtts, setExistingAtts] = useState([]);
   const [pendingDeletes, setPendingDeletes] = useState([]);
@@ -89,6 +90,7 @@ export default function PromptModal() {
         setSystems(legacySystems);
       }
       setNotes(existing.notes || '');
+      setStatus(existing.status || '');
       setDemoLinks(Array.isArray(existing.demoLinks) ? existing.demoLinks.map(l => ({ ...l })) : []);
       AttachmentsDB.getForPrompt(existing.id).then(atts => setExistingAtts(atts));
     } else {
@@ -104,6 +106,7 @@ export default function PromptModal() {
       setSystems([]);
       setDemoLinks([]);
       setNotes('');
+      setStatus('');
       setExistingAtts([]);
       setPendingFiles([]);
     }
@@ -225,6 +228,7 @@ export default function PromptModal() {
       systems,
       demoLinks: demoLinks.filter(l => l.url.trim()),
       notes: notes.trim(),
+      status: status || null,
       isFavorite,
       usageCount: existing?.usageCount || 0,
       lastUsedAt: existing?.lastUsedAt || null,
@@ -320,6 +324,22 @@ export default function PromptModal() {
               <option value="">— {t('noCategory', lang)} —</option>
               {(catalog.categories || []).map(cat => <option key={cat} value={cat}>{cat}</option>)}
             </select>
+          </div>
+
+          <div className="field-row">
+            <label>Status</label>
+            <div className="card-status-btns">
+              {['', 'draft', 'ready', 'validated'].map(s => (
+                <button
+                  key={s}
+                  type="button"
+                  className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`}
+                  onClick={() => setStatus(s)}
+                >
+                  {s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Tags */}
