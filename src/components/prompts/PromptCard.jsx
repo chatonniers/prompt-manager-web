@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { t } from '../../lib/i18n.js';
@@ -138,9 +138,167 @@ function getSystems(p) {
   return result;
 }
 
+function makeItem(body = '', body_fr = '') {
+  return { id: crypto.randomUUID(), label: '', body, body_fr };
+}
+
+// Inline edit form rendered on card back face
+function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
+  const [title, setTitle] = useState(p.title || '');
+  const [items, setItems] = useState(() =>
+    p.promptItems?.length
+      ? p.promptItems.map(i => ({ ...i }))
+      : [makeItem(p.body || '', p.body_fr || '')]
+  );
+  const [activeItemId, setActiveItemId] = useState(() =>
+    p.promptItems?.length ? p.promptItems[0].id : items[0].id
+  );
+  const [itemTab, setItemTab] = useState('en');
+  const [category, setCategory] = useState(p.category || '');
+  const [storyFlow, setStoryFlow] = useState(p.storyFlow || '');
+  const [isFavorite, setIsFavorite] = useState(p.isFavorite || false);
+  const [saving, setSaving] = useState(false);
+
+  function updateItemBody(id, field, value) {
+    setItems(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
+  }
+
+  async function handleSave() {
+    if (!title.trim()) return;
+    const validItems = items.filter(i => i.body.trim());
+    if (validItems.length === 0) return;
+    setSaving(true);
+    const finalItems = validItems.map(i => ({ ...i, body: i.body.trim(), body_fr: i.body_fr?.trim() || null }));
+    await StorageAPI.upsertPrompt({
+      ...p,
+      title: title.trim(),
+      body: finalItems[0]?.body || '',
+      body_fr: finalItems[0]?.body_fr || null,
+      promptItems: finalItems,
+      category: category || null,
+      storyFlow,
+      isFavorite,
+    });
+    setSaving(false);
+    onSave();
+  }
+
+  const activeItem = items.find(i => i.id === activeItemId) || items[0];
+
+  return (
+    <div className="card-edit-back" onClick={e => e.stopPropagation()}>
+      <div className="card-edit-header">
+        <span className="card-edit-title">Edit Prompt</span>
+        <button className="card-edit-close" onClick={onCancel}>✕</button>
+      </div>
+
+      {/* Title */}
+      <div className="card-edit-field">
+        <label className="card-edit-label">Title</label>
+        <input
+          className="card-edit-input"
+          type="text"
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          placeholder="Title…"
+          maxLength={120}
+        />
+      </div>
+
+      {/* Prompt items selector + body */}
+      {items.length > 1 && (
+        <div className="card-edit-item-tabs">
+          {items.map((item, idx) => (
+            <button
+              key={item.id}
+              className={`card-edit-item-tab${activeItemId === item.id ? ' active' : ''}`}
+              onClick={() => setActiveItemId(item.id)}
+            >
+              {item.label || `#${idx + 1}`}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {activeItem && (
+        <div className="card-edit-field">
+          <div className="card-edit-lang-row">
+            <label className="card-edit-label">Body</label>
+            <div className="card-edit-lang-btns">
+              <button className={`card-edit-lang-btn${itemTab === 'en' ? ' active' : ''}`} onClick={() => setItemTab('en')}>EN</button>
+              <button className={`card-edit-lang-btn${itemTab === 'fr' ? ' active' : ''}`} onClick={() => setItemTab('fr')}>FR</button>
+            </div>
+          </div>
+          {itemTab === 'en' ? (
+            <textarea
+              className="card-edit-textarea"
+              value={activeItem.body}
+              onChange={e => updateItemBody(activeItem.id, 'body', e.target.value)}
+              rows={4}
+              placeholder="Prompt text…"
+            />
+          ) : (
+            <textarea
+              className="card-edit-textarea"
+              value={activeItem.body_fr || ''}
+              onChange={e => updateItemBody(activeItem.id, 'body_fr', e.target.value)}
+              rows={4}
+              placeholder="Texte du prompt (FR)…"
+            />
+          )}
+        </div>
+      )}
+
+      {/* Category + Story Flow */}
+      <div className="card-edit-2col">
+        <div className="card-edit-field">
+          <label className="card-edit-label">Category</label>
+          <select className="card-edit-select" value={category} onChange={e => setCategory(e.target.value)}>
+            <option value="">— None —</option>
+            {(catalog.categories || []).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+          </select>
+        </div>
+        <div className="card-edit-field">
+          <label className="card-edit-label">Story Flow</label>
+          <select className="card-edit-select" value={storyFlow} onChange={e => setStoryFlow(e.target.value)}>
+            <option value="">— None —</option>
+            {(catalog.storyFlows || []).map(f => <option key={f} value={f}>{f}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {/* Favorite */}
+      <label className="card-edit-fav-toggle">
+        <input type="checkbox" checked={isFavorite} onChange={e => setIsFavorite(e.target.checked)} />
+        <span>★ Favorite</span>
+      </label>
+
+      <div className="card-edit-actions">
+        <button className="card-edit-cancel-btn" onClick={onCancel}>{t('cancel', lang)}</button>
+        <button className="card-edit-save-btn" onClick={handleSave} disabled={saving}>
+          {saving ? 'Saving…' : t('save', lang)}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function PromptCard({ prompt: p }) {
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
+  const catalog = state.catalog;
+
+  const [flipped, setFlipped] = useState(false);
+  const frontRef = useRef(null);
+  const [frontHeight, setFrontHeight] = useState(null);
+
+  useEffect(() => {
+    if (frontRef.current) {
+      setFrontHeight(frontRef.current.offsetHeight);
+    }
+  }, [p]);
+
+  // Close edit when card is scrolled out — optional UX nicety, skip for now
 
   const promptItems = p.promptItems?.length
     ? p.promptItems
@@ -186,8 +344,11 @@ export default function PromptCard({ prompt: p }) {
     dispatch({ type: 'SHOW_TOAST', payload: `"${dupe.title}" created` });
   }
 
-  function handleEdit() {
-    dispatch({ type: 'OPEN_MODAL', payload: p.id });
+  async function handleEditSave() {
+    const prompts = await StorageAPI.getAllPrompts();
+    dispatch({ type: 'SET_PROMPTS', payload: prompts });
+    dispatch({ type: 'SHOW_TOAST', payload: t('promptUpdated', lang) });
+    setFlipped(false);
   }
 
   function handleDelete() {
@@ -204,63 +365,82 @@ export default function PromptCard({ prompt: p }) {
   const isSingle = promptItems.length === 1;
 
   return (
-    <div className="prompt-card">
-      <div className="prompt-card-header">
-        <div className="prompt-card-title">{p.title}</div>
-        <button
-          className={`prompt-card-fav${p.isFavorite ? ' active' : ''}`}
-          title={p.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-          onClick={handleToggleFav}
-        >★</button>
-      </div>
+    <div
+      className={`prompt-card-flip-wrapper${flipped ? ' flipped' : ''}`}
+      style={frontHeight ? { minHeight: frontHeight } : undefined}
+    >
+      {/* Front face */}
+      <div className="prompt-card prompt-card-face prompt-card-front" ref={frontRef}>
+        <div className="prompt-card-header">
+          <div className="prompt-card-title">{p.title}</div>
+          <button
+            className={`prompt-card-fav${p.isFavorite ? ' active' : ''}`}
+            title={p.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            onClick={e => { e.stopPropagation(); handleToggleFav(); }}
+          >★</button>
+        </div>
 
-      {/* Prompt items */}
-      <div className="prompt-items-list">
-        {promptItems.map((item, idx) => {
-          const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;
-          return (
-            <div key={item.id} className="prompt-item-row">
-              <div className="prompt-item-content">
-                {!isSingle && <div className="prompt-item-label">{item.label || `#${idx + 1}`}</div>}
-                <div className="prompt-item-preview">{body}</div>
+        {/* Prompt items */}
+        <div className="prompt-items-list">
+          {promptItems.map((item, idx) => {
+            const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;
+            return (
+              <div key={item.id} className="prompt-item-row">
+                <div className="prompt-item-content">
+                  {!isSingle && <div className="prompt-item-label">{item.label || `#${idx + 1}`}</div>}
+                  <div className="prompt-item-preview">{body}</div>
+                </div>
+                <button className="prompt-item-copy-btn" title={t('copy', lang)} onClick={() => handleCopyItem(item)}>
+                  {t('copy', lang)}
+                </button>
               </div>
-              <button className="prompt-item-copy-btn" title={t('copy', lang)} onClick={() => handleCopyItem(item)}>
-                {t('copy', lang)}
-              </button>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+
+        {/* Meta pills */}
+        <div className="prompt-card-meta">
+          {p.category && <span className="pill category">{p.category}</span>}
+          {(p.solutions || []).map(s => <span key={s} className="pill">{s}</span>)}
+          {p.storyFlow && <span className="pill flow">{p.storyFlow}</span>}
+          {(p.tags || []).slice(0, 3).map(tag => <span key={tag} className="pill tag">#{tag}</span>)}
+          {langBadge}
+          {attachCount > 0 && <span className="attach-count-pill">📎 {attachCount}</span>}
+        </div>
+
+        {/* Systems — flippable chips */}
+        {systems.length > 0 && (
+          <div className="card-systems-list">
+            {systems.map(sys => (
+              <SystemChip key={sys.id} sys={sys} lang={lang} onCopied={handleCopied} />
+            ))}
+          </div>
+        )}
+
+        {p.usageCount > 0 && (
+          <div className="usage-hint">
+            Used {p.usageCount}×{p.lastUsedAt ? ` · ${relTime(p.lastUsedAt)}` : ''}
+          </div>
+        )}
+
+        <div className="prompt-card-actions">
+          <button className="card-action-btn" onClick={handleDuplicate} title="Duplicate">⧉</button>
+          <button className="card-action-btn edit" onClick={() => setFlipped(true)}>{t('edit', lang)}</button>
+          <button className="card-action-btn del" onClick={handleDelete}>{t('del', lang)}</button>
+        </div>
       </div>
 
-      {/* Meta pills */}
-      <div className="prompt-card-meta">
-        {p.category && <span className="pill category">{p.category}</span>}
-        {(p.solutions || []).map(s => <span key={s} className="pill">{s}</span>)}
-        {p.storyFlow && <span className="pill flow">{p.storyFlow}</span>}
-        {(p.tags || []).slice(0, 3).map(tag => <span key={tag} className="pill tag">#{tag}</span>)}
-        {langBadge}
-        {attachCount > 0 && <span className="attach-count-pill">📎 {attachCount}</span>}
-      </div>
-
-      {/* Systems — flippable chips */}
-      {systems.length > 0 && (
-        <div className="card-systems-list">
-          {systems.map(sys => (
-            <SystemChip key={sys.id} sys={sys} lang={lang} onCopied={handleCopied} />
-          ))}
-        </div>
-      )}
-
-      {p.usageCount > 0 && (
-        <div className="usage-hint">
-          Used {p.usageCount}×{p.lastUsedAt ? ` · ${relTime(p.lastUsedAt)}` : ''}
-        </div>
-      )}
-
-      <div className="prompt-card-actions">
-        <button className="card-action-btn" onClick={handleDuplicate} title="Duplicate">⧉</button>
-        <button className="card-action-btn edit" onClick={handleEdit}>{t('edit', lang)}</button>
-        <button className="card-action-btn del" onClick={handleDelete}>{t('del', lang)}</button>
+      {/* Back face — inline edit form */}
+      <div className="prompt-card prompt-card-face prompt-card-back">
+        {flipped && (
+          <CardEditBack
+            prompt={p}
+            catalog={catalog}
+            lang={lang}
+            onSave={handleEditSave}
+            onCancel={() => setFlipped(false)}
+          />
+        )}
       </div>
     </div>
   );
