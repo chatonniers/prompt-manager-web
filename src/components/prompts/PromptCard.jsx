@@ -429,6 +429,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
   const catalog = state.catalog;
+  const isDragging = state.draggingId === p.id;
 
   const [flipped, setFlipped] = useState(false);
   const [flashSaved, setFlashSaved] = useState(false);
@@ -518,9 +519,12 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
     <div className={`prompt-card-flip-wrapper${flipped ? ' flipped' : ''}${flashSaved ? ' card--flash-saved' : ''}`}>
       {/* Front face */}
       <div
-        className={`prompt-card prompt-card-face prompt-card-front${isSingle ? ' prompt-card-single' : ''}`}
+        className={`prompt-card prompt-card-face prompt-card-front${isSingle ? ' prompt-card-single' : ''}${isDragging ? ' is-dragging' : ''}`}
         style={{ '--card-accent-color': edgeColor }}
         tabIndex={0}
+        draggable={true}
+        onDragStart={e => { e.dataTransfer.setData('promptId', p.id); dispatch({ type: 'SET_DRAGGING', payload: p.id }); }}
+        onDragEnd={() => dispatch({ type: 'SET_DRAGGING', payload: null })}
         onClick={() => setFlipped(true)}
         onKeyDown={e => { if (e.key === 'Enter') setFlipped(true); }}
       >

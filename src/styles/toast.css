@@ -7,34 +7,68 @@
   color: #fff;
   font-size: 13px;
   padding: 10px 18px;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.28);
   z-index: 9999;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, transform 0.2s;
   pointer-events: none;
   font-family: var(--pm-font);
   opacity: 0;
+  transform: translateY(8px);
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-#pm-toast.visible { opacity: 1; pointer-events: auto; }
+#pm-toast.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* Undo variant — colorful gradient */
+#pm-toast.has-undo {
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  box-shadow: 0 4px 24px rgba(99,102,241,0.45);
+  padding: 12px 16px 12px 20px;
+  gap: 14px;
+}
+
+.toast-msg {
+  flex: 1;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
 
 .toast-undo-btn {
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 5px;
+  background: rgba(255,255,255,0.22);
+  border: 1.5px solid rgba(255,255,255,0.5);
+  border-radius: 6px;
   color: #fff;
   font-size: 12px;
   font-weight: 700;
-  padding: 3px 10px;
+  padding: 4px 12px;
   cursor: pointer;
   font-family: var(--pm-font);
-  transition: background 0.12s;
+  transition: background 0.12s, transform 0.1s;
   white-space: nowrap;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
-.toast-undo-btn:hover { background: rgba(255,255,255,0.28); }
+.toast-undo-btn:hover {
+  background: rgba(255,255,255,0.38);
+  transform: scale(1.04);
+}
+
+.toast-timer {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.65);
+  min-width: 22px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
 
 /* ── Confirm dialog ───────────────────────────────────────────────────── */
 #confirm-backdrop {

@@ -342,3 +342,10 @@
 }
 .bulk-action-select:focus { border-color: var(--pm-accent); }
 
+/* ── Drag and drop zones ───────────────────────────────────────────────── */
+.drop-zone.dz-over {
+  outline: 2.5px dashed var(--pm-accent);
+  background: var(--pm-accent-bg);
+  border-radius: var(--pm-radius);
+}
+

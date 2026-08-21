@@ -18,6 +18,7 @@ const initialState = {
   toastUndo: null,   // { label, onUndo } — if set, Toast shows an Undo button
   initialized: false,
   selectedIds: new Set(),
+  draggingId: null,
   zoom: (() => { const v = parseFloat(localStorage.getItem('pm-zoom')); return v >= 0.5 && v <= 2 ? v : 1; })(),
 };
 
@@ -76,6 +77,8 @@ function reducer(state, action) {
       const all = new Set([...state.selectedIds, ...(action.payload || [])]);
       return { ...state, selectedIds: all };
     }
+    case 'SET_DRAGGING':
+      return { ...state, draggingId: action.payload ?? null };
     default:
       return state;
   }

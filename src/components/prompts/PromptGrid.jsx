@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
+import { StorageAPI } from '../../lib/storage.js';
 import { filterAndRank } from '../../lib/search.js';
 import { t } from '../../lib/i18n.js';
 import { getFlowColor } from '../../lib/flowColors.js';
@@ -15,23 +17,34 @@ function applyViewFilter(prompts, view, filter) {
   return prompts;
 }
 
-// Render a category block: full-width label + flow columns below
-function CategoryBlock({ label, prompts, storyFlows, lang, selectedIds, onToggleSelect }) {
-  // Collect flows that actually have prompts, preserving catalog order
+function DropZone({ className, style, onDrop, children }) {
+  const [over, setOver] = useState(false);
+  return (
+    <div
+      className={`${className} drop-zone${over ? ' dz-over' : ''}`}
+      style={style}
+      onDragOver={e => { e.preventDefault(); e.stopPropagation(); setOver(true); }}
+      onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setOver(false); }}
+      onDrop={e => { e.preventDefault(); e.stopPropagation(); setOver(false); onDrop(e.dataTransfer.getData('promptId')); }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, onToggleSelect, onDrop }) {
   const usedFlows = storyFlows.filter(f => prompts.some(p => p.storyFlow === f));
   const noFlow = prompts.filter(p => !p.storyFlow);
-
   const hasAnyFlow = usedFlows.length > 0;
 
-  // No prompts have story flows — just render a flat grid
   if (!hasAnyFlow) {
     return (
-      <div className="category-block">
+      <DropZone className="category-block" onDrop={id => onDrop(id, { isFavorite: false, category: catKey, storyFlow: null })}>
         <div className="grid-section-label">{label}</div>
         <div className="category-flat-grid">
           {prompts.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
         </div>
-      </div>
+      </DropZone>
     );
   }
 
@@ -41,13 +54,18 @@ function CategoryBlock({ label, prompts, storyFlows, lang, selectedIds, onToggle
   ];
 
   return (
-    <div className="category-block">
+    <DropZone className="category-block" onDrop={id => onDrop(id, { isFavorite: false, category: catKey, storyFlow: null })}>
       <div className="grid-section-label">{label}</div>
       <div className="category-flow-columns">
         {columns.map(col => {
           const color = col.key !== '__none__' ? getFlowColor(col.label) : null;
+          const flowName = col.key !== '__none__' ? col.label : null;
           return (
-            <div key={col.key} className="flow-column">
+            <DropZone
+              key={col.key}
+              className="flow-column"
+              onDrop={id => onDrop(id, { isFavorite: false, category: catKey, storyFlow: flowName })}
+            >
               <div
                 className="flow-column-label"
                 style={color ? { borderLeftColor: color.border, background: color.bg, color: color.text } : {}}
@@ -55,11 +73,11 @@ function CategoryBlock({ label, prompts, storyFlows, lang, selectedIds, onToggle
                 {col.label}
               </div>
               {col.prompts.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
-            </div>
+            </DropZone>
           );
         })}
       </div>
-    </div>
+    </DropZone>
   );
 }
 
@@ -86,9 +104,19 @@ export default function PromptGrid() {
     dispatch({ type: 'TOGGLE_SELECT', payload: id });
   }
 
+  async function handleDrop(promptId, updates) {
+    const prompt = prompts.find(p => p.id === promptId);
+    if (!prompt) return;
+    await StorageAPI.upsertPrompt({ ...prompt, ...updates });
+    const [fresh, freshCatalog] = await Promise.all([
+      StorageAPI.getAllPrompts(), StorageAPI.getCatalog()
+    ]);
+    dispatch({ type: 'SET_PROMPTS', payload: fresh });
+    dispatch({ type: 'SET_CATALOG', payload: freshCatalog });
+  }
+
   if (ranked.length === 0) return <EmptyState />;
 
-  // "All Prompts" view without search: category blocks with flow columns
   if (currentView === 'all' && !searchQuery.trim()) {
     const favs = ranked.filter(p => p.isFavorite);
     const categoryBlocks = [];
@@ -105,36 +133,43 @@ export default function PromptGrid() {
       <>
         <BulkActionBar visibleIds={visibleIds} />
         <div id="prompt-grid-outer">
-          <div className="category-block">
+          {/* Favorites zone */}
+          <DropZone className="category-block" onDrop={id => handleDrop(id, { isFavorite: true })}>
             <div className="grid-section-label">{t('favorites', lang)}</div>
             {favs.length > 0 ? (
               <div className="category-flat-grid">
                 {favs.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
               </div>
             ) : (
-              <p style={{ fontSize: 13, color: 'var(--pm-text3)', padding: '8px 2px', fontStyle: 'italic' }}>No favorites yet — click the star on any card.</p>
+              <p style={{ fontSize: 13, color: 'var(--pm-text3)', padding: '8px 2px', fontStyle: 'italic' }}>No favorites yet — drag a card here or click the star.</p>
             )}
-          </div>
+          </DropZone>
+
           {categoryBlocks.map(block => (
             <CategoryBlock
               key={block.key}
+              catKey={block.key}
               label={block.label}
               prompts={block.prompts}
               storyFlows={storyFlows}
               lang={lang}
               selectedIds={selectedIds}
               onToggleSelect={onToggleSelect}
+              onDrop={handleDrop}
             />
           ))}
+
           {uncategorized.length > 0 && (
             <CategoryBlock
               key="__uncategorized__"
+              catKey={null}
               label={t('noCategory', lang)}
               prompts={uncategorized}
               storyFlows={storyFlows}
               lang={lang}
               selectedIds={selectedIds}
               onToggleSelect={onToggleSelect}
+              onDrop={handleDrop}
             />
           )}
         </div>

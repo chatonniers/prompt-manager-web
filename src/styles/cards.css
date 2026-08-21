@@ -108,8 +108,12 @@
 }
 
 .prompt-card-front {
-  cursor: pointer;
+  cursor: grab;
   padding: 0; /* banner handles top, body has its own padding */
+}
+.prompt-card-front.is-dragging {
+  opacity: 0.4;
+  cursor: grabbing;
 }
 
 .prompt-card-front:hover {
