@@ -20,6 +20,10 @@ function fmtSize(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
+function makeItem(body = '', body_fr = '') {
+  return { id: crypto.randomUUID(), label: '', body, body_fr };
+}
+
 export default function PromptModal() {
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
@@ -27,17 +31,19 @@ export default function PromptModal() {
   const isNew = editingPromptId === undefined || editingPromptId === null;
   const existing = isNew ? null : prompts.find(p => p.id === editingPromptId);
 
-  const [bodyTab, setBodyTab] = useState('en');
   const [title, setTitle] = useState('');
-  const [bodyEn, setBodyEn] = useState('');
-  const [bodyFr, setBodyFr] = useState('');
+  const [promptItems, setPromptItems] = useState([makeItem()]);
+  const [itemTabs, setItemTabs] = useState({}); // { [itemId]: 'en' | 'fr' }
   const [storyFlow, setStoryFlow] = useState('');
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedSolutions, setSelectedSolutions] = useState([]);
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
-  const [landscapes, setLandscapes] = useState([]);
+  const [landscapes, setLandscapes] = useState([]); // [{ name, url }]
   const [notes, setNotes] = useState('');
+  const [mcpClientId, setMcpClientId] = useState('');
+  const [mcpClientSecret, setMcpClientSecret] = useState('');
+  const [showSecret, setShowSecret] = useState(false);
   const [pendingFiles, setPendingFiles] = useState([]);
   const [existingAtts, setExistingAtts] = useState([]);
   const [pendingDeletes, setPendingDeletes] = useState([]);
@@ -49,19 +55,41 @@ export default function PromptModal() {
   useEffect(() => {
     if (existing) {
       setTitle(existing.title || '');
-      setBodyEn(existing.body || '');
-      setBodyFr(existing.body_fr || '');
+      // Migrate legacy single body to promptItems
+      const items = existing.promptItems?.length
+        ? existing.promptItems
+        : [makeItem(existing.body || '', existing.body_fr || '')];
+      setPromptItems(items);
+      setItemTabs({});
       setStoryFlow(existing.storyFlow || '');
       setIsFavorite(existing.isFavorite || false);
       setSelectedSolutions(existing.solutions || []);
       setTags(existing.tags || []);
-      setLandscapes(existing.landscapes || []);
+      // Migrate legacy string landscapes to objects
+      const lss = (existing.landscapes || []).map(ls =>
+        typeof ls === 'string' ? { name: ls, url: ls.startsWith('http') ? ls : '' } : ls
+      );
+      setLandscapes(lss);
       setNotes(existing.notes || '');
+      setMcpClientId(existing.mcpClientId || '');
+      setMcpClientSecret(existing.mcpClientSecret || '');
+      setShowSecret(false);
       AttachmentsDB.getForPrompt(existing.id).then(atts => setExistingAtts(atts));
     } else {
-      setTitle(''); setBodyEn(''); setBodyFr(''); setStoryFlow('');
-      setIsFavorite(false); setSelectedSolutions([]); setTags([]);
-      setLandscapes([]); setNotes(''); setExistingAtts([]); setPendingFiles([]);
+      setTitle('');
+      setPromptItems([makeItem()]);
+      setItemTabs({});
+      setStoryFlow('');
+      setIsFavorite(false);
+      setSelectedSolutions([]);
+      setTags([]);
+      setLandscapes([]);
+      setNotes('');
+      setMcpClientId('');
+      setMcpClientSecret('');
+      setShowSecret(false);
+      setExistingAtts([]);
+      setPendingFiles([]);
     }
     setPendingDeletes([]); setPendingFiles([]); setErrors({});
   }, [editingPromptId]);
@@ -89,6 +117,22 @@ export default function PromptModal() {
     } else if (e.key === 'Backspace' && !tagInput && tags.length > 0) {
       setTags(prev => prev.slice(0, -1));
     }
+  }
+
+  function updateItem(id, field, value) {
+    setPromptItems(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
+  }
+
+  function removeItem(id) {
+    setPromptItems(prev => prev.filter(item => item.id !== id));
+  }
+
+  function getItemTab(id) {
+    return itemTabs[id] || 'en';
+  }
+
+  function setItemTab(id, tab) {
+    setItemTabs(prev => ({ ...prev, [id]: tab }));
   }
 
   function addFiles(files) {
@@ -125,19 +169,18 @@ export default function PromptModal() {
 
   async function handleSave() {
     if (!title.trim()) { setErrors({ title: 'Title is required' }); return; }
-    if (!bodyEn.trim()) { setErrors({ body: 'Prompt body (EN) is required' }); return; }
+    const validItems = promptItems.filter(item => item.body.trim());
+    if (validItems.length === 0) { setErrors({ body: 'At least one prompt body is required' }); return; }
     setSaving(true);
 
     const promptId = existing?.id || crypto.randomUUID();
 
-    // Save pending attachment files to IndexedDB first
     const savedNewAtts = [];
     for (const f of pendingFiles) {
       const attId = crypto.randomUUID();
       await AttachmentsDB.save({ id: attId, promptId, name: f.name, type: f.type, size: f.size, data: f.data });
       savedNewAtts.push({ id: attId, name: f.name, type: f.type, size: f.size });
     }
-    // Delete removed attachments
     for (const attId of pendingDeletes) {
       await AttachmentsDB.delete(attId);
     }
@@ -147,16 +190,24 @@ export default function PromptModal() {
       ...savedNewAtts,
     ];
 
+    const finalItems = promptItems
+      .filter(item => item.body.trim())
+      .map(item => ({ ...item, body: item.body.trim(), body_fr: item.body_fr?.trim() || null }));
+
     await StorageAPI.upsertPrompt({
       id: promptId,
       title: title.trim(),
-      body: bodyEn.trim(),
-      body_fr: bodyFr.trim() || null,
+      // Keep legacy fields in sync with first item for export compat
+      body: finalItems[0]?.body || '',
+      body_fr: finalItems[0]?.body_fr || null,
+      promptItems: finalItems,
       storyFlow,
       solutions: selectedSolutions,
       tags,
-      landscapes: landscapes.filter(l => l.trim()),
+      landscapes: landscapes.filter(ls => ls.name.trim() || ls.url.trim()),
       notes: notes.trim(),
+      mcpClientId: mcpClientId.trim() || null,
+      mcpClientSecret: mcpClientSecret.trim() || null,
       isFavorite,
       usageCount: existing?.usageCount || 0,
       lastUsedAt: existing?.lastUsedAt || null,
@@ -169,8 +220,6 @@ export default function PromptModal() {
     dispatch({ type: 'CLOSE_MODAL' });
     setSaving(false);
   }
-
-  const activeBody = bodyTab === 'en' ? bodyEn : bodyFr;
 
   if (!isModalOpen) return null;
 
@@ -190,20 +239,57 @@ export default function PromptModal() {
             {errors.title && <span className="field-error">{errors.title}</span>}
           </div>
 
-          {/* Body EN/FR */}
+          {/* Prompt Items */}
           <div className="field-row">
-            <div className="body-tabs">
-              <button className={`body-tab${bodyTab === 'en' ? ' active-tab' : ''}`} onClick={() => setBodyTab('en')}>EN</button>
-              <button className={`body-tab${bodyTab === 'fr' ? ' active-tab' : ''}`} onClick={() => setBodyTab('fr')}>FR</button>
-              <span className="body-tab-hint">EN is required · FR is optional</span>
-            </div>
-            {bodyTab === 'en' ? (
-              <textarea value={bodyEn} onChange={e => setBodyEn(e.target.value)} placeholder="The full prompt text that will be copied to clipboard…" rows={6} className={errors.body ? 'input-error' : ''} />
-            ) : (
-              <textarea value={bodyFr} onChange={e => setBodyFr(e.target.value)} placeholder="Le texte complet du prompt qui sera copié dans le presse-papier…" rows={6} />
-            )}
-            <span className="char-count">{activeBody.length} chars</span>
+            <label>Prompt Bodies <span className="req">*</span> <span className="hint">(one Copy button per prompt)</span></label>
             {errors.body && <span className="field-error">{errors.body}</span>}
+            <div className="prompt-items-editor">
+              {promptItems.map((item, idx) => {
+                const tab = getItemTab(item.id);
+                const activeBody = tab === 'en' ? item.body : (item.body_fr || '');
+                return (
+                  <div key={item.id} className="prompt-item-editor">
+                    <div className="prompt-item-editor-header">
+                      <span className="prompt-item-editor-num">#{idx + 1}</span>
+                      <input
+                        type="text"
+                        className="prompt-item-label-input"
+                        value={item.label}
+                        onChange={e => updateItem(item.id, 'label', e.target.value)}
+                        placeholder="Label (optional, e.g. 'Step 1')…"
+                      />
+                      {promptItems.length > 1 && (
+                        <button className="prompt-item-delete-btn" title="Remove this prompt" onClick={() => removeItem(item.id)}>✕</button>
+                      )}
+                    </div>
+                    <div className="body-tabs">
+                      <button className={`body-tab${tab === 'en' ? ' active-tab' : ''}`} onClick={() => setItemTab(item.id, 'en')}>EN</button>
+                      <button className={`body-tab${tab === 'fr' ? ' active-tab' : ''}`} onClick={() => setItemTab(item.id, 'fr')}>FR</button>
+                      <span className="body-tab-hint">EN is required · FR is optional</span>
+                    </div>
+                    {tab === 'en' ? (
+                      <textarea
+                        value={item.body}
+                        onChange={e => updateItem(item.id, 'body', e.target.value)}
+                        placeholder="The full prompt text that will be copied to clipboard…"
+                        rows={5}
+                      />
+                    ) : (
+                      <textarea
+                        value={item.body_fr || ''}
+                        onChange={e => updateItem(item.id, 'body_fr', e.target.value)}
+                        placeholder="Le texte complet du prompt qui sera copié dans le presse-papier…"
+                        rows={5}
+                      />
+                    )}
+                    <span className="char-count">{activeBody.length} chars</span>
+                  </div>
+                );
+              })}
+            </div>
+            <button type="button" className="add-row-btn" onClick={() => setPromptItems(prev => [...prev, makeItem()])}>
+              {t('addPromptItem', lang)}
+            </button>
           </div>
 
           {/* Story Flow + Favorite */}
@@ -259,23 +345,64 @@ export default function PromptModal() {
 
           {/* Landscapes */}
           <div className="field-row">
-            <label>Landscapes <span className="hint">(tenant URLs / system names)</span></label>
+            <label>Landscapes <span className="hint">(name + system URL)</span></label>
             {landscapes.map((ls, i) => (
-              <div key={i} className="landscape-row">
+              <div key={i} className="landscape-row-2col">
                 <input
                   type="text"
-                  value={ls}
-                  onChange={e => setLandscapes(prev => prev.map((v, j) => j === i ? e.target.value : v))}
+                  value={ls.name}
+                  onChange={e => setLandscapes(prev => prev.map((v, j) => j === i ? { ...v, name: e.target.value } : v))}
+                  placeholder="Display name (e.g. DEV, PROD)…"
+                />
+                <input
+                  type="text"
+                  value={ls.url}
+                  onChange={e => setLandscapes(prev => prev.map((v, j) => j === i ? { ...v, url: e.target.value } : v))}
                   placeholder="https://tenant.example.com"
-                  list="landscape-datalist"
+                  list="landscape-url-datalist"
                 />
                 <button className="row-remove-btn" onClick={() => setLandscapes(prev => prev.filter((_, j) => j !== i))}>×</button>
               </div>
             ))}
-            <datalist id="landscape-datalist">
-              {catalog.landscapes.map(ls => <option key={ls} value={ls} />)}
+            <datalist id="landscape-url-datalist">
+              {catalog.landscapes.map((ls, i) => (
+                <option key={i} value={ls.url || ls.name} label={ls.name} />
+              ))}
             </datalist>
-            <button type="button" className="add-row-btn" onClick={() => setLandscapes(prev => [...prev, ''])}>+ Add Landscape</button>
+            <button type="button" className="add-row-btn" onClick={() => setLandscapes(prev => [...prev, { name: '', url: '' }])}>+ Add Landscape</button>
+          </div>
+
+          {/* MCP Credentials */}
+          <div className="field-row mcp-section">
+            <label>{t('mcpCredentials', lang)} <span className="hint">{t('mcpOptional', lang)}</span></label>
+            <div className="field-row-2col" style={{ gap: 10 }}>
+              <div className="field-col">
+                <label style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11 }}>{t('mcpClientId', lang)}</label>
+                <input
+                  type="text"
+                  value={mcpClientId}
+                  onChange={e => setMcpClientId(e.target.value)}
+                  placeholder="client-id…"
+                />
+              </div>
+              <div className="field-col">
+                <label style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11 }}>{t('mcpClientSecret', lang)}</label>
+                <div className="mcp-secret-row">
+                  <input
+                    type={showSecret ? 'text' : 'password'}
+                    value={mcpClientSecret}
+                    onChange={e => setMcpClientSecret(e.target.value)}
+                    placeholder="client-secret…"
+                  />
+                  <button
+                    type="button"
+                    className="mcp-eye-btn"
+                    title={showSecret ? 'Hide' : 'Show'}
+                    onClick={() => setShowSecret(v => !v)}
+                  >{showSecret ? '🙈' : '👁'}</button>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Notes */}

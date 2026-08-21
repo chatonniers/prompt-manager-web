@@ -15,10 +15,17 @@ export const StorageAPI = {
   async getCatalog() {
     const raw = localStorage.getItem("pm-catalog");
     const data = raw ? JSON.parse(raw) : {};
+    // Migrate legacy string landscapes to { name, url } objects
+    const rawLandscapes = data.landscapes ?? [...DEFAULT_CATALOG.landscapes];
+    const landscapes = rawLandscapes.map(ls =>
+      typeof ls === 'string'
+        ? { name: ls, url: ls.startsWith('http') ? ls : '' }
+        : ls
+    );
     return {
       solutions:  data.solutions  ?? [...DEFAULT_CATALOG.solutions],
       storyFlows: data.storyFlows ?? [...DEFAULT_CATALOG.storyFlows],
-      landscapes: data.landscapes ?? [...DEFAULT_CATALOG.landscapes]
+      landscapes,
     };
   },
 
@@ -121,10 +128,20 @@ export const StorageAPI = {
 
     if (data.catalog) {
       const cur = await this.getCatalog();
+      // Normalize incoming landscapes to { name, url } objects
+      const incomingLandscapes = (data.catalog.landscapes || []).map(ls =>
+        typeof ls === 'string' ? { name: ls, url: ls.startsWith('http') ? ls : '' } : ls
+      );
+      const mergedLandscapes = [...cur.landscapes];
+      for (const incoming of incomingLandscapes) {
+        if (!mergedLandscapes.some(ex => ex.name === incoming.name && ex.url === incoming.url)) {
+          mergedLandscapes.push(incoming);
+        }
+      }
       await this.saveCatalog({
         solutions:  [...new Set([...cur.solutions,  ...(data.catalog.solutions  || [])])],
         storyFlows: [...new Set([...cur.storyFlows, ...(data.catalog.storyFlows || [])])],
-        landscapes: [...new Set([...cur.landscapes,  ...(data.catalog.landscapes || [])])]
+        landscapes: mergedLandscapes,
       });
     }
 
