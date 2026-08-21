@@ -174,7 +174,6 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
   const [itemTab, setItemTab] = useState('en');
   const [category, setCategory] = useState(p.category || '');
   const [storyFlow, setStoryFlow] = useState(p.storyFlow || '');
-  const [isFavorite, setIsFavorite] = useState(p.isFavorite || false);
   const [notes, setNotes] = useState(p.notes || '');
   const [systems, setSystems] = useState(() => getSystems(p));
   const [attachments, setAttachments] = useState([]);
@@ -212,7 +211,6 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
       promptItems: finalItems,
       category: category || null,
       storyFlow,
-      isFavorite,
       notes: notes.trim(),
       systems,
     });
@@ -357,12 +355,6 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
           </div>
         </div>
       )}
-
-      {/* Favorite */}
-      <label className="card-edit-fav-toggle">
-        <input type="checkbox" checked={isFavorite} onChange={e => setIsFavorite(e.target.checked)} />
-        <span>★ Favorite</span>
-      </label>
 
       <div className="card-edit-actions">
         <button className="card-edit-cancel-btn" onClick={onCancel}>{t('cancel', lang)}</button>
