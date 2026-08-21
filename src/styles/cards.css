@@ -85,22 +85,22 @@
 /* ── Card — core visual unit ──────────────────────────────────────────── */
 .prompt-card {
   background: var(--pm-surface);
-  border: 1px solid var(--pm-border);
   border-radius: var(--pm-radius);
   display: flex;
   flex-direction: column;
   position: relative;
   box-shadow: var(--pm-shadow-card);
-  transition: box-shadow 0.22s ease, transform 0.22s ease, border-color 0.22s ease;
+  transition: box-shadow 0.22s ease, transform 0.22s ease;
   animation: cardEntrance 0.3s ease both;
 }
 
 /* Left accent bar — the primary visual identity of a card */
 .prompt-card-front {
   cursor: grab;
+  border: 1px solid var(--pm-border);
   border-left: 4px solid var(--card-accent-color, var(--pm-border2));
   border-radius: var(--pm-radius);
-  transition: box-shadow 0.22s ease, transform 0.22s ease, border-color 0.22s ease;
+  transition: box-shadow 0.22s ease, transform 0.22s ease, border-left-color 0.22s ease;
 }
 
 /* Remove the ::before banner — left bar is the identity now */
@@ -115,7 +115,7 @@
 .prompt-card-front:hover {
   box-shadow: var(--pm-shadow-card-hover);
   transform: translateY(-3px);
-  border-color: var(--card-accent-color, var(--pm-accent));
+  border-left-color: var(--card-accent-color, var(--pm-accent));
 }
 
 .prompt-card-front:hover .card-copy-cta {
