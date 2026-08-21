@@ -18,6 +18,7 @@ const initialState = {
   toastMsg: null,
   initialized: false,
   selectedIds: new Set(),
+  zoom: (() => { const v = parseFloat(localStorage.getItem('pm-zoom')); return v >= 0.5 && v <= 2 ? v : 1; })(),
 };
 
 function reducer(state, action) {
@@ -60,6 +61,11 @@ function reducer(state, action) {
       return { ...state, toastMsg: action.payload ?? action.msg };
     case 'CLEAR_TOAST':
       return { ...state, toastMsg: null };
+    case 'SET_ZOOM': {
+      const v = Math.min(2, Math.max(0.5, Math.round(action.payload * 10) / 10));
+      localStorage.setItem('pm-zoom', v);
+      return { ...state, zoom: v };
+    }
     case 'TOGGLE_SELECT': {
       const next = new Set(state.selectedIds);
       if (next.has(action.payload)) next.delete(action.payload);

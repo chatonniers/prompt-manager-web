@@ -5,7 +5,7 @@ import { encodeShareUrl } from '../../lib/share.js';
 import { t } from '../../lib/i18n.js';
 import ImportModeModal from '../shared/ImportModeModal.jsx';
 
-export default function TopBar({ onHelp, zoom, onZoomIn, onZoomOut, onZoomReset }) {
+export default function TopBar({ onHelp }) {
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
   const importRef = useRef(null);
@@ -91,8 +91,6 @@ export default function TopBar({ onHelp, zoom, onZoomIn, onZoomOut, onZoomReset 
     dispatch({ type: 'SHOW_TOAST', payload: t('shareUrlCopied', lang) });
   }
 
-  const zoomPct = Math.round(zoom * 100);
-
   return (
     <header id="top-bar">
       <div id="top-bar-left">
@@ -103,9 +101,6 @@ export default function TopBar({ onHelp, zoom, onZoomIn, onZoomOut, onZoomReset 
       <div id="top-bar-right">
         <button className="tb-btn tb-btn-lang" onClick={handleLangToggle} title="Switch language">
           {lang === 'en' ? 'FR' : 'EN'}
-        </button>
-        <button className="tb-btn tb-btn-primary" onClick={() => dispatch({ type: 'OPEN_MODAL', payload: undefined })}>
-          {t('newPrompt', lang)}
         </button>
         <button className="tb-btn" onClick={() => importRef.current?.click()}>{t('import', lang)}</button>
         <button className="tb-btn" onClick={handleExport}>{t('export', lang)}</button>
@@ -121,13 +116,6 @@ export default function TopBar({ onHelp, zoom, onZoomIn, onZoomOut, onZoomReset 
             onClose={() => setImportData(null)}
           />
         )}
-
-        <div className="tb-divider" />
-
-        {/* Zoom controls */}
-        <button className="tb-btn tb-btn-icon" onClick={onZoomOut} title="Zoom out" disabled={zoom <= 0.5}>−</button>
-        <button className="tb-btn tb-zoom-label" onClick={onZoomReset} title="Reset zoom">{zoomPct}%</button>
-        <button className="tb-btn tb-btn-icon" onClick={onZoomIn} title="Zoom in" disabled={zoom >= 2}>+</button>
 
         <div className="tb-divider" />
 

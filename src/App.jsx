@@ -26,15 +26,8 @@ function AppInner() {
   useStorage()
   const { state, dispatch } = useApp()
   const [helpOpen, setHelpOpen] = useState(false)
-  const [zoom, setZoom] = useState(() => {
-    const saved = parseFloat(localStorage.getItem('pm-zoom'));
-    return (saved && saved >= 0.5 && saved <= 2) ? saved : 1;
-  })
-
+  const zoom = state.zoom ?? 1
   const STEP = 0.1
-  function zoomIn()    { setZoom(z => { const v = Math.min(2, Math.round((z + STEP) * 10) / 10); localStorage.setItem('pm-zoom', v); return v; }) }
-  function zoomOut()   { setZoom(z => { const v = Math.max(0.5, Math.round((z - STEP) * 10) / 10); localStorage.setItem('pm-zoom', v); return v; }) }
-  function zoomReset() { setZoom(1); localStorage.setItem('pm-zoom', 1); }
 
   // Handle share URL on mount
   useEffect(() => {
@@ -64,7 +57,7 @@ function AppInner() {
   }
   return (
     <>
-      <TopBar onHelp={() => setHelpOpen(true)} zoom={zoom} onZoomIn={zoomIn} onZoomOut={zoomOut} onZoomReset={zoomReset} />
+      <TopBar onHelp={() => setHelpOpen(true)} />
       <div id="main-layout">
         <Sidebar />
         <main id="content">

@@ -2,10 +2,17 @@ import { useApp } from '../../context/AppContext.jsx';
 import { t } from '../../lib/i18n.js';
 import PromptGrid from './PromptGrid.jsx';
 
+const STEP = 0.1;
+
 export default function PromptListView() {
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
-  const { searchQuery, sortOrder, sapContext } = state;
+  const { searchQuery, sortOrder, sapContext, zoom = 1 } = state;
+  const zoomPct = Math.round(zoom * 100);
+
+  function zoomIn()    { dispatch({ type: 'SET_ZOOM', payload: zoom + STEP }); }
+  function zoomOut()   { dispatch({ type: 'SET_ZOOM', payload: zoom - STEP }); }
+  function zoomReset() { dispatch({ type: 'SET_ZOOM', payload: 1 }); }
 
   return (
     <>
@@ -33,6 +40,17 @@ export default function PromptListView() {
               <option value="created">{t('sortCreated', lang)}</option>
             </select>
           </label>
+        </div>
+        <div className="toolbar-right-controls">
+          <button className="toolbar-btn toolbar-btn-icon" onClick={zoomOut} title="Zoom out" disabled={zoom <= 0.5}>−</button>
+          <button className="toolbar-btn toolbar-zoom-label" onClick={zoomReset} title="Reset zoom">{zoomPct}%</button>
+          <button className="toolbar-btn toolbar-btn-icon" onClick={zoomIn} title="Zoom in" disabled={zoom >= 2}>+</button>
+          <button
+            className="toolbar-btn toolbar-btn-primary"
+            onClick={() => dispatch({ type: 'OPEN_MODAL', payload: undefined })}
+          >
+            {t('newPrompt', lang)}
+          </button>
         </div>
       </div>
 

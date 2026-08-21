@@ -144,6 +144,57 @@
   cursor: pointer;
 }
 
+/* ── Toolbar right-side controls (zoom + new) ─────────────────────────── */
+.toolbar-right-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.toolbar-btn {
+  background: var(--pm-surface);
+  color: var(--pm-text2);
+  border: 1.5px solid var(--pm-border2);
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  letter-spacing: 0.1px;
+}
+.toolbar-btn:hover { background: var(--pm-accent-bg); border-color: var(--pm-accent); color: var(--pm-accent); }
+.toolbar-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.toolbar-btn-icon {
+  padding: 6px 10px;
+  min-width: 30px;
+  text-align: center;
+}
+
+.toolbar-zoom-label {
+  min-width: 44px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 6px 6px;
+  color: var(--pm-text3);
+  border-color: transparent;
+  background: transparent;
+}
+.toolbar-zoom-label:hover { color: var(--pm-accent); border-color: var(--pm-border2); background: var(--pm-surface); }
+
+.toolbar-btn-primary {
+  background: var(--pm-accent);
+  color: #fff;
+  border-color: var(--pm-accent);
+  margin-left: 4px;
+}
+.toolbar-btn-primary:hover { background: var(--pm-accent2); border-color: var(--pm-accent2); color: #fff; }
+
 /* SAP context banner */
 .sap-context-banner {
   display: flex;
