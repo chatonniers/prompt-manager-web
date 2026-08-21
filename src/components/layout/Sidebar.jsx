@@ -4,7 +4,7 @@ import { useSidebarResize } from '../../hooks/useSidebarResize.js';
 import { t } from '../../lib/i18n.js';
 import { getFlowColor } from '../../lib/flowColors.js';
 
-export default function Sidebar({ collapsed }) {
+export default function Sidebar({ collapsed, onToggle }) {
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
   const { prompts, catalog, currentView, currentFilter } = state;
@@ -33,7 +33,11 @@ export default function Sidebar({ collapsed }) {
   }
 
   if (collapsed) {
-    return <nav id="sidebar" className="sidebar-collapsed" ref={sidebarRef} />;
+    return (
+      <nav id="sidebar" className="sidebar-collapsed" ref={sidebarRef}>
+        <button className="sidebar-toggle-btn" onClick={onToggle} title="Expand sidebar">›</button>
+      </nav>
+    );
   }
 
   return (
@@ -125,6 +129,7 @@ export default function Sidebar({ collapsed }) {
         <div className="sidebar-version">
           v{__APP_VERSION__} · {__BUILD_DATE__}<br />by Sylvain C.
         </div>
+        <button className="sidebar-toggle-btn sidebar-toggle-collapse" onClick={onToggle} title="Collapse sidebar">‹</button>
       </nav>
       <div id="sidebar-resizer" ref={resizerRef} />
     </>

@@ -21,7 +21,7 @@ export default function AppShell() {
     <div id="app">
       <TopBar sidebarCollapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed(v => !v)} />
       <div id="main-layout">
-        <Sidebar collapsed={sidebarCollapsed} />
+        <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(v => !v)} />
         <MainContent />
       </div>
       {state.isModalOpen && <PromptModal />}
