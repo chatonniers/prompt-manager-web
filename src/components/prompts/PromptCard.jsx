@@ -599,27 +599,6 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
           </>
         )}
 
-        {/* Primary copy CTA — full width */}
-        <button
-          className={`card-copy-cta${ctaCopied ? ' copied' : ''}`}
-          onClick={e => {
-            e.stopPropagation();
-            // Copy first (or only) item
-            handleCopyItem(promptItems[0], true);
-          }}
-        >
-          {ctaCopied ? (
-            <>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l4 4 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Copied — paste now
-            </>
-          ) : (
-            <>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.6"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2H3.5A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
-              {isSingle ? t('copy', lang) : `Copy "${promptItems[0].label || 'Prompt 1'}"`}
-            </>
-          )}
-        </button>
         </div>{/* end prompt-card-body */}
       </div>
 
