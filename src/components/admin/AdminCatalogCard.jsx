@@ -44,7 +44,8 @@ export default function AdminCatalogCard({ titleKey, descKey, addKey, items, pro
 
   async function saveNewCatalog(updatedList) {
     const key = getListKey();
-    const catalog = { ...state.catalog, [key]: updatedList };
+    const latest = await StorageAPI.getCatalog();
+    const catalog = { ...latest, [key]: updatedList };
     await StorageAPI.saveCatalog(catalog);
     dispatch({ type: 'SET_CATALOG', payload: catalog });
     return catalog;
