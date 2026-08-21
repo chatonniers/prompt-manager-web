@@ -641,6 +641,8 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
           {p.category && <span className="pill category card-header-category">{p.category}</span>}
         </div>
 
+        {p.notes && <div className="prompt-card-notes">{p.notes}</div>}
+
         {/* Prompt items */}
         <div className="prompt-items-list">
           {promptItems.map((item, idx) => {
