@@ -251,7 +251,8 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
       attachments: attachmentsMeta,
     });
     setSaving(false);
-    onSave();
+    const [freshPrompts, freshCatalog] = await Promise.all([StorageAPI.getAllPrompts(), StorageAPI.getCatalog()]);
+    onSave(freshPrompts, freshCatalog);
   }
 
   const activeItem = items.find(i => i.id === activeItemId) || items[0];
@@ -492,10 +493,9 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
     dispatch({ type: 'SHOW_TOAST', payload: t('promptCreated', lang) });
   }
 
-  async function handleEditSave() {
-    const [prompts, catalog] = await Promise.all([StorageAPI.getAllPrompts(), StorageAPI.getCatalog()]);
-    dispatch({ type: 'SET_PROMPTS', payload: prompts });
-    dispatch({ type: 'SET_CATALOG', payload: catalog });
+  async function handleEditSave(freshPrompts, freshCatalog) {
+    dispatch({ type: 'SET_PROMPTS', payload: freshPrompts });
+    dispatch({ type: 'SET_CATALOG', payload: freshCatalog });
     dispatch({ type: 'SHOW_TOAST', payload: t('promptUpdated', lang) });
     setFlipped(false);
     setFlashSaved(true);
