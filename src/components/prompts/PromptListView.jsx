@@ -7,7 +7,7 @@ const STEP = 0.1;
 export default function PromptListView() {
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
-  const { searchQuery, sortOrder, sapContext, zoom = 1 } = state;
+  const { searchQuery, sapContext, zoom = 1 } = state;
   const zoomPct = Math.round(zoom * 100);
 
   function zoomIn()    { dispatch({ type: 'SET_ZOOM', payload: zoom + STEP }); }
@@ -26,21 +26,6 @@ export default function PromptListView() {
           autoComplete="off"
           spellCheck="false"
         />
-        <div id="sort-controls">
-          <label>
-            {t('sortLabel', lang)}{' '}
-            <select
-              id="sort-select"
-              value={sortOrder}
-              onChange={e => dispatch({ type: 'SET_SORT', payload: e.target.value })}
-            >
-              <option value="updated">{t('sortUpdated', lang)}</option>
-              <option value="title">{t('sortTitle', lang)}</option>
-              <option value="usage">{t('sortUsage', lang)}</option>
-              <option value="created">{t('sortCreated', lang)}</option>
-            </select>
-          </label>
-        </div>
         <div className="toolbar-right-controls">
           <button className="toolbar-btn toolbar-btn-icon" onClick={zoomOut} title="Zoom out" disabled={zoom <= 0.5}>−</button>
           <button className="toolbar-btn toolbar-zoom-label" onClick={zoomReset} title="Reset zoom">{zoomPct}%</button>

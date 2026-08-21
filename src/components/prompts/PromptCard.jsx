@@ -216,6 +216,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
     if (!title.trim()) return;
     const validItems = items.filter(i => i.body.trim());
     if (validItems.length === 0) return;
+    if (validItems.some(i => !i.label.trim())) return;
     setSaving(true);
     const finalItems = validItems.map(i => ({ ...i, body: i.body.trim(), body_fr: i.body_fr?.trim() || null }));
 
@@ -298,7 +299,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
               <button className={`card-edit-lang-btn${itemTab === 'fr' ? ' active' : ''}`} onClick={() => setItemTab('fr')}>FR</button>
             </div>
           </div>
-          <input className="card-edit-input" type="text" value={activeItem.label} onChange={e => updateItemBody(activeItem.id, 'label', e.target.value)} placeholder={t('promptItemLabel', lang)} style={{ marginBottom: 4, fontSize: 12 }} />
+          <input className="card-edit-input" type="text" value={activeItem.label} onChange={e => updateItemBody(activeItem.id, 'label', e.target.value)} placeholder={t('promptItemLabel', lang)} style={{ marginBottom: 4, fontSize: 12, borderColor: activeItem.label.trim() ? '' : 'var(--pm-danger)' }} />
           {itemTab === 'en' ? (
             <textarea className="card-edit-textarea" value={activeItem.body} onChange={e => updateItemBody(activeItem.id, 'body', e.target.value)} rows={4} placeholder={t('bodyEnPlaceholder', lang)} />
           ) : (
@@ -397,15 +398,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
 
       <div className="card-edit-actions">
         <button className="card-edit-cancel-btn" onClick={onCancel}>{t('cancel', lang)}</button>
-        <button
-          className="card-edit-cancel-btn"
-          style={{ color: 'var(--pm-danger)', borderColor: 'var(--pm-danger-bg)', flex: '0 0 auto', padding: '8px 12px' }}
-          onClick={onDelete}
-          title={t('del', lang)}
-        >
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M5 4V2.5A1.5 1.5 0 0 1 6.5 1h3A1.5 1.5 0 0 1 11 2.5V4M6 7v5M10 7v5M3 4l1 9.5A1.5 1.5 0 0 0 5.5 15h5a1.5 1.5 0 0 0 1.5-1.5L13 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        </button>
-        <button className="card-edit-save-btn" onClick={handleSave} disabled={saving}>
+        <button className="card-edit-save-btn" onClick={handleSave} disabled={saving || !title.trim() || items.filter(i => i.body.trim()).some(i => !i.label.trim())}>
           {saving ? t('savingLabel', lang) : t('save', lang)}
         </button>
       </div>

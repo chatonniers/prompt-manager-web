@@ -15,15 +15,6 @@ function applyViewFilter(prompts, view, filter) {
   return prompts;
 }
 
-function applySortOrder(prompts, order) {
-  const copy = [...prompts];
-  if (order === 'title') copy.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-  else if (order === 'usage') copy.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
-  else if (order === 'created') copy.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  else copy.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-  return copy;
-}
-
 // Render a category block: full-width label + flow columns below
 function CategoryBlock({ label, prompts, storyFlows, lang, selectedIds, onToggleSelect }) {
   // Collect flows that actually have prompts, preserving catalog order
@@ -74,7 +65,7 @@ function CategoryBlock({ label, prompts, storyFlows, lang, selectedIds, onToggle
 
 export default function PromptGrid() {
   const { state, dispatch } = useApp();
-  const { prompts, currentView, currentFilter, searchQuery, sortOrder, sapContext, settings, catalog, selectedIds } = state;
+  const { prompts, currentView, currentFilter, searchQuery, sapContext, settings, catalog, selectedIds } = state;
   const lang = settings?.lang || 'en';
   const categories = catalog.categories || [];
   const storyFlows = catalog.storyFlows || [];
@@ -87,9 +78,6 @@ export default function PromptGrid() {
     ranked = filterAndRank(pool, searchQuery, sapContext, true);
   } else {
     ranked = filterAndRank(pool, '', sapContext, showAll);
-    if (currentView !== 'most-used') {
-      ranked = applySortOrder(ranked, sortOrder);
-    }
   }
 
   const visibleIds = ranked.map(p => p.id);

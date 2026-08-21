@@ -9,7 +9,6 @@ const initialState = {
   currentView: 'all',
   currentFilter: null,
   searchQuery: '',
-  sortOrder: 'title',
   sapContext: null,
   isModalOpen: false,
   editingPromptId: undefined,
@@ -44,8 +43,6 @@ function reducer(state, action) {
       };
     case 'SET_SEARCH':
       return { ...state, searchQuery: action.payload ?? action.query };
-    case 'SET_SORT':
-      return { ...state, sortOrder: action.payload ?? action.order };
     case 'SET_SAP_CONTEXT':
       return { ...state, sapContext: action.payload ?? action.context };
     case 'OPEN_MODAL':

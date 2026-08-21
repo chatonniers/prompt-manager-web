@@ -96,7 +96,6 @@ export default function TopBar({ onHelp }) {
       <div id="top-bar-left">
         <div id="app-title" style={{ cursor: 'pointer' }} onClick={() => dispatch({ type: 'SET_VIEW', payload: { view: 'all', filter: { storyFlow: null, solution: null, category: null } } })}>
           <span className="title-main">{t('appTitle', lang)}</span>
-          <span className="title-sub">AI Discovery · SAP</span>
         </div>
       </div>
       <div id="top-bar-right">
@@ -143,8 +142,8 @@ export default function TopBar({ onHelp }) {
           title={t('settings', lang)}
         >
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ verticalAlign: 'middle' }}>
-            <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.4"/>
-            <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.42 1.42M11.53 11.53l1.42 1.42M3.05 12.95l1.42-1.42M11.53 4.47l1.42-1.42" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+            <path d="M6.5 1h3l.5 1.5a5 5 0 0 1 1.2.7l1.5-.5 1.5 2.6-1.2 1.1a5 5 0 0 1 0 1.4l1.2 1.1-1.5 2.6-1.5-.5a5 5 0 0 1-1.2.7L9.5 15h-3l-.5-1.5A5 5 0 0 1 4.8 12.8l-1.5.5L1.8 10.7l1.2-1.1a5 5 0 0 1 0-1.4L1.8 7.1l1.5-2.6 1.5.5A5 5 0 0 1 6 3.5L6.5 1z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+            <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.3"/>
           </svg>
         </button>
       </div>
