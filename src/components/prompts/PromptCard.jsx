@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { t } from '../../lib/i18n.js';
+import { getFlowColor } from '../../lib/flowColors.js';
 
 function relTime(iso) {
   if (!iso) return '';
@@ -430,7 +431,7 @@ export default function PromptCard({ prompt: p }) {
         <div className="prompt-card-meta">
           {p.category && <span className="pill category">{p.category}</span>}
           {(p.solutions || []).map(s => <span key={s} className="pill">{s}</span>)}
-          {p.storyFlow && <span className="pill flow">{p.storyFlow}</span>}
+          {p.storyFlow && (() => { const c = getFlowColor(p.storyFlow); return <span className="pill flow" style={{ background: c.bg, color: c.text }}>{p.storyFlow}</span>; })()}
           {(p.tags || []).slice(0, 3).map(tag => <span key={tag} className="pill tag">#{tag}</span>)}
           {langBadge}
           {attachCount > 0 && <span className="attach-count-pill">📎 {attachCount}</span>}

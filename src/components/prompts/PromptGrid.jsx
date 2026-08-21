@@ -1,6 +1,7 @@
 import { useApp } from '../../context/AppContext.jsx';
 import { filterAndRank } from '../../lib/search.js';
 import { t } from '../../lib/i18n.js';
+import { getFlowColor } from '../../lib/flowColors.js';
 import PromptCard from './PromptCard.jsx';
 import EmptyState from './EmptyState.jsx';
 
@@ -51,12 +52,20 @@ function CategoryBlock({ label, prompts, storyFlows, lang }) {
     <div className="category-block">
       <div className="grid-section-label">{label}</div>
       <div className="category-flow-columns">
-        {columns.map(col => (
-          <div key={col.key} className="flow-column">
-            <div className="flow-column-label">{col.label}</div>
-            {col.prompts.map(p => <PromptCard key={p.id} prompt={p} />)}
-          </div>
-        ))}
+        {columns.map(col => {
+          const color = col.key !== '__none__' ? getFlowColor(col.label) : null;
+          return (
+            <div key={col.key} className="flow-column">
+              <div
+                className="flow-column-label"
+                style={color ? { borderLeftColor: color.border, background: color.bg, color: color.text } : {}}
+              >
+                {col.label}
+              </div>
+              {col.prompts.map(p => <PromptCard key={p.id} prompt={p} />)}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

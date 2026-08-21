@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { useSidebarResize } from '../../hooks/useSidebarResize.js';
 import { t } from '../../lib/i18n.js';
+import { getFlowColor } from '../../lib/flowColors.js';
 
 export default function Sidebar({ collapsed }) {
   const { state, dispatch } = useApp();
@@ -90,15 +91,18 @@ export default function Sidebar({ collapsed }) {
           <div id="nav-flows">
             {catalog.storyFlows.map(flow => {
               const cnt = prompts.filter(p => p.storyFlow === flow).length;
+              const active = isActive('flow', flow);
+              const color = getFlowColor(flow);
               return (
                 <button
                   key={flow}
-                  className={`nav-item${isActive('flow', flow) ? ' active' : ''}`}
+                  className={`nav-item nav-item-flow${active ? ' active' : ''}`}
+                  style={active ? { background: color.bg, borderLeftColor: color.border, color: color.text } : {}}
                   onClick={() => setView('flow', { storyFlow: flow, solution: null, category: null })}
                 >
-                  <span className="nav-icon">▶</span>
+                  <span className="nav-flow-dot" style={{ background: color.border }} />
                   <span style={{ flex: 1 }}>{flow}</span>
-                  <span className="nav-badge">{cnt}</span>
+                  <span className="nav-badge" style={active ? { background: color.bg, color: color.text } : {}}>{cnt}</span>
                 </button>
               );
             })}
