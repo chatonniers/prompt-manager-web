@@ -20,7 +20,7 @@
 
 .category-flat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 10px;
 }
 
@@ -32,11 +32,13 @@
   padding-bottom: 8px;
   width: 100%;
   box-sizing: border-box;
+  scrollbar-width: thin;
 }
 
 .flow-column {
-  flex: 0 0 320px;
-  width: 320px;
+  flex: 1 1 260px;
+  min-width: 260px;
+  max-width: 340px;
   display: flex;
   flex-direction: column;
   gap: 8px;
