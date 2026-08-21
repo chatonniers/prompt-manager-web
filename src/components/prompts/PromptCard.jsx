@@ -155,7 +155,7 @@ function makeItem(body = '', body_fr = '') {
 
 function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate, onDelete }) {
   const { state } = useApp();
-  const allTags = [...new Set((state.prompts || []).flatMap(pr => pr.tags || []))].sort();
+  const allTags = [...new Set([...(state.catalog.tags || []), ...(state.prompts || []).flatMap(pr => pr.tags || [])])].sort();
   const [title, setTitle] = useState(p.title || '');
   const [items, setItems] = useState(() =>
     p.promptItems?.length

@@ -426,7 +426,7 @@ export default function PromptModal() {
               />
             </div>
             {tagInput.trim() && (() => {
-              const allTags = [...new Set(prompts.flatMap(p => p.tags || []))].sort();
+              const allTags = [...new Set([...(catalog.tags || []), ...prompts.flatMap(p => p.tags || [])])].sort();
               const q = tagInput.trim().replace(/^#/, '').toLowerCase();
               const suggestions = allTags.filter(t => t.toLowerCase().includes(q) && !tags.includes(t));
               return suggestions.length > 0 ? (

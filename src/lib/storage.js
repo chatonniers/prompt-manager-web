@@ -67,6 +67,7 @@ export const StorageAPI = {
       categories: data.categories ?? [...DEFAULT_CATALOG.categories],
       systems: migrateSystems(data),
       personas: data.personas ?? [],
+      tags: data.tags ?? [],
     };
   },
 

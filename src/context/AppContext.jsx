@@ -4,7 +4,7 @@ export const AppContext = createContext(null);
 
 const initialState = {
   prompts: [],
-  catalog: { solutions: [], storyFlows: [], categories: [], systems: [], personas: [] },
+  catalog: { solutions: [], storyFlows: [], categories: [], systems: [], personas: [], tags: [] },
   settings: { autoFilterEnabled: true, lang: 'en' },
   currentView: 'all',
   currentFilter: null,

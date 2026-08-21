@@ -10,42 +10,61 @@ export default function AdminTagsCard() {
   const [editingTag, setEditingTag] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [confirmTag, setConfirmTag] = useState(null);
+  const [newTag, setNewTag] = useState('');
 
-  const tagMap = {};
+  // Merge catalog tags with tags actually used on prompts
+  const usageMap = {};
   for (const p of state.prompts) {
     for (const tag of (p.tags || [])) {
-      tagMap[tag] = (tagMap[tag] || 0) + 1;
+      usageMap[tag] = (usageMap[tag] || 0) + 1;
     }
   }
-  const allTags = Object.keys(tagMap).sort();
+  const catalogTags = state.catalog.tags || [];
+  const allTags = [...new Set([...catalogTags, ...Object.keys(usageMap)])].sort();
 
-  async function handleRename(oldTag) {
-    const newTag = editValue.trim().replace(/^#/, '');
-    if (!newTag || newTag === oldTag) { setEditingTag(null); return; }
-    if (tagMap[newTag] !== undefined) {
+  async function saveCatalogTags(updatedTags) {
+    const catalog = { ...state.catalog, tags: updatedTags };
+    await StorageAPI.saveCatalog(catalog);
+    dispatch({ type: 'SET_CATALOG', payload: catalog });
+  }
+
+  async function handleAdd() {
+    const val = newTag.trim().replace(/^#/, '');
+    if (!val) return;
+    if (allTags.includes(val)) {
       dispatch({ type: 'SHOW_TOAST', payload: t('nameExists', lang) });
       return;
     }
-    const updated = state.prompts.map(p =>
-      (p.tags || []).includes(oldTag)
-        ? { ...p, tags: p.tags.map(t => t === oldTag ? newTag : t) }
-        : p
-    );
-    await Promise.all(updated.filter((p, i) => p !== state.prompts[i]).map(p => StorageAPI.upsertPrompt(p)));
-    dispatch({ type: 'SET_PROMPTS', payload: await StorageAPI.getAllPrompts() });
-    dispatch({ type: 'SHOW_TOAST', payload: t('renamed', lang, newTag) });
+    await saveCatalogTags([...catalogTags, val].sort());
+    dispatch({ type: 'SHOW_TOAST', payload: `#${val} added` });
+    setNewTag('');
+  }
+
+  async function handleRename(oldTag) {
+    const newVal = editValue.trim().replace(/^#/, '');
+    if (!newVal || newVal === oldTag) { setEditingTag(null); return; }
+    if (allTags.includes(newVal)) {
+      dispatch({ type: 'SHOW_TOAST', payload: t('nameExists', lang) });
+      return;
+    }
+    // Update catalog
+    await saveCatalogTags(catalogTags.map(t => t === oldTag ? newVal : t).sort());
+    // Update all prompts that use this tag
+    const toUpdate = state.prompts.filter(p => (p.tags || []).includes(oldTag));
+    await Promise.all(toUpdate.map(p => StorageAPI.upsertPrompt({ ...p, tags: p.tags.map(t => t === oldTag ? newVal : t) })));
+    if (toUpdate.length > 0) dispatch({ type: 'SET_PROMPTS', payload: await StorageAPI.getAllPrompts() });
+    dispatch({ type: 'SHOW_TOAST', payload: t('renamed', lang, newVal) });
     setEditingTag(null);
   }
 
   async function handleDelete(tag) {
     setConfirmTag(null);
-    const updated = state.prompts.map(p =>
-      (p.tags || []).includes(tag)
-        ? { ...p, tags: p.tags.filter(t => t !== tag) }
-        : p
-    );
-    await Promise.all(updated.filter((p, i) => p !== state.prompts[i]).map(p => StorageAPI.upsertPrompt(p)));
-    dispatch({ type: 'SET_PROMPTS', payload: await StorageAPI.getAllPrompts() });
+    // Remove from catalog
+    await saveCatalogTags(catalogTags.filter(t => t !== tag));
+    // Remove from all prompts
+    const toUpdate = state.prompts.filter(p => (p.tags || []).includes(tag));
+    await Promise.all(toUpdate.map(p => StorageAPI.upsertPrompt({ ...p, tags: p.tags.filter(t => t !== tag) })));
+    if (toUpdate.length > 0) dispatch({ type: 'SET_PROMPTS', payload: await StorageAPI.getAllPrompts() });
     dispatch({ type: 'SHOW_TOAST', payload: t('deleted', lang, tag) });
   }
 
@@ -54,13 +73,13 @@ export default function AdminTagsCard() {
       <div className="admin-card-header">
         <div>
           <h2>Tags</h2>
-          <p>Manage all tags across your prompt library. Rename or remove tags — changes apply to all cards using them.</p>
+          <p>Define tags for your library. Tags added here appear in autocomplete when editing cards. Renaming or removing a tag updates all cards using it.</p>
         </div>
       </div>
       <div className="admin-list" style={{ marginBottom: 8 }}>
         {allTags.length === 0 && <div className="admin-empty">{t('noItems', lang)}</div>}
         {allTags.map(tag => {
-          const cnt = tagMap[tag];
+          const cnt = usageMap[tag] || 0;
           return (
             <div key={tag} className="admin-row">
               <span style={{ fontSize: 13, color: 'var(--pm-accent)', marginRight: 4 }}>#</span>
@@ -87,13 +106,25 @@ export default function AdminTagsCard() {
               ) : (
                 <>
                   <span className="admin-item-input" style={{ flex: 1, padding: '5px 8px', cursor: 'pointer' }} onClick={() => { setEditingTag(tag); setEditValue(tag); }}>{tag}</span>
-                  <span className={`admin-in-use${cnt > 0 ? ' has-uses' : ''}`}>{t('promptsCount', lang, cnt)}</span>
+                  <span className={`admin-in-use${cnt > 0 ? ' has-uses' : ''}`}>{cnt > 0 ? t('promptsCount', lang, cnt) : t('unused', lang)}</span>
                   <button className="admin-del-btn" onClick={() => setConfirmTag(tag)}>Remove</button>
                 </>
               )}
             </div>
           );
         })}
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+        <input
+          className="admin-item-input"
+          style={{ flex: 1, border: '1.5px dashed var(--pm-accent)', borderRadius: 7, padding: '6px 10px', background: 'var(--pm-bg)' }}
+          type="text"
+          value={newTag}
+          onChange={e => setNewTag(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleAdd()}
+          placeholder="New tag…"
+        />
+        <button className="admin-save-btn" onClick={handleAdd}>{t('add', lang)}</button>
       </div>
     </div>
   );
