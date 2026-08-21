@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { filterAndRank } from '../../lib/search.js';
@@ -81,6 +81,52 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
   );
 }
 
+function FavoritesRow({ favs, lang, selectedIds, onToggleSelect, onDrop }) {
+  const scrollRef = useRef(null);
+  const [hovered, setHovered] = useState(false);
+
+  function scroll(dir) {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * 400, behavior: 'smooth' });
+  }
+
+  return (
+    <DropZone className="category-block" onDrop={id => onDrop(id, { isFavorite: true })}>
+      <div className="grid-section-label">
+        {t('favorites', lang)}<span className="section-count">{favs.length}</span>
+      </div>
+      {favs.length > 0 ? (
+        <div
+          className="favs-row-wrap"
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        >
+          {hovered && (
+            <button className="favs-nav favs-nav-left" onClick={() => scroll(-1)}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+          )}
+          <div className="favs-row" ref={scrollRef}>
+            {favs.map(p => (
+              <div key={p.id} className="favs-row-item">
+                <PromptCard prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />
+              </div>
+            ))}
+          </div>
+          {hovered && (
+            <button className="favs-nav favs-nav-right" onClick={() => scroll(1)}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+          )}
+        </div>
+      ) : (
+        <p style={{ fontSize: 12, color: 'var(--pm-text3)', padding: '8px 2px', fontStyle: 'italic' }}>No favorites yet — drag a card here or click ★</p>
+      )}
+    </DropZone>
+  );
+}
+
 export default function PromptGrid() {
   const { state, dispatch } = useApp();
   const { prompts, currentView, currentFilter, searchQuery, sapContext, settings, catalog, selectedIds } = state;
@@ -134,17 +180,13 @@ export default function PromptGrid() {
       <>
         <BulkActionBar visibleIds={visibleIds} />
         <div id="prompt-grid-outer">
-          {/* Favorites zone */}
-          <DropZone className="category-block" onDrop={id => handleDrop(id, { isFavorite: true })}>
-            <div className="grid-section-label">{t('favorites', lang)}<span className="section-count">{favs.length}</span></div>
-            {favs.length > 0 ? (
-              <div className="category-flat-grid">
-                {favs.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
-              </div>
-            ) : (
-              <p style={{ fontSize: 12, color: 'var(--pm-text3)', padding: '8px 2px', fontStyle: 'italic' }}>No favorites yet — drag a card here or click ★</p>
-            )}
-          </DropZone>
+          <FavoritesRow
+              favs={favs}
+              lang={lang}
+              selectedIds={selectedIds}
+              onToggleSelect={onToggleSelect}
+              onDrop={handleDrop}
+            />
 
           {categoryBlocks.map(block => (
             <CategoryBlock

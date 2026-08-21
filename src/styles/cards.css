@@ -1,3 +1,52 @@
+/* ── Favorites horizontal row ────────────────────────────────────────── */
+.favs-row-wrap {
+  position: relative;
+}
+
+.favs-row {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 6px;
+  scrollbar-width: none;
+}
+.favs-row::-webkit-scrollbar { display: none; }
+
+.favs-row-item {
+  flex: 0 0 380px;
+  width: 380px;
+  scroll-snap-align: start;
+}
+
+.favs-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid var(--pm-border2);
+  box-shadow: var(--pm-shadow-md);
+  color: var(--pm-text2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
+}
+.favs-nav:hover {
+  background: var(--pm-accent);
+  border-color: var(--pm-accent);
+  color: #fff;
+  transform: translateY(-50%) scale(1.1);
+}
+.favs-nav-left  { left: -18px; }
+.favs-nav-right { right: -18px; }
+
 /* ── Prompt grid ──────────────────────────────────────────────────────── */
 #prompt-grid {
   display: grid;
