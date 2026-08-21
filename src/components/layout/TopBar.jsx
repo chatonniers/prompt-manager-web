@@ -3,14 +3,14 @@ import { useApp } from '../../context/AppContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { t } from '../../lib/i18n.js';
 
+const STEP = 0.1;
+
 function LogoMark() {
   return (
     <svg className="app-logo-mark" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Outer hexagonal card stack */}
       <rect x="4" y="7" width="22" height="22" rx="5" fill="rgba(99,102,241,0.25)" stroke="rgba(99,102,241,0.5)" strokeWidth="1.2"/>
       <rect x="7" y="4" width="22" height="22" rx="5" fill="rgba(99,102,241,0.35)" stroke="rgba(99,102,241,0.6)" strokeWidth="1.2"/>
       <rect x="10" y="8" width="20" height="20" rx="4" fill="#4F46E5" stroke="#6366F1" strokeWidth="1"/>
-      {/* Lightning bolt / prompt symbol */}
       <path d="M21 10l-5 7h4l-2 7 6-9h-4l1-5z" fill="white" opacity="0.92"/>
     </svg>
   );
@@ -21,6 +21,10 @@ export default function TopBar({ onHelp }) {
   const lang = state.settings?.lang || 'en';
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
   const promptCount = state.prompts?.length || 0;
+  const zoom = state.zoom ?? 1;
+  const zoomPct = Math.round(zoom * 100);
+  const { searchQuery, currentView } = state;
+  const showSearch = currentView !== 'settings';
 
   useEffect(() => {
     function onChange() { setIsFullscreen(!!document.fullscreenElement); }
@@ -45,6 +49,7 @@ export default function TopBar({ onHelp }) {
 
   return (
     <header id="top-bar">
+      {/* Left — logo + prompt count */}
       <div id="top-bar-left">
         <div id="app-title" onClick={() => dispatch({ type: 'SET_VIEW', payload: { view: 'all', filter: { storyFlow: null, solution: null, category: null } } })}>
           <LogoMark />
@@ -58,13 +63,47 @@ export default function TopBar({ onHelp }) {
         </div>
       </div>
 
+      {/* Center — search + zoom + new */}
+      {showSearch && (
+        <div id="top-bar-center">
+          <div id="tb-search-wrap">
+            <svg id="tb-search-icon" width="15" height="15" viewBox="0 0 16 16" fill="none">
+              <circle cx="6.5" cy="6.5" r="4.5" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5"/>
+              <line x1="10.2" y1="10.2" x2="14" y2="14" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            <input
+              id="tb-search"
+              type="text"
+              placeholder={t('searchPlaceholder', lang)}
+              value={searchQuery}
+              onChange={e => dispatch({ type: 'SET_SEARCH', payload: e.target.value })}
+              autoComplete="off"
+              spellCheck="false"
+            />
+            {searchQuery && (
+              <button id="tb-search-clear" onClick={() => dispatch({ type: 'SET_SEARCH', payload: '' })}>×</button>
+            )}
+          </div>
+          <div id="tb-zoom-controls">
+            <button className="tb-btn tb-btn-icon" onClick={() => dispatch({ type: 'SET_ZOOM', payload: zoom - STEP })} disabled={zoom <= 0.5} title="Zoom out">−</button>
+            <button className="tb-zoom-label" onClick={() => dispatch({ type: 'SET_ZOOM', payload: 1 })} title="Reset zoom">{zoomPct}%</button>
+            <button className="tb-btn tb-btn-icon" onClick={() => dispatch({ type: 'SET_ZOOM', payload: zoom + STEP })} disabled={zoom >= 2} title="Zoom in">+</button>
+          </div>
+          <button
+            className="tb-btn tb-btn-primary"
+            onClick={() => dispatch({ type: 'OPEN_MODAL', payload: undefined })}
+          >
+            {t('newPrompt', lang)}
+          </button>
+        </div>
+      )}
+
+      {/* Right — lang, fullscreen, settings */}
       <div id="top-bar-right">
         <button className="tb-btn tb-btn-lang" onClick={handleLangToggle} title="Switch language">
           {lang === 'en' ? 'FR' : 'EN'}
         </button>
-
         <div className="tb-divider" />
-
         <button className="tb-btn tb-btn-icon" onClick={onHelp} title="Help">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ verticalAlign: 'middle' }}>
             <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/>
