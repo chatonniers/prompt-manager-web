@@ -427,6 +427,62 @@
   padding: 12px 14px;
 }
 
+.mcp-credential-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--pm-surface);
+  border: 1.5px solid var(--pm-border);
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.mcp-label-input {
+  width: 130px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--pm-border2) !important;
+  border-radius: 7px !important;
+  padding: 7px 10px !important;
+  font-size: 12px !important;
+  font-family: inherit;
+  color: var(--pm-text2) !important;
+  background: var(--pm-bg) !important;
+  outline: none;
+}
+
+.mcp-label-input:focus {
+  border-color: var(--pm-accent) !important;
+}
+
+.mcp-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.mcp-fields input[type=text],
+.mcp-fields input[type=password] {
+  border: 1.5px solid var(--pm-border2);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--pm-text1);
+  background: var(--pm-surface);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.mcp-fields input:focus {
+  border-color: var(--pm-accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+}
+
 .mcp-secret-row {
   display: flex;
   gap: 6px;
@@ -464,3 +520,36 @@
 }
 
 .mcp-eye-btn:hover { background: var(--pm-accent-bg); border-color: var(--pm-accent); }
+
+/* ── Catalog picker (landscapes + MCP) ───────────────────────────────── */
+.catalog-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.catalog-chip {
+  background: var(--pm-bg);
+  border: 1.5px solid var(--pm-border2);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pm-text2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.catalog-chip:hover {
+  background: var(--pm-accent-bg);
+  border-color: var(--pm-accent);
+  color: var(--pm-accent);
+}
+
+.catalog-chip.selected {
+  background: var(--pm-accent-bg);
+  border-color: var(--pm-accent);
+  color: var(--pm-accent);
+}

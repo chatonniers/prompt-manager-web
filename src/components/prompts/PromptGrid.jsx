@@ -1,6 +1,7 @@
 import { useApp } from '../../context/AppContext.jsx';
 import { filterAndRank } from '../../lib/search.js';
 import { t } from '../../lib/i18n.js';
+import { AUTONOMOUS_CATEGORIES } from '../../lib/storage.js';
 import PromptCard from './PromptCard.jsx';
 import EmptyState from './EmptyState.jsx';
 
@@ -9,6 +10,7 @@ function applyViewFilter(prompts, view, filter) {
   if (view === 'most-used') return [...prompts].sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0)).filter(p => p.usageCount > 0);
   if (view === 'flow') return prompts.filter(p => p.storyFlow === (filter?.storyFlow ?? filter));
   if (view === 'solution') return prompts.filter(p => p.solutions?.includes(filter?.solution ?? filter));
+  if (view === 'category') return prompts.filter(p => p.category === filter?.category);
   return prompts;
 }
 
@@ -20,6 +22,14 @@ function applySortOrder(prompts, order) {
   else copy.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
   return copy;
 }
+
+const CAT_ICONS = {
+  'Autonomous Finance':       '💰',
+  'Autonomous Supply Chain':  '🔗',
+  'Autonomous Spend':         '🛒',
+  'Autonomous HCM':           '👥',
+  'Autonomous CX':            '💬',
+};
 
 export default function PromptGrid() {
   const { state } = useApp();
@@ -41,19 +51,48 @@ export default function PromptGrid() {
 
   if (ranked.length === 0) return <EmptyState />;
 
+  // "All Prompts" view without search: group by category then favorites
   if (currentView === 'all' && !searchQuery.trim()) {
+    const groups = [];
+
+    // Favorites first
     const favs = ranked.filter(p => p.isFavorite);
-    const rest = ranked.filter(p => !p.isFavorite);
-    if (favs.length > 0 && rest.length > 0) {
+    if (favs.length > 0) {
+      groups.push({ label: `⭐ ${t('favorites', lang)}`, prompts: favs });
+    }
+
+    // Then group by category
+    for (const cat of AUTONOMOUS_CATEGORIES) {
+      const catPrompts = ranked.filter(p => !p.isFavorite && p.category === cat);
+      if (catPrompts.length > 0) {
+        groups.push({ label: `${CAT_ICONS[cat] || '◉'} ${cat}`, prompts: catPrompts });
+      }
+    }
+
+    // Uncategorized last
+    const uncategorized = ranked.filter(p => !p.isFavorite && !p.category);
+    if (uncategorized.length > 0) {
+      groups.push({ label: t('noCategory', lang), prompts: uncategorized });
+    }
+
+    if (groups.length <= 1) {
       return (
         <div id="prompt-grid">
-          <div className="grid-section-label">⭐ {t('favorites', lang)}</div>
-          {favs.map(p => <PromptCard key={p.id} prompt={p} />)}
-          <div className="grid-section-label">{t('allPrompts', lang)}</div>
-          {rest.map(p => <PromptCard key={p.id} prompt={p} />)}
+          {ranked.map(p => <PromptCard key={p.id} prompt={p} />)}
         </div>
       );
     }
+
+    return (
+      <div id="prompt-grid">
+        {groups.map(group => (
+          <>
+            <div key={group.label} className="grid-section-label">{group.label}</div>
+            {group.prompts.map(p => <PromptCard key={p.id} prompt={p} />)}
+          </>
+        ))}
+      </div>
+    );
   }
 
   return (

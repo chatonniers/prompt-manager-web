@@ -2,6 +2,15 @@ import { useRef } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { useSidebarResize } from '../../hooks/useSidebarResize.js';
 import { t } from '../../lib/i18n.js';
+import { AUTONOMOUS_CATEGORIES } from '../../lib/storage.js';
+
+const CAT_ICONS = {
+  'Autonomous Finance':       '💰',
+  'Autonomous Supply Chain':  '🔗',
+  'Autonomous Spend':         '🛒',
+  'Autonomous HCM':           '👥',
+  'Autonomous CX':            '💬',
+};
 
 export default function Sidebar() {
   const { state, dispatch } = useApp();
@@ -14,13 +23,14 @@ export default function Sidebar() {
   const mostUsedCount = prompts.filter(p => (p.usageCount || 0) > 0).length;
 
   function setView(view, filter) {
-    dispatch({ type: 'SET_VIEW', payload: { view, filter: filter ?? { storyFlow: null, solution: null } } });
+    dispatch({ type: 'SET_VIEW', payload: { view, filter: filter ?? { storyFlow: null, solution: null, category: null } } });
   }
 
   function isActive(view, filterVal) {
     if (view !== currentView) return false;
     if (view === 'flow') return currentFilter?.storyFlow === filterVal;
     if (view === 'solution') return currentFilter?.solution === filterVal;
+    if (view === 'category') return currentFilter?.category === filterVal;
     return true;
   }
 
@@ -47,6 +57,24 @@ export default function Sidebar() {
         <span className="nav-badge">{mostUsedCount}</span>
       </button>
 
+      <div className="nav-section-label">{t('byCategory', lang)}</div>
+      <div id="nav-categories">
+        {AUTONOMOUS_CATEGORIES.map(cat => {
+          const cnt = prompts.filter(p => p.category === cat).length;
+          return (
+            <button
+              key={cat}
+              className={`nav-item${isActive('category', cat) ? ' active' : ''}`}
+              onClick={() => setView('category', { storyFlow: null, solution: null, category: cat })}
+            >
+              <span className="nav-icon">{CAT_ICONS[cat] || '◉'}</span>
+              <span style={{ flex: 1 }}>{cat.replace('Autonomous ', '')}</span>
+              <span className="nav-badge">{cnt}</span>
+            </button>
+          );
+        })}
+      </div>
+
       <div className="nav-section-label">{t('byStoryFlow', lang)}</div>
       <div id="nav-flows">
         {catalog.storyFlows.map(flow => {
@@ -55,7 +83,7 @@ export default function Sidebar() {
             <button
               key={flow}
               className={`nav-item${isActive('flow', flow) ? ' active' : ''}`}
-              onClick={() => setView('flow', { storyFlow: flow, solution: null })}
+              onClick={() => setView('flow', { storyFlow: flow, solution: null, category: null })}
             >
               <span className="nav-icon">▶</span>
               <span style={{ flex: 1 }}>{flow}</span>
@@ -73,7 +101,7 @@ export default function Sidebar() {
             <button
               key={sol}
               className={`nav-item${isActive('solution', sol) ? ' active' : ''}`}
-              onClick={() => setView('solution', { storyFlow: null, solution: sol })}
+              onClick={() => setView('solution', { storyFlow: null, solution: sol, category: null })}
             >
               <span className="nav-icon">◆</span>
               <span style={{ flex: 1 }}>{sol}</span>

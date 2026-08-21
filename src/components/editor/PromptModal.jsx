@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
-import { StorageAPI } from '../../lib/storage.js';
+import { StorageAPI, AUTONOMOUS_CATEGORIES } from '../../lib/storage.js';
 import { AttachmentsDB } from '../../lib/attachments.js';
 import { t } from '../../lib/i18n.js';
 
@@ -35,15 +35,14 @@ export default function PromptModal() {
   const [promptItems, setPromptItems] = useState([makeItem()]);
   const [itemTabs, setItemTabs] = useState({}); // { [itemId]: 'en' | 'fr' }
   const [storyFlow, setStoryFlow] = useState('');
+  const [category, setCategory] = useState('');
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedSolutions, setSelectedSolutions] = useState([]);
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
   const [landscapes, setLandscapes] = useState([]); // [{ name, url }]
   const [notes, setNotes] = useState('');
-  const [mcpClientId, setMcpClientId] = useState('');
-  const [mcpClientSecret, setMcpClientSecret] = useState('');
-  const [showSecret, setShowSecret] = useState(false);
+  const [mcpCredentials, setMcpCredentials] = useState([]); // [{ id, label, clientId, clientSecret, showSecret }]
   const [pendingFiles, setPendingFiles] = useState([]);
   const [existingAtts, setExistingAtts] = useState([]);
   const [pendingDeletes, setPendingDeletes] = useState([]);
@@ -62,6 +61,7 @@ export default function PromptModal() {
       setPromptItems(items);
       setItemTabs({});
       setStoryFlow(existing.storyFlow || '');
+      setCategory(existing.category || '');
       setIsFavorite(existing.isFavorite || false);
       setSelectedSolutions(existing.solutions || []);
       setTags(existing.tags || []);
@@ -71,23 +71,27 @@ export default function PromptModal() {
       );
       setLandscapes(lss);
       setNotes(existing.notes || '');
-      setMcpClientId(existing.mcpClientId || '');
-      setMcpClientSecret(existing.mcpClientSecret || '');
-      setShowSecret(false);
+      // Migrate legacy single mcpClientId/mcpClientSecret to array
+      if (existing.mcpCredentials?.length) {
+        setMcpCredentials(existing.mcpCredentials.map(c => ({ ...c, showSecret: false })));
+      } else if (existing.mcpClientId) {
+        setMcpCredentials([{ id: crypto.randomUUID(), label: '', clientId: existing.mcpClientId, clientSecret: existing.mcpClientSecret || '', showSecret: false }]);
+      } else {
+        setMcpCredentials([]);
+      }
       AttachmentsDB.getForPrompt(existing.id).then(atts => setExistingAtts(atts));
     } else {
       setTitle('');
       setPromptItems([makeItem()]);
       setItemTabs({});
       setStoryFlow('');
+      setCategory('');
       setIsFavorite(false);
       setSelectedSolutions([]);
       setTags([]);
       setLandscapes([]);
       setNotes('');
-      setMcpClientId('');
-      setMcpClientSecret('');
-      setShowSecret(false);
+      setMcpCredentials([]);
       setExistingAtts([]);
       setPendingFiles([]);
     }
@@ -201,13 +205,18 @@ export default function PromptModal() {
       body: finalItems[0]?.body || '',
       body_fr: finalItems[0]?.body_fr || null,
       promptItems: finalItems,
+      category: category || null,
       storyFlow,
       solutions: selectedSolutions,
       tags,
       landscapes: landscapes.filter(ls => ls.name.trim() || ls.url.trim()),
       notes: notes.trim(),
-      mcpClientId: mcpClientId.trim() || null,
-      mcpClientSecret: mcpClientSecret.trim() || null,
+      mcpCredentials: mcpCredentials
+        .filter(c => c.clientId.trim() || c.clientSecret.trim())
+        .map(({ id, label, clientId, clientSecret }) => ({ id, label, clientId: clientId.trim(), clientSecret: clientSecret.trim() })),
+      // Keep legacy fields for backwards compat (first credential)
+      mcpClientId: mcpCredentials[0]?.clientId.trim() || null,
+      mcpClientSecret: mcpCredentials[0]?.clientSecret.trim() || null,
       isFavorite,
       usageCount: existing?.usageCount || 0,
       lastUsedAt: existing?.lastUsedAt || null,
@@ -292,6 +301,15 @@ export default function PromptModal() {
             </button>
           </div>
 
+          {/* Category + Story Flow + Favorite */}
+          <div className="field-row">
+            <label>{t('category', lang)}</label>
+            <select value={category} onChange={e => setCategory(e.target.value)}>
+              <option value="">— {t('noCategory', lang)} —</option>
+              {AUTONOMOUS_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            </select>
+          </div>
+
           {/* Story Flow + Favorite */}
           <div className="field-row-2col">
             <div className="field-col">
@@ -346,63 +364,127 @@ export default function PromptModal() {
           {/* Landscapes */}
           <div className="field-row">
             <label>Landscapes <span className="hint">(name + system URL)</span></label>
-            {landscapes.map((ls, i) => (
-              <div key={i} className="landscape-row-2col">
-                <input
-                  type="text"
-                  value={ls.name}
-                  onChange={e => setLandscapes(prev => prev.map((v, j) => j === i ? { ...v, name: e.target.value } : v))}
-                  placeholder="Display name (e.g. DEV, PROD)…"
-                />
-                <input
-                  type="text"
-                  value={ls.url}
-                  onChange={e => setLandscapes(prev => prev.map((v, j) => j === i ? { ...v, url: e.target.value } : v))}
-                  placeholder="https://tenant.example.com"
-                  list="landscape-url-datalist"
-                />
-                <button className="row-remove-btn" onClick={() => setLandscapes(prev => prev.filter((_, j) => j !== i))}>×</button>
+            {/* Catalog picker */}
+            {catalog.landscapes.length > 0 && (
+              <div className="catalog-picker">
+                {catalog.landscapes.map((ls, i) => {
+                  const selected = landscapes.some(l => l.name === ls.name && l.url === ls.url);
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      className={`catalog-chip${selected ? ' selected' : ''}`}
+                      onClick={() => {
+                        if (selected) {
+                          setLandscapes(prev => prev.filter(l => !(l.name === ls.name && l.url === ls.url)));
+                        } else {
+                          setLandscapes(prev => [...prev, { name: ls.name, url: ls.url }]);
+                        }
+                      }}
+                    >
+                      {selected ? '✓ ' : ''}{ls.name || ls.url}
+                    </button>
+                  );
+                })}
               </div>
-            ))}
-            <datalist id="landscape-url-datalist">
-              {catalog.landscapes.map((ls, i) => (
-                <option key={i} value={ls.url || ls.name} label={ls.name} />
-              ))}
-            </datalist>
-            <button type="button" className="add-row-btn" onClick={() => setLandscapes(prev => [...prev, { name: '', url: '' }])}>+ Add Landscape</button>
+            )}
+            {/* Custom rows for overrides or new entries not in catalog */}
+            {landscapes.filter(ls => !catalog.landscapes.some(cl => cl.name === ls.name && cl.url === ls.url)).map((ls, i) => {
+              const realIdx = landscapes.indexOf(ls);
+              return (
+                <div key={realIdx} className="landscape-row-2col">
+                  <input
+                    type="text"
+                    value={ls.name}
+                    onChange={e => setLandscapes(prev => prev.map((v, j) => j === realIdx ? { ...v, name: e.target.value } : v))}
+                    placeholder="Display name (e.g. DEV, PROD)…"
+                  />
+                  <input
+                    type="text"
+                    value={ls.url}
+                    onChange={e => setLandscapes(prev => prev.map((v, j) => j === realIdx ? { ...v, url: e.target.value } : v))}
+                    placeholder="https://tenant.example.com"
+                  />
+                  <button className="row-remove-btn" onClick={() => setLandscapes(prev => prev.filter((_, j) => j !== realIdx))}>×</button>
+                </div>
+              );
+            })}
+            <button type="button" className="add-row-btn" onClick={() => setLandscapes(prev => [...prev, { name: '', url: '' }])}>+ Add Custom Landscape</button>
           </div>
 
           {/* MCP Credentials */}
           <div className="field-row mcp-section">
             <label>{t('mcpCredentials', lang)} <span className="hint">{t('mcpOptional', lang)}</span></label>
-            <div className="field-row-2col" style={{ gap: 10 }}>
-              <div className="field-col">
-                <label style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11 }}>{t('mcpClientId', lang)}</label>
-                <input
-                  type="text"
-                  value={mcpClientId}
-                  onChange={e => setMcpClientId(e.target.value)}
-                  placeholder="client-id…"
-                />
+            {/* Catalog picker */}
+            {catalog.mcpCredentials?.length > 0 && (
+              <div className="catalog-picker">
+                {catalog.mcpCredentials.map(cat => {
+                  const selected = mcpCredentials.some(c => c.id === cat.id);
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      className={`catalog-chip${selected ? ' selected' : ''}`}
+                      onClick={() => {
+                        if (selected) {
+                          setMcpCredentials(prev => prev.filter(c => c.id !== cat.id));
+                        } else {
+                          setMcpCredentials(prev => [...prev, { ...cat, showSecret: false }]);
+                        }
+                      }}
+                    >
+                      {selected ? '✓ ' : ''}🔑 {cat.label || cat.clientId}
+                    </button>
+                  );
+                })}
               </div>
-              <div className="field-col">
-                <label style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11 }}>{t('mcpClientSecret', lang)}</label>
-                <div className="mcp-secret-row">
+            )}
+            {/* Custom / inline credentials not from catalog */}
+            {mcpCredentials.filter(c => !catalog.mcpCredentials?.some(cat => cat.id === c.id)).map((cred, i) => {
+              const realIdx = mcpCredentials.indexOf(cred);
+              return (
+                <div key={cred.id} className="mcp-credential-row">
                   <input
-                    type={showSecret ? 'text' : 'password'}
-                    value={mcpClientSecret}
-                    onChange={e => setMcpClientSecret(e.target.value)}
-                    placeholder="client-secret…"
+                    type="text"
+                    className="mcp-label-input"
+                    value={cred.label}
+                    onChange={e => setMcpCredentials(prev => prev.map((c, j) => j === realIdx ? { ...c, label: e.target.value } : c))}
+                    placeholder="Label (e.g. DEV, PROD)…"
                   />
+                  <div className="mcp-fields">
+                    <input
+                      type="text"
+                      value={cred.clientId}
+                      onChange={e => setMcpCredentials(prev => prev.map((c, j) => j === realIdx ? { ...c, clientId: e.target.value } : c))}
+                      placeholder={t('mcpClientId', lang) + '…'}
+                    />
+                    <div className="mcp-secret-row">
+                      <input
+                        type={cred.showSecret ? 'text' : 'password'}
+                        value={cred.clientSecret}
+                        onChange={e => setMcpCredentials(prev => prev.map((c, j) => j === realIdx ? { ...c, clientSecret: e.target.value } : c))}
+                        placeholder={t('mcpClientSecret', lang) + '…'}
+                      />
+                      <button
+                        type="button"
+                        className="mcp-eye-btn"
+                        title={cred.showSecret ? 'Hide' : 'Show'}
+                        onClick={() => setMcpCredentials(prev => prev.map((c, j) => j === realIdx ? { ...c, showSecret: !c.showSecret } : c))}
+                      >{cred.showSecret ? '🙈' : '👁'}</button>
+                    </div>
+                  </div>
                   <button
-                    type="button"
-                    className="mcp-eye-btn"
-                    title={showSecret ? 'Hide' : 'Show'}
-                    onClick={() => setShowSecret(v => !v)}
-                  >{showSecret ? '🙈' : '👁'}</button>
+                    className="row-remove-btn"
+                    onClick={() => setMcpCredentials(prev => prev.filter((_, j) => j !== realIdx))}
+                  >×</button>
                 </div>
-              </div>
-            </div>
+              );
+            })}
+            <button
+              type="button"
+              className="add-row-btn"
+              onClick={() => setMcpCredentials(prev => [...prev, { id: crypto.randomUUID(), label: '', clientId: '', clientSecret: '', showSecret: false }])}
+            >+ Add Custom Credential</button>
           </div>
 
           {/* Notes */}

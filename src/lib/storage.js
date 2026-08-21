@@ -3,8 +3,17 @@ import { AttachmentsDB } from './attachments.js';
 const DEFAULT_CATALOG = {
   solutions:  ["S/4HANA","IBP","Ariba","Joule","Joule Studio","BTP","Datasphere","SuccessFactors","Digital Manufacturing"],
   storyFlows: ["Procure-to-Pay","Order-to-Cash","Plan-to-Inventory","Hire-to-Retire","Record-to-Report","Lead-to-Cash","Design-to-Operate","Other"],
-  landscapes: []
+  landscapes: [],
+  mcpCredentials: [],
 };
+
+export const AUTONOMOUS_CATEGORIES = [
+  "Autonomous Finance",
+  "Autonomous Supply Chain",
+  "Autonomous Spend",
+  "Autonomous HCM",
+  "Autonomous CX",
+];
 
 export const StorageAPI = {
   async getAllPrompts() {
@@ -26,6 +35,7 @@ export const StorageAPI = {
       solutions:  data.solutions  ?? [...DEFAULT_CATALOG.solutions],
       storyFlows: data.storyFlows ?? [...DEFAULT_CATALOG.storyFlows],
       landscapes,
+      mcpCredentials: (data.mcpCredentials ?? []),
     };
   },
 
@@ -142,6 +152,7 @@ export const StorageAPI = {
         solutions:  [...new Set([...cur.solutions,  ...(data.catalog.solutions  || [])])],
         storyFlows: [...new Set([...cur.storyFlows, ...(data.catalog.storyFlows || [])])],
         landscapes: mergedLandscapes,
+        mcpCredentials: cur.mcpCredentials ?? [],
       });
     }
 

@@ -4,7 +4,7 @@ export const AppContext = createContext(null);
 
 const initialState = {
   prompts: [],
-  catalog: { solutions: [], storyFlows: [], landscapes: [] },
+  catalog: { solutions: [], storyFlows: [], landscapes: [], mcpCredentials: [] },
   settings: { autoFilterEnabled: true, lang: 'en' },
   currentView: 'all',
   currentFilter: null,
@@ -36,7 +36,7 @@ function reducer(state, action) {
       return {
         ...state,
         currentView: action.payload?.view ?? action.view,
-        currentFilter: (action.payload?.filter ?? action.filter) ?? { storyFlow: null, solution: null },
+        currentFilter: (action.payload?.filter ?? action.filter) ?? { storyFlow: null, solution: null, category: null },
         searchQuery: '',
       };
     case 'SET_SEARCH':

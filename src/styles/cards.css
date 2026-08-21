@@ -83,6 +83,7 @@
 
 .pill.flow { background: var(--pm-flow-bg); color: var(--pm-flow-text); }
 .pill.tag  { background: var(--pm-bg); color: var(--pm-text2); }
+.pill.category { background: #F0F4FF; color: #4338CA; font-weight: 700; }
 .pill.lang-badge.fr { background: var(--pm-flow-bg); color: var(--pm-flow-text); }
 .pill.lang-missing  { background: var(--pm-warn-bg); color: var(--pm-warn); }
 
@@ -275,6 +276,12 @@
 .card-landscape-more:hover { color: var(--pm-accent); }
 
 /* ── MCP credentials on card ─────────────────────────────────────────── */
+.card-mcp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .card-mcp-row {
   display: flex;
   align-items: center;

@@ -47,9 +47,9 @@ export default function PromptCard({ prompt: p }) {
     dispatch({ type: 'SHOW_TOAST', payload: t('copied', lang) });
   }
 
-  async function handleCopySecret() {
-    if (!p.mcpClientSecret) return;
-    await copyText(p.mcpClientSecret);
+  async function handleCopySecret(secret) {
+    if (!secret) return;
+    await copyText(secret);
     dispatch({ type: 'SHOW_TOAST', payload: t('secretCopied', lang) });
   }
 
@@ -120,6 +120,7 @@ export default function PromptCard({ prompt: p }) {
 
       {/* Meta pills */}
       <div className="prompt-card-meta">
+        {p.category && <span className="pill category">{p.category.replace('Autonomous ', '')}</span>}
         {(p.solutions || []).map(s => <span key={s} className="pill">{s}</span>)}
         {p.storyFlow && <span className="pill flow">{p.storyFlow}</span>}
         {(p.tags || []).slice(0, 3).map(tag => <span key={tag} className="pill tag">#{tag}</span>)}
@@ -162,16 +163,31 @@ export default function PromptCard({ prompt: p }) {
       )}
 
       {/* MCP Credentials */}
-      {p.mcpClientId && (
-        <div className="card-mcp-row">
-          <span className="card-mcp-label">🔑 MCP: <span className="card-mcp-id">{p.mcpClientId}</span></span>
-          {p.mcpClientSecret && (
-            <button className="card-mcp-copy-btn" onClick={handleCopySecret}>
-              {t('copySecret', lang)}
-            </button>
-          )}
-        </div>
-      )}
+      {(() => {
+        // Normalize: support new array and legacy single fields
+        const creds = p.mcpCredentials?.length
+          ? p.mcpCredentials
+          : p.mcpClientId
+            ? [{ id: 'legacy', label: '', clientId: p.mcpClientId, clientSecret: p.mcpClientSecret || '' }]
+            : [];
+        return creds.length > 0 && (
+          <div className="card-mcp-list">
+            {creds.map(cred => (
+              <div key={cred.id} className="card-mcp-row">
+                <span className="card-mcp-label">
+                  🔑 {cred.label ? <strong>{cred.label}:</strong> : 'MCP:'}{' '}
+                  <span className="card-mcp-id">{cred.clientId}</span>
+                </span>
+                {cred.clientSecret && (
+                  <button className="card-mcp-copy-btn" onClick={() => handleCopySecret(cred.clientSecret)}>
+                    {t('copySecret', lang)}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        );
+      })()}
 
       {p.usageCount > 0 && (
         <div className="usage-hint">
