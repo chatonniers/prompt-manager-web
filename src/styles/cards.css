@@ -388,6 +388,15 @@
 .card-edit-demo-desc { flex: 3; }
 
 /* Demo links front display */
+.card-section-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  color: var(--pm-text3);
+  padding: 6px 0 2px;
+}
+
 .card-demo-links {
   display: flex;
   flex-wrap: wrap;

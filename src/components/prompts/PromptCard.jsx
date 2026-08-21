@@ -647,7 +647,9 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
 
         {/* Demo links */}
         {(p.demoLinks || []).filter(l => l.url).length > 0 && (
-          <div className="card-demo-links">
+          <>
+            <div className="card-section-label">Demo</div>
+            <div className="card-demo-links">
             {(p.demoLinks).filter(l => l.url).map(link => (
               <a
                 key={link.id}
@@ -661,6 +663,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
               </a>
             ))}
           </div>
+          </>
         )}
 
         {p.usageCount > 0 && (
