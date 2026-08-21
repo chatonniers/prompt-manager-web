@@ -586,12 +586,19 @@
 .card-edit-back {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   width: 100%;
   box-sizing: border-box;
-  padding: 18px;
+}
+
+.card-edit-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 18px 10px;
 }
 
 .card-edit-header {
@@ -726,8 +733,10 @@
 .card-edit-actions {
   display: flex;
   gap: 7px;
-  margin-top: auto;
-  padding-top: 4px;
+  padding: 10px 18px 14px;
+  border-top: 1px solid var(--pm-border);
+  background: var(--pm-surface);
+  flex-shrink: 0;
 }
 
 .card-edit-cancel-btn {

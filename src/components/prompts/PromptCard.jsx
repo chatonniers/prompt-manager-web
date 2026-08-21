@@ -259,6 +259,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
 
   return (
     <div className="card-edit-back" onClick={e => e.stopPropagation()}>
+      <div className="card-edit-body">
       <div className="card-edit-header">
         <span className="card-edit-title">{t('editPromptTitle', lang)}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -414,6 +415,9 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
           <input type="file" ref={fileInputRef} multiple style={{ display: 'none' }} onChange={e => addFiles(e.target.files)} />
         </div>
       </div>
+
+      </div>
+      </div>{/* end card-edit-body */}
 
       <div className="card-edit-actions">
         <button className="card-edit-cancel-btn" onClick={onCancel}>{t('cancel', lang)}</button>
