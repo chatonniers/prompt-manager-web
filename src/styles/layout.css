@@ -172,6 +172,9 @@
   padding: 24px 28px;
   min-width: 0;
   max-width: 100%;
+  background-image: radial-gradient(circle, var(--pm-border2) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-attachment: local;
 }
 
 #view-list { min-width: 0; }
