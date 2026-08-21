@@ -74,7 +74,7 @@ export default function Sidebar({ collapsed }) {
                   onClick={() => setView('category', { storyFlow: null, solution: null, category: cat })}
                 >
                   <span className="nav-icon">◉</span>
-                  <span style={{ flex: 1 }}>{cat.replace('Autonomous ', '')}</span>
+                  <span style={{ flex: 1 }}>{cat}</span>
                   <span className="nav-badge">{cnt}</span>
                 </button>
               );
