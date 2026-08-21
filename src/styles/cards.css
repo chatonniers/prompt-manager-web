@@ -19,20 +19,14 @@
 }
 
 .category-flat-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 320px));
   gap: 10px;
-}
-
-.category-flat-grid .prompt-card-flip-wrapper {
-  flex: 1 1 260px;
-  max-width: 320px;
-  min-width: 220px;
 }
 
 .category-flow-columns {
   display: flex;
-  gap: 16px;
+  gap: 10px;
   align-items: flex-start;
   overflow-x: auto;
   padding-bottom: 8px;
@@ -42,9 +36,8 @@
 }
 
 .flow-column {
-  flex: 1 1 260px;
-  min-width: 260px;
-  max-width: 320px;
+  flex: 0 0 320px;
+  width: 320px;
   display: flex;
   flex-direction: column;
   gap: 8px;
