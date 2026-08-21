@@ -451,7 +451,7 @@ export default function PromptModal() {
 
         <div id="modal-footer">
           <button className="action-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>{t('cancel', lang)}</button>
-          <button className="action-btn primary" onClick={handleSave} disabled={saving || promptItems.filter(i => i.body.trim()).some(i => !i.label.trim())}>{saving ? t('savingLabel', lang) : t('save', lang)}</button>
+          <button className="action-btn primary" onClick={handleSave} disabled={saving || promptItems.some(i => !i.label.trim())}>{saving ? t('savingLabel', lang) : t('save', lang)}</button>
         </div>
       </div>
     </div>

@@ -553,8 +553,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
                     <div className="prompt-item-tooltip">{body}</div>
                   </div>
                 </div>
-                {!isSingle && (
-                  <button
+                <button
                     className={`prompt-item-copy-btn${isCopied ? ' copied' : ''}`}
                     title={t('copy', lang)}
                     onClick={e => { e.stopPropagation(); handleCopyItem(item, false); }}
@@ -565,7 +564,6 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
                       : <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2H3.5A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
                     }
                   </button>
-                )}
               </div>
             );
           })}
