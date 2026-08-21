@@ -135,24 +135,26 @@
 .settings-nav-item {
   display: flex;
   align-items: center;
-  gap: 9px;
   background: none;
   border: none;
-  border-radius: 8px;
-  padding: 9px 14px;
+  border-left: 2px solid transparent;
+  border-radius: 0 6px 6px 0;
+  padding: 8px 14px;
   font-size: 13px;
   font-family: inherit;
   color: var(--pm-text2);
   cursor: pointer;
   text-align: left;
-  transition: background 0.1s, color 0.1s;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
   white-space: nowrap;
+  letter-spacing: 0.1px;
 }
 
 .settings-nav-item:hover { background: var(--pm-bg); color: var(--pm-text1); }
 
 .settings-nav-item.active {
   background: var(--pm-accent-bg);
+  border-left-color: var(--pm-accent);
   color: var(--pm-accent);
   font-weight: 600;
 }

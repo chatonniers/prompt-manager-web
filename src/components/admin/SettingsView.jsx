@@ -8,12 +8,12 @@ import AdminCategoriesCard from './AdminCategoriesCard.jsx';
 import AdminSystemsCard from './AdminSystemsCard.jsx';
 
 const SECTIONS = [
-  { id: 'general',    icon: '⚙',  labelKey: 'settingsTitle' },
-  { id: 'categories', icon: '◉',  labelKey: 'categoriesAdmin' },
-  { id: 'personas',   icon: '👤', labelKey: 'personasAdmin' },
-  { id: 'systems',    icon: '🔗', labelKey: 'systemsAdmin' },
-  { id: 'solutions',  icon: '◆',  labelKey: 'solutionsAdmin' },
-  { id: 'flows',      icon: '↻',  labelKey: 'flowsAdmin' },
+  { id: 'general',    labelKey: 'settingsTitle' },
+  { id: 'categories', labelKey: 'categoriesAdmin' },
+  { id: 'personas',   labelKey: 'personasAdmin' },
+  { id: 'systems',    labelKey: 'systemsAdmin' },
+  { id: 'solutions',  labelKey: 'solutionsAdmin' },
+  { id: 'flows',      labelKey: 'flowsAdmin' },
 ];
 
 export default function SettingsView() {
@@ -54,7 +54,6 @@ export default function SettingsView() {
               className={`settings-nav-item${activeSection === sec.id ? ' active' : ''}`}
               onClick={() => setActiveSection(sec.id)}
             >
-              <span className="settings-nav-icon">{sec.icon}</span>
               {t(sec.labelKey, lang)}
             </button>
           ))}
