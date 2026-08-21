@@ -369,7 +369,7 @@ export default function PromptModal() {
           {/* Systems */}
           <div className="field-row">
             <label>{t('systems', lang)} <span className="hint">(landscapes + MCP endpoints)</span></label>
-            {(catalog.systems || []).length > 0 && (
+            {(catalog.systems || []).length > 0 ? (
               <div className="catalog-picker">
                 {catalog.systems.map(sys => {
                   const selected = systems.some(s => s.id === sys.id);
@@ -392,18 +392,9 @@ export default function PromptModal() {
                   );
                 })}
               </div>
+            ) : (
+              <p className="field-hint-text">No systems in catalog yet — add them in ⚙ Settings.</p>
             )}
-            {systems.filter(s => !(catalog.systems || []).some(cs => cs.id === s.id)).map((sys, i) => {
-              const realIdx = systems.indexOf(sys);
-              return (
-                <div key={sys.id} className="landscape-row-2col">
-                  <input type="text" value={sys.name} onChange={e => setSystems(prev => prev.map((v, j) => j === realIdx ? { ...v, name: e.target.value } : v))} placeholder="System name…" />
-                  <input type="text" value={sys.url} onChange={e => setSystems(prev => prev.map((v, j) => j === realIdx ? { ...v, url: e.target.value } : v))} placeholder="https://…" />
-                  <button className="row-remove-btn" onClick={() => setSystems(prev => prev.filter((_, j) => j !== realIdx))}>×</button>
-                </div>
-              );
-            })}
-            <button type="button" className="add-row-btn" onClick={() => setSystems(prev => [...prev, { id: crypto.randomUUID(), name: '', description: '', url: '', endpoints: [] }])}>+ Add Custom System</button>
           </div>
 
           {/* Notes */}
