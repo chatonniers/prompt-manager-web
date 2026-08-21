@@ -178,6 +178,9 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
   const [storyFlow, setStoryFlow] = useState(p.storyFlow || '');
   const [notes, setNotes] = useState(p.notes || '');
   const [systems, setSystems] = useState(() => getSystems(p));
+  const [demoLinks, setDemoLinks] = useState(() =>
+    Array.isArray(p.demoLinks) ? p.demoLinks.map(l => ({ ...l })) : []
+  );
   const [attachments, setAttachments] = useState([]);
   const [pendingFiles, setPendingFiles] = useState([]);
   const [pendingDeletes, setPendingDeletes] = useState([]);
@@ -249,6 +252,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
       storyFlow,
       notes: notes.trim(),
       systems,
+      demoLinks: demoLinks.filter(l => l.url.trim()),
       attachments: attachmentsMeta,
     });
     setSaving(false);
@@ -370,10 +374,43 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
         </div>
       </div>
 
+      {/* Demo Links */}
+      <div className="card-edit-field">
+        <label className="card-edit-label">{t('demoLinksLabel', lang)}</label>
+        {demoLinks.map((link, idx) => (
+          <div key={link.id} className="card-edit-demo-link-row">
+            <input
+              className="card-edit-input card-edit-demo-url"
+              type="url"
+              value={link.url}
+              onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, url: e.target.value } : l))}
+              placeholder={t('demoLinkUrlPlaceholder', lang)}
+            />
+            <input
+              className="card-edit-input card-edit-demo-desc"
+              type="text"
+              value={link.desc || ''}
+              onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, desc: e.target.value } : l))}
+              placeholder={t('demoLinkDescPlaceholder', lang)}
+            />
+            <button
+              type="button"
+              className="card-edit-att-del"
+              onClick={() => setDemoLinks(prev => prev.filter((_, i) => i !== idx))}
+            >×</button>
+          </div>
+        ))}
+        <button
+          type="button"
+          className="card-edit-att-add"
+          onClick={() => setDemoLinks(prev => [...prev, { id: crypto.randomUUID(), url: '', desc: '' }])}
+        >{t('addDemoLink', lang)}</button>
+      </div>
+
       {/* Systems */}
       {(catalog.systems || []).length > 0 && (
         <div className="card-edit-field">
-          <label className="card-edit-label">{t('systems', lang)}</label>
+          <label className="card-edit-label">{t('landscapeCard', lang)}</label>
           <div className="card-edit-systems">
             {catalog.systems.map(sys => {
               const selected = systems.some(s => s.id === sys.id);
@@ -604,6 +641,24 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
           <div className="card-systems-list">
             {systems.map(sys => (
               <SystemChip key={sys.id} sys={sys} lang={lang} onCopied={handleCopied} />
+            ))}
+          </div>
+        )}
+
+        {/* Demo links */}
+        {(p.demoLinks || []).filter(l => l.url).length > 0 && (
+          <div className="card-demo-links">
+            {(p.demoLinks).filter(l => l.url).map(link => (
+              <a
+                key={link.id}
+                className="card-demo-link"
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={e => e.stopPropagation()}
+              >
+                🔗 {link.desc || link.url}
+              </a>
             ))}
           </div>
         )}
