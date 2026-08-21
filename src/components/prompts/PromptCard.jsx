@@ -303,35 +303,6 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
         <textarea className="card-edit-textarea" value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder={t('notesPlaceholderCard', lang)} />
       </div>
 
-      <div className="card-edit-field">
-        <label className="card-edit-label">{t('tagsLabel', lang)}</label>
-        <div className="card-edit-tags">
-          {tags.map(tag => (
-            <span key={tag} className="card-edit-tag-chip">
-              #{tag}
-              <button type="button" className="card-edit-tag-del" onClick={() => setTags(prev => prev.filter(t => t !== tag))}>×</button>
-            </span>
-          ))}
-          <input
-            className="card-edit-tag-input"
-            type="text"
-            value={tagInput}
-            onChange={e => setTagInput(e.target.value)}
-            onKeyDown={e => {
-              if ((e.key === 'Enter' || e.key === ',') && tagInput.trim()) {
-                e.preventDefault();
-                const val = tagInput.trim().replace(/^#/, '');
-                if (val && !tags.includes(val)) setTags(prev => [...prev, val]);
-                setTagInput('');
-              } else if (e.key === 'Backspace' && !tagInput && tags.length) {
-                setTags(prev => prev.slice(0, -1));
-              }
-            }}
-            placeholder={tags.length === 0 ? t('tagPlaceholder', lang) : ''}
-          />
-        </div>
-      </div>
-
       <div className="card-edit-item-tabs">
         {items.map((item, idx) => (
           <button key={item.id} className={`card-edit-item-tab${activeItemId === item.id ? ' active' : ''}${!item.label.trim() ? ' tab-error' : ''}`} onClick={() => setActiveItemId(item.id)}>
@@ -423,6 +394,35 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
           </div>
         </div>
       )}
+
+      <div className="card-edit-field">
+        <label className="card-edit-label">{t('tagsLabel', lang)}</label>
+        <div className="card-edit-tags">
+          {tags.map(tag => (
+            <span key={tag} className="card-edit-tag-chip">
+              #{tag}
+              <button type="button" className="card-edit-tag-del" onClick={() => setTags(prev => prev.filter(t => t !== tag))}>×</button>
+            </span>
+          ))}
+          <input
+            className="card-edit-tag-input"
+            type="text"
+            value={tagInput}
+            onChange={e => setTagInput(e.target.value)}
+            onKeyDown={e => {
+              if ((e.key === 'Enter' || e.key === ',') && tagInput.trim()) {
+                e.preventDefault();
+                const val = tagInput.trim().replace(/^#/, '');
+                if (val && !tags.includes(val)) setTags(prev => [...prev, val]);
+                setTagInput('');
+              } else if (e.key === 'Backspace' && !tagInput && tags.length) {
+                setTags(prev => prev.slice(0, -1));
+              }
+            }}
+            placeholder={tags.length === 0 ? t('tagPlaceholder', lang) : ''}
+          />
+        </div>
+      </div>
 
       <div className="card-edit-field">
         <label className="card-edit-label">{t('attachmentsLabel', lang)}</label>

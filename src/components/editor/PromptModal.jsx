@@ -286,6 +286,12 @@ export default function PromptModal() {
             )}
           </div>
 
+          {/* Notes */}
+          <div className="field-row">
+            <label>{t('notes', lang)} <span className="hint">({t('notesHintModal', lang)})</span></label>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={t('notesPlaceholder', lang)} rows={3} />
+          </div>
+
           {/* Prompt Items */}
           <div className="field-row">
             <label>{t('promptBodiesLabel', lang)} <span className="req">*</span> <span className="hint">({t('promptBodiesCopyHint', lang)})</span></label>
@@ -418,7 +424,7 @@ export default function PromptModal() {
             </div>
           </div>
 
-          {/* Systems */}
+          {/* Attachments */}
           <div className="field-row">
             <label>{t('systems', lang)} <span className="hint">({t('systemsHint', lang)})</span></label>
             {(catalog.systems || []).length > 0 ? (
@@ -480,12 +486,6 @@ export default function PromptModal() {
               className="add-row-btn"
               onClick={() => setDemoLinks(prev => [...prev, { id: crypto.randomUUID(), url: '', desc: '' }])}
             >{t('addDemoLink', lang)}</button>
-          </div>
-
-          {/* Notes */}
-          <div className="field-row">
-            <label>{t('notes', lang)} <span className="hint">({t('notesHintModal', lang)})</span></label>
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={t('notesPlaceholder', lang)} rows={3} />
           </div>
 
           {/* Attachments */}
