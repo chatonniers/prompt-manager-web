@@ -40,8 +40,8 @@ export default function PromptListView({ zoom = 1 }) {
         </div>
       </div>
 
-      {/* Scaled content */}
-      <div id="content-scaler" style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', width: `${100 / zoom}%` }}>
+      {/* Scaled content — CSS zoom keeps text crisp, transform: scale causes blur */}
+      <div id="content-scaler" style={{ zoom }}>
         {sapContext?.detected && (
           <div className="sap-context-banner">
             <span>{t('sapContextBanner', lang, sapContext.solution)}</span>
