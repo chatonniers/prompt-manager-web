@@ -1,8 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
+import { AttachmentsDB } from '../../lib/attachments.js';
 import { t } from '../../lib/i18n.js';
 import { getFlowColor } from '../../lib/flowColors.js';
+
+function fileIcon(type) {
+  if (!type) return '📄';
+  if (type.startsWith('image/')) return '🖼';
+  if (type.includes('pdf')) return '📕';
+  if (type.includes('zip') || type.includes('compressed')) return '🗜';
+  if (type.includes('spreadsheet') || type.includes('excel')) return '📊';
+  if (type.includes('presentation') || type.includes('powerpoint')) return '📑';
+  return '📄';
+}
+
+function fmtSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
 
 function relTime(iso) {
   if (!iso) return '';
@@ -160,7 +177,22 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
   const [isFavorite, setIsFavorite] = useState(p.isFavorite || false);
   const [notes, setNotes] = useState(p.notes || '');
   const [systems, setSystems] = useState(() => getSystems(p));
+  const [attachments, setAttachments] = useState([]);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    AttachmentsDB.getForPrompt(p.id).then(setAttachments);
+  }, [p.id]);
+
+  async function downloadAtt(att) {
+    const record = await AttachmentsDB.get(att.id);
+    if (!record) return;
+    const blob = new Blob([record.data], { type: record.type || 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = att.name; a.click();
+    URL.revokeObjectURL(url);
+  }
 
   function updateItemBody(id, field, value) {
     setItems(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
@@ -308,6 +340,23 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel }) {
           placeholder="Demo tips, context…"
         />
       </div>
+
+      {/* Attachments — read-only, click to download */}
+      {attachments.length > 0 && (
+        <div className="card-edit-field">
+          <label className="card-edit-label">Attachments</label>
+          <div className="card-edit-attachments">
+            {attachments.map(att => (
+              <button key={att.id} className="card-edit-att-row" onClick={() => downloadAtt(att)} title="Download">
+                <span>{fileIcon(att.type)}</span>
+                <span className="card-edit-att-name">{att.name}</span>
+                <span className="card-edit-att-size">{fmtSize(att.size)}</span>
+                <span className="card-edit-att-dl">↓</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Favorite */}
       <label className="card-edit-fav-toggle">
