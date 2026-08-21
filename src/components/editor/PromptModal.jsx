@@ -263,9 +263,9 @@ export default function PromptModal() {
           </div>
 
           {/* Personas */}
-          {(catalog.personas || []).length > 0 && (
-            <div className="field-row">
-              <label>{t('personasLabel', lang)}</label>
+          <div className="field-row">
+            <label>{t('personasLabel', lang)}</label>
+            {(catalog.personas || []).length > 0 ? (
               <div className="catalog-picker">
                 {catalog.personas.map(persona => {
                   const selected = personas.includes(persona);
@@ -281,8 +281,10 @@ export default function PromptModal() {
                   );
                 })}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="hint" style={{ fontSize: 12, margin: '4px 0 0' }}>{t('noPersonasYet', lang)}</p>
+            )}
+          </div>
 
           {/* Prompt Items */}
           <div className="field-row">
