@@ -457,9 +457,8 @@ export default function PromptCard({ prompt: p }) {
         </div>
       </div>
 
-      {/* Back face — inline edit form */}
-      <div className="prompt-card prompt-card-face prompt-card-back">
-        {flipped && (
+      {flipped && (
+        <div className="prompt-card prompt-card-face prompt-card-back">
           <CardEditBack
             prompt={p}
             catalog={catalog}
@@ -467,8 +466,8 @@ export default function PromptCard({ prompt: p }) {
             onSave={handleEditSave}
             onCancel={() => setFlipped(false)}
           />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
