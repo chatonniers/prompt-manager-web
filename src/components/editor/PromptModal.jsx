@@ -73,9 +73,9 @@ export default function PromptModal() {
       setNotes(existing.notes || '');
       // Migrate legacy single mcpClientId/mcpClientSecret to array
       if (existing.mcpCredentials?.length) {
-        setMcpCredentials(existing.mcpCredentials.map(c => ({ ...c, showSecret: false })));
+        setMcpCredentials(existing.mcpCredentials.map(c => ({ id: c.id || crypto.randomUUID(), label: c.label || '', clientId: c.clientId || '', clientSecret: c.clientSecret || '', url: c.url || '', showSecret: false })));
       } else if (existing.mcpClientId) {
-        setMcpCredentials([{ id: crypto.randomUUID(), label: '', clientId: existing.mcpClientId, clientSecret: existing.mcpClientSecret || '', showSecret: false }]);
+        setMcpCredentials([{ id: crypto.randomUUID(), label: '', clientId: existing.mcpClientId, clientSecret: existing.mcpClientSecret || '', url: '', showSecret: false }]);
       } else {
         setMcpCredentials([]);
       }
@@ -212,11 +212,11 @@ export default function PromptModal() {
       landscapes: landscapes.filter(ls => ls.name.trim() || ls.url.trim()),
       notes: notes.trim(),
       mcpCredentials: mcpCredentials
-        .filter(c => c.clientId.trim() || c.clientSecret.trim())
-        .map(({ id, label, clientId, clientSecret }) => ({ id, label, clientId: clientId.trim(), clientSecret: clientSecret.trim() })),
+        .filter(c => c.clientId?.trim() || c.clientSecret?.trim() || c.label?.trim() || c.url?.trim())
+        .map(({ id, label, clientId, clientSecret, url }) => ({ id, label: label || '', clientId: (clientId || '').trim(), clientSecret: (clientSecret || '').trim(), url: (url || '').trim() })),
       // Keep legacy fields for backwards compat (first credential)
-      mcpClientId: mcpCredentials[0]?.clientId.trim() || null,
-      mcpClientSecret: mcpCredentials[0]?.clientSecret.trim() || null,
+      mcpClientId: mcpCredentials[0]?.clientId?.trim() || null,
+      mcpClientSecret: mcpCredentials[0]?.clientSecret?.trim() || null,
       isFavorite,
       usageCount: existing?.usageCount || 0,
       lastUsedAt: existing?.lastUsedAt || null,
