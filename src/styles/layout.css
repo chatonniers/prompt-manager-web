@@ -91,7 +91,7 @@
 #content {
   flex: 1;
   overflow-y: auto;
-  padding: 14px 18px;
+  padding: 20px 24px;
   min-width: 0;
   max-width: 100%;
 }
@@ -105,43 +105,45 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 #list-search {
   flex: 1;
   border: 1.5px solid var(--pm-border2);
-  border-radius: 9px;
-  padding: 9px 12px 9px 36px;
-  font-size: 13px;
+  border-radius: 10px;
+  padding: 10px 14px 10px 40px;
+  font-size: 14px;
   font-family: inherit;
   outline: none;
   color: var(--pm-text1);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='6.5' cy='6.5' r='4.5' fill='none' stroke='%238B93B0' stroke-width='1.5'/%3E%3Cline x1='10' y1='10' x2='14' y2='14' stroke='%238B93B0' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: 11px center;
+  background-position: 13px center;
   background-color: var(--pm-surface);
-  transition: border-color 0.15s, box-shadow 0.15s;
+  box-shadow: var(--pm-shadow-xs);
+  transition: border-color 0.18s, box-shadow 0.18s, width 0.25s ease;
 }
 
 #list-search:focus {
   border-color: var(--pm-accent);
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.13), var(--pm-shadow-sm);
 }
 #list-search::placeholder { color: var(--pm-text3); }
 
-#sort-controls label { font-size: 12px; color: var(--pm-text2); font-weight: 500; }
+#sort-controls label { font-size: 13px; color: var(--pm-text2); font-weight: 500; }
 #sort-select {
   border: 1.5px solid var(--pm-border2);
-  border-radius: 7px;
-  padding: 7px 10px;
-  font-size: 12px;
+  border-radius: var(--pm-radius-sm);
+  padding: 8px 12px;
+  font-size: 13px;
   font-family: inherit;
   margin-left: 6px;
   outline: none;
   background: var(--pm-surface);
   color: var(--pm-text1);
   cursor: pointer;
+  box-shadow: var(--pm-shadow-xs);
 }
 
 /* ── Toolbar right-side controls (zoom + new) ─────────────────────────── */
@@ -156,14 +158,15 @@
   background: var(--pm-surface);
   color: var(--pm-text2);
   border: 1.5px solid var(--pm-border2);
-  border-radius: 7px;
-  padding: 6px 12px;
-  font-size: 12px;
+  border-radius: var(--pm-radius-sm);
+  padding: 8px 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
   transition: background 0.12s, border-color 0.12s, color 0.12s;
   letter-spacing: 0.1px;
+  box-shadow: var(--pm-shadow-xs);
 }
 .toolbar-btn:hover { background: var(--pm-accent-bg); border-color: var(--pm-accent); color: var(--pm-accent); }
 .toolbar-btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -192,8 +195,11 @@
   color: #fff;
   border-color: var(--pm-accent);
   margin-left: 4px;
+  padding: 8px 18px;
+  font-size: 13px;
+  box-shadow: 0 2px 8px rgba(99,102,241,0.3);
 }
-.toolbar-btn-primary:hover { background: var(--pm-accent2); border-color: var(--pm-accent2); color: #fff; }
+.toolbar-btn-primary:hover { background: var(--pm-accent2); border-color: var(--pm-accent2); color: #fff; box-shadow: 0 4px 14px rgba(99,102,241,0.4); }
 
 /* SAP context banner */
 .sap-context-banner {

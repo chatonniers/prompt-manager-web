@@ -7,9 +7,7 @@ import { getFlowColor } from '../../lib/flowColors.js';
 import { extractVars } from '../../lib/substitution.js';
 import SubstituteModal from '../shared/SubstituteModal.jsx';
 
-function fileIcon(type) {
-  return null;
-}
+function fileIcon() { return null; }
 
 function fmtSize(bytes) {
   if (bytes < 1024) return bytes + ' B';
@@ -55,7 +53,6 @@ function SystemChip({ sys, lang, onCopied }) {
 
   return (
     <div className={`card-sys-chip${flipped ? ' flipped' : ''}`} onClick={e => e.stopPropagation()}>
-      {/* Front */}
       <div className="card-sys-face card-sys-front" onClick={() => hasEndpoints && setFlipped(true)}>
         {sys.url && !hasEndpoints ? (
           <a className="card-sys-link" href={sys.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>
@@ -69,7 +66,6 @@ function SystemChip({ sys, lang, onCopied }) {
         )}
       </div>
 
-      {/* Back — connection details */}
       {hasEndpoints && (
         <div className="card-sys-face card-sys-back">
           <div className="card-sys-back-header">
@@ -128,7 +124,6 @@ function SystemChip({ sys, lang, onCopied }) {
   );
 }
 
-// Migrate legacy prompt data to systems array
 function getSystems(p) {
   if (p.systems?.length) return p.systems;
   const result = [];
@@ -158,7 +153,6 @@ function makeItem(body = '', body_fr = '') {
   return { id: crypto.randomUUID(), label: '', body, body_fr };
 }
 
-// Inline edit form rendered on card back face
 function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate }) {
   const [title, setTitle] = useState(p.title || '');
   const [items, setItems] = useState(() =>
@@ -273,63 +267,25 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
         </div>
       </div>
 
-      {/* Title */}
       <div className="card-edit-field">
         <label className="card-edit-label">{t('titleLabel', lang)}</label>
-        <input
-          className="card-edit-input"
-          type="text"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          placeholder={t('titlePlaceholder', lang)}
-          maxLength={120}
-        />
+        <input className="card-edit-input" type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('titlePlaceholder', lang)} maxLength={120} />
       </div>
 
-      {/* Notes — directly under title */}
       <div className="card-edit-field">
         <label className="card-edit-label">{t('notesLabel', lang)}</label>
-        <textarea
-          className="card-edit-textarea"
-          value={notes}
-          onChange={e => setNotes(e.target.value)}
-          rows={2}
-          placeholder={t('notesPlaceholderCard', lang)}
-        />
+        <textarea className="card-edit-textarea" value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder={t('notesPlaceholderCard', lang)} />
       </div>
 
-      {/* Prompt items selector + body */}
       <div className="card-edit-item-tabs">
         {items.map((item, idx) => (
-          <button
-            key={item.id}
-            className={`card-edit-item-tab${activeItemId === item.id ? ' active' : ''}`}
-            onClick={() => setActiveItemId(item.id)}
-          >
+          <button key={item.id} className={`card-edit-item-tab${activeItemId === item.id ? ' active' : ''}`} onClick={() => setActiveItemId(item.id)}>
             {item.label || `#${idx + 1}`}
           </button>
         ))}
-        <button
-          className="card-edit-item-tab"
-          style={{ opacity: 0.7 }}
-          onClick={() => {
-            const newItem = makeItem();
-            setItems(prev => [...prev, newItem]);
-            setActiveItemId(newItem.id);
-          }}
-          title={t('addPromptItem', lang)}
-        >+</button>
+        <button className="card-edit-item-tab" style={{ opacity: 0.7 }} onClick={() => { const newItem = makeItem(); setItems(prev => [...prev, newItem]); setActiveItemId(newItem.id); }} title={t('addPromptItem', lang)}>+</button>
         {items.length > 1 && (
-          <button
-            className="card-edit-item-tab"
-            style={{ opacity: 0.7, color: 'var(--pm-danger)' }}
-            onClick={() => {
-              const remaining = items.filter(i => i.id !== activeItemId);
-              setItems(remaining);
-              setActiveItemId(remaining[remaining.length - 1]?.id);
-            }}
-            title={t('removePrompt', lang)}
-          >−</button>
+          <button className="card-edit-item-tab" style={{ opacity: 0.7, color: 'var(--pm-danger)' }} onClick={() => { const remaining = items.filter(i => i.id !== activeItemId); setItems(remaining); setActiveItemId(remaining[remaining.length - 1]?.id); }} title={t('removePrompt', lang)}>−</button>
         )}
       </div>
 
@@ -342,35 +298,15 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
               <button className={`card-edit-lang-btn${itemTab === 'fr' ? ' active' : ''}`} onClick={() => setItemTab('fr')}>FR</button>
             </div>
           </div>
-          <input
-            className="card-edit-input"
-            type="text"
-            value={activeItem.label}
-            onChange={e => updateItemBody(activeItem.id, 'label', e.target.value)}
-            placeholder={t('promptItemLabel', lang)}
-            style={{ marginBottom: 4, fontSize: 12 }}
-          />
+          <input className="card-edit-input" type="text" value={activeItem.label} onChange={e => updateItemBody(activeItem.id, 'label', e.target.value)} placeholder={t('promptItemLabel', lang)} style={{ marginBottom: 4, fontSize: 12 }} />
           {itemTab === 'en' ? (
-            <textarea
-              className="card-edit-textarea"
-              value={activeItem.body}
-              onChange={e => updateItemBody(activeItem.id, 'body', e.target.value)}
-              rows={4}
-              placeholder={t('bodyEnPlaceholder', lang)}
-            />
+            <textarea className="card-edit-textarea" value={activeItem.body} onChange={e => updateItemBody(activeItem.id, 'body', e.target.value)} rows={4} placeholder={t('bodyEnPlaceholder', lang)} />
           ) : (
-            <textarea
-              className="card-edit-textarea"
-              value={activeItem.body_fr || ''}
-              onChange={e => updateItemBody(activeItem.id, 'body_fr', e.target.value)}
-              rows={4}
-              placeholder={t('bodyFrPlaceholder', lang)}
-            />
+            <textarea className="card-edit-textarea" value={activeItem.body_fr || ''} onChange={e => updateItemBody(activeItem.id, 'body_fr', e.target.value)} rows={4} placeholder={t('bodyFrPlaceholder', lang)} />
           )}
         </div>
       )}
 
-      {/* Category + Story Flow */}
       <div className="card-edit-2col">
         <div className="card-edit-field">
           <label className="card-edit-label">{t('category', lang)}</label>
@@ -388,7 +324,6 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
         </div>
       </div>
 
-      {/* Personas */}
       <div className="card-edit-field">
         <label className="card-edit-label">{t('personasLabel', lang)}</label>
         {(catalog.personas || []).length > 0 ? (
@@ -396,14 +331,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
             {catalog.personas.map(persona => {
               const selected = personas.includes(persona);
               return (
-                <button
-                  key={persona}
-                  type="button"
-                  className={`card-edit-sys-chip${selected ? ' selected' : ''}`}
-                  onClick={() => setPersonas(prev =>
-                    selected ? prev.filter(x => x !== persona) : [...prev, persona]
-                  )}
-                >
+                <button key={persona} type="button" className={`card-edit-sys-chip${selected ? ' selected' : ''}`} onClick={() => setPersonas(prev => selected ? prev.filter(x => x !== persona) : [...prev, persona])}>
                   {selected ? '· ' : ''}{persona}
                 </button>
               );
@@ -414,40 +342,18 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
         )}
       </div>
 
-      {/* Demo Links */}
       <div className="card-edit-field">
         <label className="card-edit-label">{t('demoLinksLabel', lang)}</label>
         {demoLinks.map((link, idx) => (
           <div key={link.id} className="card-edit-demo-link-row">
-            <input
-              className="card-edit-input card-edit-demo-desc"
-              type="text"
-              value={link.desc || ''}
-              onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, desc: e.target.value } : l))}
-              placeholder={t('demoLinkDescPlaceholder', lang)}
-            />
-            <input
-              className="card-edit-input card-edit-demo-url"
-              type="url"
-              value={link.url}
-              onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, url: e.target.value } : l))}
-              placeholder={t('demoLinkUrlPlaceholder', lang)}
-            />
-            <button
-              type="button"
-              className="card-edit-att-del"
-              onClick={() => setDemoLinks(prev => prev.filter((_, i) => i !== idx))}
-            >×</button>
+            <input className="card-edit-input card-edit-demo-desc" type="text" value={link.desc || ''} onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, desc: e.target.value } : l))} placeholder={t('demoLinkDescPlaceholder', lang)} />
+            <input className="card-edit-input card-edit-demo-url" type="url" value={link.url} onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, url: e.target.value } : l))} placeholder={t('demoLinkUrlPlaceholder', lang)} />
+            <button type="button" className="card-edit-att-del" onClick={() => setDemoLinks(prev => prev.filter((_, i) => i !== idx))}>×</button>
           </div>
         ))}
-        <button
-          type="button"
-          className="card-edit-att-add"
-          onClick={() => setDemoLinks(prev => [...prev, { id: crypto.randomUUID(), url: '', desc: '' }])}
-        >{t('addDemoLink', lang)}</button>
+        <button type="button" className="card-edit-att-add" onClick={() => setDemoLinks(prev => [...prev, { id: crypto.randomUUID(), url: '', desc: '' }])}>{t('addDemoLink', lang)}</button>
       </div>
 
-      {/* Systems */}
       {(catalog.systems || []).length > 0 && (
         <div className="card-edit-field">
           <label className="card-edit-label">{t('landscapeCard', lang)}</label>
@@ -455,14 +361,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
             {catalog.systems.map(sys => {
               const selected = systems.some(s => s.id === sys.id);
               return (
-                <button
-                  key={sys.id}
-                  type="button"
-                  className={`card-edit-sys-chip${selected ? ' selected' : ''}`}
-                  onClick={() => setSystems(prev =>
-                    selected ? prev.filter(s => s.id !== sys.id) : [...prev, sys]
-                  )}
-                >
+                <button key={sys.id} type="button" className={`card-edit-sys-chip${selected ? ' selected' : ''}`} onClick={() => setSystems(prev => selected ? prev.filter(s => s.id !== sys.id) : [...prev, sys])}>
                   {selected ? '· ' : ''}{sys.name || sys.url}
                   {sys.endpoints?.length > 0 && <span style={{ opacity: 0.6, marginLeft: 3, fontSize: 10 }}>cred</span>}
                 </button>
@@ -472,7 +371,6 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
         </div>
       )}
 
-      {/* Attachments */}
       <div className="card-edit-field">
         <label className="card-edit-label">{t('attachmentsLabel', lang)}</label>
         <div className="card-edit-attachments">
@@ -492,18 +390,8 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
               <button className="card-edit-att-del" onClick={() => setPendingFiles(prev => prev.filter(x => x._tempId !== f._tempId))} title="Remove">×</button>
             </div>
           ))}
-          <button
-            type="button"
-            className="card-edit-att-add"
-            onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}
-          >+ {t('addFileBtn', lang)}</button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            multiple
-            style={{ display: 'none' }}
-            onChange={e => addFiles(e.target.files)}
-          />
+          <button type="button" className="card-edit-att-add" onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}>+ {t('addFileBtn', lang)}</button>
+          <input type="file" ref={fileInputRef} multiple style={{ display: 'none' }} onChange={e => addFiles(e.target.files)} />
         </div>
       </div>
 
@@ -525,29 +413,44 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
   const [flipped, setFlipped] = useState(false);
   const [flashSaved, setFlashSaved] = useState(false);
   const [substItem, setSubstItem] = useState(null);
+  // Per-item copy state: itemId → 'copied' | null
+  const [copiedItemId, setCopiedItemId] = useState(null);
+  const [ctaCopied, setCtaCopied] = useState(false);
 
   const promptItems = p.promptItems?.length
     ? p.promptItems
     : [{ id: p.id + '-legacy', label: '', body: p.body || '', body_fr: p.body_fr || null }];
 
   const systems = getSystems(p);
+  const isSingle = promptItems.length === 1;
 
-  async function handleCopyItem(item) {
+  // Determine left-edge color from flow, then category index, then default
+  const flowColor = p.storyFlow ? getFlowColor(p.storyFlow) : null;
+  const edgeColor = flowColor ? flowColor.border : 'var(--pm-border)';
+
+  async function handleCopyItem(item, isCta = false) {
     const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;
     const vars = extractVars(body);
     if (vars.length > 0) {
       setSubstItem({ item, body });
       return;
     }
-    await doCopy(body, item);
+    await doCopy(body, item, isCta);
   }
 
-  async function doCopy(text, item) {
+  async function doCopy(text, item, isCta = false) {
     await copyText(text);
     await StorageAPI.incrementUsage(p.id);
     const prompts = await StorageAPI.getAllPrompts();
     dispatch({ type: 'SET_PROMPTS', payload: prompts });
     dispatch({ type: 'SHOW_TOAST', payload: t('copied', lang) });
+    if (isCta) {
+      setCtaCopied(true);
+      setTimeout(() => setCtaCopied(false), 1500);
+    } else {
+      setCopiedItemId(item.id);
+      setTimeout(() => setCopiedItemId(null), 1500);
+    }
   }
 
   function handleCopied() {
@@ -563,16 +466,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
 
   async function handleDuplicate() {
     const now = new Date().toISOString();
-    const dupe = {
-      ...p,
-      id: crypto.randomUUID(),
-      title: p.title + ' ' + t('copyDuplicate', lang),
-      isFavorite: false,
-      usageCount: 0,
-      lastUsedAt: null,
-      createdAt: now,
-      updatedAt: now,
-    };
+    const dupe = { ...p, id: crypto.randomUUID(), title: p.title + ' ' + t('copyDuplicate', lang), isFavorite: false, usageCount: 0, lastUsedAt: null, createdAt: now, updatedAt: now };
     await StorageAPI.upsertPrompt(dupe);
     const prompts = await StorageAPI.getAllPrompts();
     dispatch({ type: 'SET_PROMPTS', payload: prompts });
@@ -585,7 +479,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
     dispatch({ type: 'SHOW_TOAST', payload: t('promptUpdated', lang) });
     setFlipped(false);
     setFlashSaved(true);
-    setTimeout(() => setFlashSaved(false), 700);
+    setTimeout(() => setFlashSaved(false), 800);
   }
 
   function handleDelete() {
@@ -599,18 +493,17 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
     : null;
 
   const attachCount = p.attachments?.length || 0;
-  const isSingle = promptItems.length === 1;
 
   return (
     <div className={`prompt-card-flip-wrapper${flipped ? ' flipped' : ''}${flashSaved ? ' card--flash-saved' : ''}`}>
       {/* Front face */}
       <div
-        className="prompt-card prompt-card-face prompt-card-front"
+        className={`prompt-card prompt-card-face prompt-card-front${isSingle ? ' prompt-card-single' : ''}`}
+        style={{ borderLeftColor: edgeColor }}
         tabIndex={0}
         onClick={() => setFlipped(true)}
         onKeyDown={e => { if (e.key === 'Enter') setFlipped(true); }}
       >
-        {/* Checkbox for bulk select */}
         {onToggleSelect && (
           <input
             type="checkbox"
@@ -621,13 +514,11 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
             title="Select"
           />
         )}
+
+        {/* Header: fav | title + personas | category pill */}
         <div className="prompt-card-header">
-          <button
-            className={`prompt-card-fav${p.isFavorite ? ' active' : ''}`}
-            title={p.isFavorite ? t('removeFromFav', lang) : t('addToFav', lang)}
-            onClick={e => { e.stopPropagation(); handleToggleFav(); }}
-          >
-            <svg width="13" height="13" viewBox="0 0 16 16" fill={p.isFavorite ? 'currentColor' : 'none'} xmlns="http://www.w3.org/2000/svg">
+          <button className={`prompt-card-fav${p.isFavorite ? ' active' : ''}`} title={p.isFavorite ? t('removeFromFav', lang) : t('addToFav', lang)} onClick={e => { e.stopPropagation(); handleToggleFav(); }}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill={p.isFavorite ? 'currentColor' : 'none'} xmlns="http://www.w3.org/2000/svg">
               <path d="M8 1.5l1.8 3.6 4 .58-2.9 2.83.68 3.99L8 10.35l-3.58 1.88.68-3.99L2.2 5.68l4-.58L8 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
             </svg>
           </button>
@@ -635,38 +526,46 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
             <div className="prompt-card-title">{p.title}</div>
             {(p.personas || []).length > 0 && (
               <div className="prompt-card-personas">
-                {p.personas.map(persona => (
-                  <span key={persona} className="pill persona">
-                    {persona}
-                  </span>
-                ))}
+                {p.personas.map(persona => <span key={persona} className="pill persona">{persona}</span>)}
               </div>
             )}
           </div>
           {p.category && <span className="pill category card-header-category">{p.category}</span>}
         </div>
 
+        {/* Notes */}
         {p.notes && <div className="prompt-card-notes">{p.notes}</div>}
 
-        {/* Prompt items */}
+        {/* Prompt items — label + number badge only (no body text) */}
         <div className="prompt-items-list">
           {promptItems.map((item, idx) => {
             const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;
+            const label = item.label || (isSingle ? t('copy', lang) : `Prompt ${idx + 1}`);
+            const isCopied = copiedItemId === item.id;
             return (
-              <div key={item.id} className={`prompt-item-row${idx % 2 === 1 ? ' even' : ''}`}>
+              <div key={item.id} className="prompt-item-row">
                 <div className="prompt-item-content">
-                  {!isSingle && <div className="prompt-item-label">{item.label || `#${idx + 1}`}</div>}
+                  {!isSingle && (
+                    <span className="prompt-item-num">{idx + 1}</span>
+                  )}
                   <div className="prompt-item-preview-wrap">
-                    <div className="prompt-item-preview">{body}</div>
+                    <span className="prompt-item-preview">{label}</span>
                     <div className="prompt-item-tooltip">{body}</div>
                   </div>
                 </div>
-                <button className="prompt-item-copy-btn" title={t('copy', lang)} onClick={e => { e.stopPropagation(); handleCopyItem(item); }}>
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
-                    <path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2H3.5A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                </button>
+                {!isSingle && (
+                  <button
+                    className={`prompt-item-copy-btn${isCopied ? ' copied' : ''}`}
+                    title={t('copy', lang)}
+                    onClick={e => { e.stopPropagation(); handleCopyItem(item, false); }}
+                    style={isCopied ? { background: 'var(--pm-success)', borderColor: 'var(--pm-success)', color: '#fff' } : {}}
+                  >
+                    {isCopied
+                      ? <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      : <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2H3.5A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                    }
+                  </button>
+                )}
               </div>
             );
           })}
@@ -679,14 +578,13 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
           {(p.tags || []).slice(0, 3).map(tag => <span key={tag} className="pill tag">#{tag}</span>)}
           {langBadge}
           {attachCount > 0 && <span className="attach-count-pill">{attachCount} file{attachCount > 1 ? 's' : ''}</span>}
+          {p.usageCount > 0 && <span className="usage-hint" style={{ marginLeft: 'auto' }}>Used {t('usedCount', lang, p.usageCount)}{p.lastUsedAt ? ` · ${relTime(p.lastUsedAt, lang)}` : ''}</span>}
         </div>
 
-        {/* Systems — flippable chips */}
+        {/* Systems */}
         {systems.length > 0 && (
           <div className="card-systems-list">
-            {systems.map(sys => (
-              <SystemChip key={sys.id} sys={sys} lang={lang} onCopied={handleCopied} />
-            ))}
+            {systems.map(sys => <SystemChip key={sys.id} sys={sys} lang={lang} onCopied={handleCopied} />)}
           </div>
         )}
 
@@ -695,37 +593,41 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
           <>
             <div className="card-section-label">Demo link(s)</div>
             <div className="card-demo-links">
-            {(p.demoLinks).filter(l => l.url).map(link => (
-              <a
-                key={link.id}
-                className="card-demo-link"
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={e => e.stopPropagation()}
-              >
-                {link.desc || link.url}
-              </a>
-            ))}
-          </div>
+              {p.demoLinks.filter(l => l.url).map(link => (
+                <a key={link.id} className="card-demo-link" href={link.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>
+                  {link.desc || link.url}
+                </a>
+              ))}
+            </div>
           </>
         )}
 
-        {p.usageCount > 0 && (
-          <div className="usage-hint">
-          Used {t('usedCount', lang, p.usageCount)}{p.lastUsedAt ? ` · ${relTime(p.lastUsedAt, lang)}` : ''}
-          </div>
-        )}
-
-        <div className="prompt-card-actions">
-        </div>
+        {/* Primary copy CTA — full width */}
+        <button
+          className={`card-copy-cta${ctaCopied ? ' copied' : ''}`}
+          onClick={e => {
+            e.stopPropagation();
+            // Copy first (or only) item
+            handleCopyItem(promptItems[0], true);
+          }}
+        >
+          {ctaCopied ? (
+            <>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l4 4 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              Copied — paste now
+            </>
+          ) : (
+            <>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.6"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2H3.5A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+              {isSingle ? t('copy', lang) : `Copy "${promptItems[0].label || 'Prompt 1'}"`}
+            </>
+          )}
+        </button>
       </div>
 
+      {/* Back face — edit form */}
       {flipped && (
-        <div
-          className="prompt-card prompt-card-face prompt-card-back"
-          onKeyDown={e => { if (e.key === 'Escape') setFlipped(false); }}
-        >
+        <div className="prompt-card prompt-card-face prompt-card-back" onKeyDown={e => { if (e.key === 'Escape') setFlipped(false); }}>
           <CardEditBack
             prompt={p}
             catalog={catalog}
@@ -741,7 +643,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
         <SubstituteModal
           text={substItem.body}
           lang={lang}
-          onCopy={text => doCopy(text, substItem.item)}
+          onCopy={text => doCopy(text, substItem.item, true)}
           onClose={() => setSubstItem(null)}
         />
       )}
