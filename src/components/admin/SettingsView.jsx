@@ -90,6 +90,14 @@ export default function SettingsView() {
             promptField="storyFlow"
             isArray={false}
           />
+          <AdminCatalogCard
+            titleKey="personasAdmin"
+            descKey="personasDesc"
+            addKey="addPersona"
+            items={state.catalog.personas || []}
+            promptField="personas"
+            isArray
+          />
         </div>
 
       </div>

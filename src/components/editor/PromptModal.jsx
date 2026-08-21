@@ -38,6 +38,7 @@ export default function PromptModal() {
   const [category, setCategory] = useState('');
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedSolutions, setSelectedSolutions] = useState([]);
+  const [personas, setPersonas] = useState([]);
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
   const [systems, setSystems] = useState([]);
@@ -63,6 +64,7 @@ export default function PromptModal() {
       setCategory(existing.category || '');
       setIsFavorite(existing.isFavorite || false);
       setSelectedSolutions(existing.solutions || []);
+      setPersonas(existing.personas || []);
       setTags(existing.tags || []);
       // Migrate legacy landscapes + mcpCredentials into systems array
       const savedSystems = existing.systems || [];
@@ -103,6 +105,7 @@ export default function PromptModal() {
       setCategory('');
       setIsFavorite(false);
       setSelectedSolutions([]);
+      setPersonas([]);
       setTags([]);
       setSystems([]);
       setDemoLinks([]);
@@ -222,6 +225,7 @@ export default function PromptModal() {
       category: category || null,
       storyFlow,
       solutions: selectedSolutions,
+      personas,
       tags,
       systems,
       demoLinks: demoLinks.filter(l => l.url.trim()),
@@ -348,6 +352,29 @@ export default function PromptModal() {
                 </label>
               ))}
             </div>
+          </div>
+
+          {/* Personas */}
+          <div className="field-row">
+            <label>{t('personasLabel', lang)}</label>
+            {(catalog.personas || []).length > 0 ? (
+              <div className="catalog-picker">
+                {catalog.personas.map(persona => (
+                  <button
+                    key={persona}
+                    type="button"
+                    className={`catalog-chip${personas.includes(persona) ? ' selected' : ''}`}
+                    onClick={() => setPersonas(prev =>
+                      prev.includes(persona) ? prev.filter(x => x !== persona) : [...prev, persona]
+                    )}
+                  >
+                    {personas.includes(persona) ? '✓ ' : ''}{persona}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="field-hint-text">{t('noPersonasYet', lang)}</p>
+            )}
           </div>
 
           {/* Tags */}

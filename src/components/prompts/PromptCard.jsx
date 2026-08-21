@@ -176,6 +176,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
   const [itemTab, setItemTab] = useState('en');
   const [category, setCategory] = useState(p.category || '');
   const [storyFlow, setStoryFlow] = useState(p.storyFlow || '');
+  const [personas, setPersonas] = useState(p.personas || []);
   const [notes, setNotes] = useState(p.notes || '');
   const [systems, setSystems] = useState(() => getSystems(p));
   const [demoLinks, setDemoLinks] = useState(() =>
@@ -250,6 +251,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
       promptItems: finalItems,
       category: category || null,
       storyFlow,
+      personas,
       notes: notes.trim(),
       systems,
       demoLinks: demoLinks.filter(l => l.url.trim()),
@@ -373,6 +375,30 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate 
           </select>
         </div>
       </div>
+
+      {/* Personas */}
+      {(catalog.personas || []).length > 0 && (
+        <div className="card-edit-field">
+          <label className="card-edit-label">{t('personasLabel', lang)}</label>
+          <div className="card-edit-systems">
+            {catalog.personas.map(persona => {
+              const selected = personas.includes(persona);
+              return (
+                <button
+                  key={persona}
+                  type="button"
+                  className={`card-edit-sys-chip${selected ? ' selected' : ''}`}
+                  onClick={() => setPersonas(prev =>
+                    selected ? prev.filter(x => x !== persona) : [...prev, persona]
+                  )}
+                >
+                  {selected ? '✓ ' : ''}{persona}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Demo Links */}
       <div className="card-edit-field">
@@ -599,7 +625,20 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
             title={p.isFavorite ? t('removeFromFav', lang) : t('addToFav', lang)}
             onClick={e => { e.stopPropagation(); handleToggleFav(); }}
           >★</button>
-          <div className="prompt-card-title">{p.title}</div>
+          <div className="prompt-card-title-area">
+            <div className="prompt-card-title">{p.title}</div>
+            {(p.personas || []).length > 0 && (
+              <div className="prompt-card-personas">
+                {p.personas.map(persona => (
+                  <span key={persona} className="pill persona">
+                    <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" style={{ flexShrink: 0 }}><circle cx="8" cy="5" r="3.5"/><path d="M1.5 14c0-3.038 2.91-5.5 6.5-5.5s6.5 2.462 6.5 5.5"/></svg>
+                    {persona}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          {p.category && <span className="pill category card-header-category">{p.category}</span>}
         </div>
 
         {/* Prompt items */}
@@ -628,7 +667,6 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
 
         {/* Meta pills */}
         <div className="prompt-card-meta">
-          {p.category && <span className="pill category">{p.category}</span>}
           {(p.solutions || []).map(s => <span key={s} className="pill">{s}</span>)}
           {p.storyFlow && (() => { const c = getFlowColor(p.storyFlow); return <span className="pill flow" style={{ background: c.bg, color: c.text }}>{p.storyFlow}</span>; })()}
           {(p.tags || []).slice(0, 3).map(tag => <span key={tag} className="pill tag">#{tag}</span>)}

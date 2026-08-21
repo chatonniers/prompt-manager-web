@@ -13,6 +13,7 @@ const DEFAULT_CATALOG = {
   storyFlows: ["Procure-to-Pay","Order-to-Cash","Plan-to-Inventory","Hire-to-Retire","Record-to-Report","Lead-to-Cash","Design-to-Operate","Other"],
   categories: DEFAULT_CATEGORIES,
   systems: [],
+  personas: [],
 };
 
 export const AUTONOMOUS_CATEGORIES = DEFAULT_CATEGORIES;
@@ -65,6 +66,7 @@ export const StorageAPI = {
       storyFlows: data.storyFlows ?? [...DEFAULT_CATALOG.storyFlows],
       categories: data.categories ?? [...DEFAULT_CATALOG.categories],
       systems: migrateSystems(data),
+      personas: data.personas ?? [],
     };
   },
 
@@ -177,6 +179,7 @@ export const StorageAPI = {
       await this.saveCatalog({
         solutions:  [...new Set([...cur.solutions,  ...(data.catalog.solutions  || [])])],
         storyFlows: [...new Set([...cur.storyFlows, ...(data.catalog.storyFlows || [])])],
+        personas:   [...new Set([...cur.personas,   ...(data.catalog.personas   || [])])],
         categories: [...new Set([...cur.categories, ...(data.catalog.categories || [])])],
         systems: mergedSystems,
       });
