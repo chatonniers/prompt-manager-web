@@ -50,7 +50,6 @@ export default function TopBar({ onHelp }) {
           <LogoMark />
           <div className="app-wordmark">
             <span className="title-main">{t('appTitle', lang)}</span>
-            <span className="title-sub">AI Prompt Library · SAP</span>
           </div>
         </div>
         <div className="tb-stat-pill">
