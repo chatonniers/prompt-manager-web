@@ -557,12 +557,12 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
           />
         )}
         <div className="prompt-card-header">
-          <div className="prompt-card-title">{p.title}</div>
           <button
             className={`prompt-card-fav${p.isFavorite ? ' active' : ''}`}
             title={p.isFavorite ? t('removeFromFav', lang) : t('addToFav', lang)}
             onClick={e => { e.stopPropagation(); handleToggleFav(); }}
           >★</button>
+          <div className="prompt-card-title">{p.title}</div>
         </div>
 
         {/* Prompt items */}
