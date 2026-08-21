@@ -280,7 +280,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
 
       <div className="card-edit-item-tabs">
         {items.map((item, idx) => (
-          <button key={item.id} className={`card-edit-item-tab${activeItemId === item.id ? ' active' : ''}`} onClick={() => setActiveItemId(item.id)}>
+          <button key={item.id} className={`card-edit-item-tab${activeItemId === item.id ? ' active' : ''}${!item.label.trim() ? ' tab-error' : ''}`} onClick={() => setActiveItemId(item.id)}>
             {item.label || `#${idx + 1}`}
           </button>
         ))}
@@ -398,7 +398,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
 
       <div className="card-edit-actions">
         <button className="card-edit-cancel-btn" onClick={onCancel}>{t('cancel', lang)}</button>
-        <button className="card-edit-save-btn" onClick={handleSave} disabled={saving || !title.trim() || items.filter(i => i.body.trim()).some(i => !i.label.trim())}>
+        <button className="card-edit-save-btn" onClick={handleSave} disabled={saving || !title.trim() || items.some(i => !i.label.trim())}>
           {saving ? t('savingLabel', lang) : t('save', lang)}
         </button>
       </div>

@@ -656,6 +656,7 @@
   transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
 .card-edit-item-tab.active { background: var(--pm-accent-bg); border-color: var(--pm-accent); color: var(--pm-accent); }
+.card-edit-item-tab.tab-error { border-color: var(--pm-danger); color: var(--pm-danger); }
 
 .card-edit-lang-row  { display: flex; align-items: center; justify-content: space-between; }
 .card-edit-lang-btns { display: flex; gap: 3px; }

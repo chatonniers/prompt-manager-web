@@ -272,7 +272,7 @@ export default function PromptModal() {
                       <span className="prompt-item-editor-num">#{idx + 1}</span>
                       <input
                         type="text"
-                        className={`prompt-item-label-input${errors.label && !item.label.trim() ? ' input-error' : ''}`}
+                        className={`prompt-item-label-input${!item.label.trim() ? ' input-error' : ''}`}
                         value={item.label}
                         onChange={e => updateItem(item.id, 'label', e.target.value)}
                         placeholder={t('promptItemLabel', lang)}

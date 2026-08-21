@@ -373,6 +373,11 @@
   box-shadow: 0 0 0 2px rgba(99,102,241,0.1);
 }
 
+.prompt-item-label-input.input-error {
+  border-color: var(--pm-danger) !important;
+  box-shadow: 0 0 0 2px rgba(239,68,68,0.1);
+}
+
 .prompt-item-delete-btn {
   background: none;
   border: none;
