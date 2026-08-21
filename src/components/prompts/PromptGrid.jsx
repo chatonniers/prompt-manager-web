@@ -107,6 +107,7 @@ export default function PromptGrid() {
   async function handleDrop(promptId, updates) {
     const prompt = prompts.find(p => p.id === promptId);
     if (!prompt) return;
+    dispatch({ type: 'SET_DRAGGING', payload: null });
     await StorageAPI.upsertPrompt({ ...prompt, ...updates });
     const [fresh, freshCatalog] = await Promise.all([
       StorageAPI.getAllPrompts(), StorageAPI.getCatalog()
