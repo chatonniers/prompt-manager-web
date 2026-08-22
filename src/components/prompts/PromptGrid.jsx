@@ -130,8 +130,6 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
         ref={rowRef}
         className={`pt-row${selectedIds?.has(p.id) ? ' pt-row-selected' : ''}${canEdit ? ' pt-row-clickable' : ''}`}
         onClick={() => canEdit && onOpen(p.id)}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
       >
         <td className="pt-td pt-td-check" onClick={e => e.stopPropagation()}>
           <input type="checkbox" checked={!!selectedIds?.has(p.id)} onChange={() => onToggleSelect(p.id)} />
@@ -140,7 +138,7 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
         {/* Title + copy tabs */}
         <td ref={titleCellRef} className="pt-td pt-td-title-cell">
           <div className="pt-title-row">
-            <span className="pt-title-text">{p.title}</span>
+            <span className="pt-title-text" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>{p.title}</span>
           </div>
           {/* Prompt item tabs */}
           <div className="pt-item-tabs">
