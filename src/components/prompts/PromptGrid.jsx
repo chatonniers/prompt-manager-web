@@ -5,6 +5,8 @@ import { StorageAPI } from '../../lib/storage.js';
 import { filterAndRank } from '../../lib/search.js';
 import { t } from '../../lib/i18n.js';
 import { getFlowColor } from '../../lib/flowColors.js';
+import { extractVars } from '../../lib/substitution.js';
+import SubstituteModal from '../shared/SubstituteModal.jsx';
 import PromptCard from './PromptCard.jsx';
 import EmptyState from './EmptyState.jsx';
 import BulkActionBar from './BulkActionBar.jsx';
@@ -40,17 +42,15 @@ const REQ_ICONS = {
 function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequests, canEdit, lang, dispatch }) {
   const [activeItem, setActiveItem] = useState(0);
   const [copiedIdx, setCopiedIdx] = useState(null);
+  const [substItem, setSubstItem] = useState(null);
 
   const items = p.promptItems?.length ? p.promptItems : [{ id: p.id, label: '', body: p.body || '', body_fr: p.body_fr || '' }];
   const flowColor = p.storyFlow ? getFlowColor(p.storyFlow) : null;
   const req = (publishRequests || []).find(r => r.prompt_id === p.id);
   const reqInfo = req ? REQ_ICONS[req.status] : null;
 
-  async function handleCopy(idx) {
-    const item = items[idx];
-    const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;
-    if (!body) return;
-    await copyText(body);
+  async function doCopy(text, item, idx) {
+    await copyText(text);
     await StorageAPI.incrementUsage(p.id);
     const fresh = await StorageAPI.getAllPrompts();
     dispatch({ type: 'SET_PROMPTS', payload: fresh });
@@ -59,63 +59,85 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
     setTimeout(() => setCopiedIdx(null), 1500);
   }
 
+  async function handleCopy(idx) {
+    const item = items[idx];
+    const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;
+    if (!body) return;
+    const vars = extractVars(body);
+    if (vars.length > 0) {
+      setSubstItem({ item, body, idx });
+      return;
+    }
+    await doCopy(body, item, idx);
+  }
+
   return (
-    <tr className={`pt-row${selectedIds?.has(p.id) ? ' pt-row-selected' : ''}`}>
-      <td className="pt-td pt-td-check">
-        <input type="checkbox" checked={!!selectedIds?.has(p.id)} onChange={() => onToggleSelect(p.id)} />
-      </td>
+    <>
+      <tr className={`pt-row${selectedIds?.has(p.id) ? ' pt-row-selected' : ''}`}>
+        <td className="pt-td pt-td-check">
+          <input type="checkbox" checked={!!selectedIds?.has(p.id)} onChange={() => onToggleSelect(p.id)} />
+        </td>
 
-      {/* Title + copy tabs */}
-      <td className="pt-td pt-td-title-cell">
-        <div className="pt-title-row">
-          <span className="pt-title-text" onClick={() => onOpen(p.id)} style={{ cursor: 'pointer' }}>{p.title}</span>
-        </div>
-        {/* Prompt item tabs */}
-        <div className="pt-item-tabs">
-          {items.map((item, idx) => {
-            const label = item.label?.trim() || (items.length === 1 ? t('copy', lang) : `#${idx + 1}`);
-            return (
-              <button
-                key={item.id || idx}
-                className={`pt-item-tab${activeItem === idx ? ' active' : ''}${copiedIdx === idx ? ' copied' : ''}`}
-                onClick={() => { setActiveItem(idx); handleCopy(idx); }}
-                title={item.label?.trim() || `Copy prompt ${idx + 1}`}
-              >
-                {copiedIdx === idx ? '✓' : label}
-              </button>
-            );
-          })}
-        </div>
-      </td>
+        {/* Title + copy tabs */}
+        <td className="pt-td pt-td-title-cell">
+          <div className="pt-title-row">
+            <span className="pt-title-text" onClick={() => onOpen(p.id)} style={{ cursor: 'pointer' }}>{p.title}</span>
+          </div>
+          {/* Prompt item tabs */}
+          <div className="pt-item-tabs">
+            {items.map((item, idx) => {
+              const label = item.label?.trim() || (items.length === 1 ? t('copy', lang) : `#${idx + 1}`);
+              return (
+                <button
+                  key={item.id || idx}
+                  className={`pt-item-tab${activeItem === idx ? ' active' : ''}${copiedIdx === idx ? ' copied' : ''}`}
+                  onClick={() => { setActiveItem(idx); handleCopy(idx); }}
+                  title={item.label?.trim() || `Copy prompt ${idx + 1}`}
+                >
+                  {copiedIdx === idx ? '✓' : label}
+                </button>
+              );
+            })}
+          </div>
+        </td>
 
-      <td className="pt-td">
-        {p.status && <span className={`pill status-${p.status}`}>{p.status}</span>}
-      </td>
-      <td className="pt-td" style={{ textAlign: 'center' }}>
-        {p.isPrivate
-          ? <span title="Private" style={{ color: '#D97706', fontWeight: 700, fontSize: 11 }}>Private</span>
-          : <span title="Public" style={{ color: '#059669', fontWeight: 700, fontSize: 11 }}>Public</span>}
-      </td>
-      <td className="pt-td" style={{ textAlign: 'center' }}>
-        {reqInfo && <span style={{ color: reqInfo.color, fontWeight: 700, fontSize: 11 }}>{reqInfo.label}</span>}
-      </td>
-      <td className="pt-td pt-td-dim">{p.category || '—'}</td>
-      <td className="pt-td">
-        {p.storyFlow
-          ? <span className="pill flow" style={flowColor ? { background: flowColor.bg, color: flowColor.text } : {}}>{p.storyFlow}</span>
-          : <span className="pt-td-dim">—</span>}
-      </td>
-      <td className="pt-td pt-td-pills">
-        {(p.solutions || []).slice(0, 3).map(s => <span key={s} className="pill">{s}</span>)}
-        {(p.solutions || []).length > 3 && <span className="pt-more">+{p.solutions.length - 3}</span>}
-      </td>
-      <td className="pt-td pt-td-pills">
-        {(p.tags || []).slice(0, 3).map(tag => <span key={tag} className="pill tag">#{tag}</span>)}
-        {(p.tags || []).length > 3 && <span className="pt-more">+{p.tags.length - 3}</span>}
-      </td>
-      <td className="pt-td pt-td-num">{p.usageCount > 0 ? p.usageCount : '—'}</td>
-      <td className="pt-td pt-td-dim">{relTime(p.updatedAt)}</td>
-    </tr>
+        <td className="pt-td">
+          {p.status && <span className={`pill status-${p.status}`}>{p.status}</span>}
+        </td>
+        <td className="pt-td" style={{ textAlign: 'center' }}>
+          {p.isPrivate
+            ? <span title="Private" style={{ color: '#D97706', fontWeight: 700, fontSize: 11 }}>Private</span>
+            : <span title="Public" style={{ color: '#059669', fontWeight: 700, fontSize: 11 }}>Public</span>}
+        </td>
+        <td className="pt-td" style={{ textAlign: 'center' }}>
+          {reqInfo && <span style={{ color: reqInfo.color, fontWeight: 700, fontSize: 11 }}>{reqInfo.label}</span>}
+        </td>
+        <td className="pt-td pt-td-dim">{p.category || '—'}</td>
+        <td className="pt-td">
+          {p.storyFlow
+            ? <span className="pill flow" style={flowColor ? { background: flowColor.bg, color: flowColor.text } : {}}>{p.storyFlow}</span>
+            : <span className="pt-td-dim">—</span>}
+        </td>
+        <td className="pt-td pt-td-pills">
+          {(p.solutions || []).slice(0, 3).map(s => <span key={s} className="pill">{s}</span>)}
+          {(p.solutions || []).length > 3 && <span className="pt-more">+{p.solutions.length - 3}</span>}
+        </td>
+        <td className="pt-td pt-td-pills">
+          {(p.tags || []).slice(0, 3).map(tag => <span key={tag} className="pill tag">#{tag}</span>)}
+          {(p.tags || []).length > 3 && <span className="pt-more">+{p.tags.length - 3}</span>}
+        </td>
+        <td className="pt-td pt-td-num">{p.usageCount > 0 ? p.usageCount : '—'}</td>
+        <td className="pt-td pt-td-dim">{relTime(p.updatedAt)}</td>
+      </tr>
+      {substItem && (
+        <SubstituteModal
+          text={substItem.body}
+          lang={lang}
+          onCopy={text => { doCopy(text, substItem.item, substItem.idx); setSubstItem(null); }}
+          onClose={() => setSubstItem(null)}
+        />
+      )}
+    </>
   );
 }
 
