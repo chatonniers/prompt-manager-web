@@ -20,7 +20,7 @@ function relTime(iso) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
-function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen }) {
+function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen, publishRequests }) {
   const [sort, setSort] = useState({ col: 'title', dir: 1 });
 
   function toggleSort(col) {
@@ -39,6 +39,12 @@ function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen }) {
     return av.localeCompare(bv) * sort.dir;
   });
 
+  const REQ_ICONS = {
+    pending:  { icon: '⏳', title: 'Publish request pending',  color: '#D97706' },
+    approved: { icon: '✓',  title: 'Publish request approved', color: '#059669' },
+    rejected: { icon: '✗',  title: 'Publish request rejected', color: '#DC2626' },
+  };
+
   function Th({ col, label }) {
     const active = sort.col === col;
     return (
@@ -56,6 +62,7 @@ function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen }) {
             <th className="pt-th pt-th-check" />
             <Th col="title" label="Title" />
             <Th col="status" label="Status" />
+            <th className="pt-th">Request</th>
             <Th col="category" label="Category" />
             <Th col="flow" label="Flow" />
             <th className="pt-th">Solutions</th>
@@ -67,6 +74,8 @@ function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen }) {
         <tbody>
           {sorted.map(p => {
             const flowColor = p.storyFlow ? getFlowColor(p.storyFlow) : null;
+            const req = (publishRequests || []).find(r => r.prompt_id === p.id);
+            const reqInfo = req ? REQ_ICONS[req.status] : null;
             return (
               <tr key={p.id} className={`pt-row${selectedIds?.has(p.id) ? ' pt-row-selected' : ''}`} onClick={() => onOpen(p.id)}>
                 <td className="pt-td pt-td-check" onClick={e => e.stopPropagation()}>
@@ -75,6 +84,13 @@ function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen }) {
                 <td className="pt-td pt-td-title">{p.title}</td>
                 <td className="pt-td">
                   {p.status && <span className={`pill status-${p.status}`}>{p.status}</span>}
+                </td>
+                <td className="pt-td" style={{ textAlign: 'center' }}>
+                  {reqInfo && (
+                    <span title={reqInfo.title} style={{ color: reqInfo.color, fontWeight: 700, fontSize: 13 }}>
+                      {reqInfo.icon}
+                    </span>
+                  )}
                 </td>
                 <td className="pt-td pt-td-dim">{p.category || '—'}</td>
                 <td className="pt-td">
@@ -264,7 +280,7 @@ export default function PromptGrid() {
   const lang = settings?.lang || 'en';
   const categories = catalog.categories || [];
   const storyFlows = catalog.storyFlows || [];
-  const visibilityRules = settings?.visibilityRules;
+  const visibilityRules = catalog?.visibilityRules;
   const role = profile?.role || 'viewer';
 
   let pool = applyViewFilter(prompts, currentView, currentFilter, workspace, profile?.id, canPublish, visibilityRules, role);
@@ -353,6 +369,7 @@ export default function PromptGrid() {
           selectedIds={selectedIds}
           onToggleSelect={onToggleSelect}
           onOpen={id => dispatch({ type: 'OPEN_EDIT', payload: id })}
+          publishRequests={state.publishRequests}
         />
       </>
     );

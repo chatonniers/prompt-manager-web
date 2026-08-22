@@ -62,16 +62,21 @@ create trigger on_auth_user_created
 -- ── Catalog ───────────────────────────────────────────────────
 -- Single shared row for the whole team.
 create table public.catalog (
-  id           uuid primary key default uuid_generate_v4(),
-  solutions    text[] not null default '{}',
-  story_flows  text[] not null default '{}',
-  categories   text[] not null default '{}',
-  personas     text[] not null default '{}',
-  tags         text[] not null default '{}',
-  systems      jsonb  not null default '[]',
-  updated_at   timestamptz not null default now(),
-  updated_by   uuid references public.profiles(id)
+  id                uuid primary key default uuid_generate_v4(),
+  solutions         text[] not null default '{}',
+  story_flows       text[] not null default '{}',
+  categories        text[] not null default '{}',
+  personas          text[] not null default '{}',
+  tags              text[] not null default '{}',
+  systems           jsonb  not null default '[]',
+  visibility_rules  jsonb  default null,
+  kpi_rules         jsonb  default null,
+  updated_at        timestamptz not null default now(),
+  updated_by        uuid references public.profiles(id)
 );
+-- Migration: add columns if table already exists
+-- alter table public.catalog add column if not exists visibility_rules jsonb default null;
+-- alter table public.catalog add column if not exists kpi_rules jsonb default null;
 alter table public.catalog enable row level security;
 
 -- Everyone can read

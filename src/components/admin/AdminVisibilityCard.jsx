@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 
@@ -25,9 +25,15 @@ function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
 
 export default function AdminVisibilityCard() {
   const { state, dispatch } = useApp();
-  const [vr, setVr] = useState(() => deepClone(state.settings?.visibilityRules || {}));
-  const [kr, setKr] = useState(() => deepClone(state.settings?.kpiRules || {}));
+  const [vr, setVr] = useState(() => deepClone(state.catalog?.visibilityRules || {}));
+  const [kr, setKr] = useState(() => deepClone(state.catalog?.kpiRules || {}));
   const [saved, setSaved] = useState(false);
+
+  // Sync when catalog loads asynchronously after mount
+  useEffect(() => {
+    if (state.catalog?.visibilityRules) setVr(deepClone(state.catalog.visibilityRules));
+    if (state.catalog?.kpiRules) setKr(deepClone(state.catalog.kpiRules));
+  }, [!!state.catalog?.visibilityRules, !!state.catalog?.kpiRules]);
 
   function toggleStatus(role, ws, status) {
     setVr(prev => {
@@ -64,9 +70,9 @@ export default function AdminVisibilityCard() {
   }
 
   async function handleSave() {
-    const updated = { ...state.settings, visibilityRules: vr, kpiRules: kr };
-    await StorageAPI.saveSettings(updated);
-    dispatch({ type: 'SET_SETTINGS', payload: updated });
+    const updatedCatalog = { ...state.catalog, visibilityRules: vr, kpiRules: kr };
+    await StorageAPI.saveCatalog(updatedCatalog);
+    dispatch({ type: 'SET_CATALOG', payload: updatedCatalog });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }

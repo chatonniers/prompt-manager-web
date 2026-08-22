@@ -156,7 +156,7 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin }) {
   const { searchQuery, currentView, statusFilter } = state;
   const showSearch = currentView !== 'settings';
 
-  const kpiRules = state.settings?.kpiRules;
+  const kpiRules = state.catalog?.kpiRules;
   const kpiRoleKey = canAdmin ? 'admin' : isEditor ? 'editor' : workspace === 'library' ? 'viewer_library' : 'viewer_mine';
   const allowedKpis = kpiRules?.[kpiRoleKey] ?? FALLBACK_KPIS[kpiRoleKey];
 

@@ -108,17 +108,21 @@ function dbToCatalog(row) {
     systems:    row.systems     || [],
     personas:   row.personas    || [],
     tags:       row.tags        || [],
+    visibilityRules: row.visibility_rules ?? SETTINGS_DEFAULTS.visibilityRules,
+    kpiRules:        row.kpi_rules        ?? SETTINGS_DEFAULTS.kpiRules,
   };
 }
 
 function catalogToDb(catalog) {
   return {
-    solutions:   catalog.solutions  || [],
-    story_flows: catalog.storyFlows || [],
-    categories:  catalog.categories || [],
-    systems:     catalog.systems    || [],
-    personas:    catalog.personas   || [],
-    tags:        catalog.tags       || [],
+    solutions:         catalog.solutions  || [],
+    story_flows:       catalog.storyFlows || [],
+    categories:        catalog.categories || [],
+    systems:           catalog.systems    || [],
+    personas:          catalog.personas   || [],
+    tags:              catalog.tags       || [],
+    visibility_rules:  catalog.visibilityRules ?? null,
+    kpi_rules:         catalog.kpiRules        ?? null,
   };
 }
 
