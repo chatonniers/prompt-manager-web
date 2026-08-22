@@ -62,6 +62,7 @@ function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen, publishRequ
             <th className="pt-th pt-th-check" />
             <Th col="title" label="Title" />
             <Th col="status" label="Status" />
+            <th className="pt-th">Visibility</th>
             <th className="pt-th">Request</th>
             <Th col="category" label="Category" />
             <Th col="flow" label="Flow" />
@@ -84,6 +85,11 @@ function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen, publishRequ
                 <td className="pt-td pt-td-title">{p.title}</td>
                 <td className="pt-td">
                   {p.status && <span className={`pill status-${p.status}`}>{p.status}</span>}
+                </td>
+                <td className="pt-td" style={{ textAlign: 'center' }}>
+                  {p.isPrivate
+                    ? <span title="Private — only visible to owner" style={{ color: '#D97706', fontSize: 13 }}>🔒</span>
+                    : <span title="Shared — visible to editors/admins" style={{ color: '#059669', fontSize: 13 }}>🌐</span>}
                 </td>
                 <td className="pt-td" style={{ textAlign: 'center' }}>
                   {reqInfo && (
