@@ -26,7 +26,7 @@ function AppInner() {
   useStorage()
   const { state, dispatch } = useApp()
   const [helpOpen, setHelpOpen] = useState(false)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
   const zoom = state.zoom ?? 1
   const STEP = 0.1
 

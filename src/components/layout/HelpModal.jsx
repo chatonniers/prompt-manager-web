@@ -240,14 +240,14 @@ const SECTIONS_EN = [
   {
     num: '01', icon: '🃏',
     title: 'Prompt cards',
-    body: 'Each card holds a title, one or more numbered prompts, tags (category, story flow, solutions), a status badge, notes, and system links. Click a card to flip it to the edit form.',
+    body: 'Each card holds a title, one or more numbered prompts, tags (category, flow, solutions), a status badge, notes, and system links. Click a card to flip it to the edit form.',
     tip: 'Cards with multiple prompts show each item in a numbered row — each has its own Copy button.',
     screen: <ScreenCard />,
   },
   {
     num: '02', icon: '✏️',
     title: 'Create & edit a prompt',
-    body: 'Click "+ New" in the toolbar to open the full creation modal. Set title, label (mandatory), body text, persona, category, story flow, status, solutions and optionally mark as favorite. To edit, flip a card — Save/Cancel stay fixed at the bottom.',
+    body: 'Click "+ New" in the toolbar to open the full creation modal. Set title, label (mandatory), body text, persona, category, flow, status, solutions and optionally mark as favorite. To edit, flip a card — Save/Cancel stay fixed at the bottom.',
     tip: 'Add multiple prompt items per card (e.g. Step 1, Step 2) with the + tab. Each gets its own label and body.',
     screen: <ScreenCreate />,
   },
@@ -266,14 +266,14 @@ const SECTIONS_EN = [
   {
     num: '05', icon: '🗂️',
     title: 'Navigation & filters',
-    body: 'The left sidebar groups prompts by Category, Story Flow, and Solution. Click any item to filter the main view. Sections can be collapsed with the chevron. Drag the sidebar edge to resize it.',
+    body: 'The left sidebar groups prompts by Category, Flow, and Solution. Click any item to filter the main view. Sections can be collapsed with the chevron. Drag the sidebar edge to resize it.',
     tip: 'By Solution is collapsed by default — click to expand.',
     screen: <ScreenSidebar />,
   },
   {
     num: '06', icon: '↕️',
     title: 'Drag & drop cards',
-    body: 'On the main "All Prompts" view, drag any card and drop it into a different zone. Drop on Favorites to pin, on a category block to move category, or on a specific flow column to change story flow. Changes persist immediately.',
+    body: 'On the main "All Prompts" view, drag any card and drop it into a different zone. Drop on Favorites to pin, on a category block to move category, or on a specific flow column to change flow. Changes persist immediately.',
     tip: 'Dragged card fades to 40% opacity. Drop zones highlight with a dashed accent border.',
     screen: <ScreenDrag />,
   },
@@ -292,7 +292,7 @@ const SECTIONS_EN = [
   {
     num: '09', icon: '⚙️',
     title: 'Settings',
-    body: 'Click the gear icon (top-right) to open Settings. Sections: General (auto-filter, SAP URL detect), Import / Export (JSON backup & restore), Categories, Personas, Systems, Solutions, and Story Flows.',
+    body: 'Click the gear icon (top-right) to open Settings. Sections: General (auto-filter, SAP URL detect), Import / Export (JSON backup & restore), Categories, Personas, Systems, Solutions, and Flows.',
     tip: 'Drag rows in catalog sections to reorder. Systems support MCP credentials — secrets are hidden by default.',
     screen: <ScreenSettings />,
   },

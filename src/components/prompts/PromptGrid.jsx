@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { filterAndRank } from '../../lib/search.js';
@@ -17,10 +17,11 @@ function applyViewFilter(prompts, view, filter) {
   return prompts;
 }
 
-function DropZone({ className, style, onDrop, children }) {
+function DropZone({ className, style, onDrop, children, blockRef }) {
   const [over, setOver] = useState(false);
   return (
     <div
+      ref={blockRef}
       className={`${className} drop-zone${over ? ' dz-over' : ''}`}
       style={style}
       onDragOver={e => { e.preventDefault(); e.stopPropagation(); setOver(true); }}
@@ -32,18 +33,21 @@ function DropZone({ className, style, onDrop, children }) {
   );
 }
 
-function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, onToggleSelect, onDrop }) {
+function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, onToggleSelect, onDrop, hideLabel }) {
   const usedFlows = storyFlows.filter(f => prompts.some(p => p.storyFlow === f));
   const noFlow = prompts.filter(p => !p.storyFlow);
   const hasAnyFlow = usedFlows.length > 0;
 
   if (!hasAnyFlow) {
     return (
-      <DropZone className="category-block" onDrop={id => onDrop(id, { isFavorite: false, category: catKey, storyFlow: null })}>
-        <div className="grid-section-label">{label}<span className="section-count">{prompts.length}</span></div>
-        <div className="category-flat-grid">
-          {prompts.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
-        </div>
+      <DropZone className="category-block" onDrop={id => onDrop(id, { category: catKey, storyFlow: null })}>
+        {!hideLabel && <div className="grid-section-label">{label}<span className="section-count">{prompts.length}</span></div>}
+        {prompts.length === 0
+          ? <div className="category-block-empty-hint">Drop cards here</div>
+          : <div className="category-flat-grid">
+              {prompts.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
+            </div>
+        }
       </DropZone>
     );
   }
@@ -54,8 +58,8 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
   ];
 
   return (
-    <DropZone className="category-block" onDrop={id => onDrop(id, { isFavorite: false, category: catKey, storyFlow: null })}>
-      <div className="grid-section-label">{label}<span className="section-count">{prompts.length}</span></div>
+    <DropZone className="category-block" onDrop={id => onDrop(id, { category: catKey, storyFlow: null })}>
+      {!hideLabel && <div className="grid-section-label">{label}<span className="section-count">{prompts.length}</span></div>}
       <div className="category-flow-columns">
         {columns.map(col => {
           const color = col.key !== '__none__' ? getFlowColor(col.label) : null;
@@ -64,7 +68,7 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
             <DropZone
               key={col.key}
               className="flow-column"
-              onDrop={id => onDrop(id, { isFavorite: false, category: catKey, storyFlow: flowName })}
+              onDrop={id => onDrop(id, { category: catKey, storyFlow: flowName })}
             >
               <div
                 className="flow-column-label"
@@ -81,9 +85,20 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
   );
 }
 
-function FavoritesRow({ favs, lang, selectedIds, onToggleSelect, onDrop }) {
+function FavoritesRow({ favs, lang, selectedIds, onToggleSelect, onDrop, onHeightChange }) {
   const scrollRef = useRef(null);
+  const blockRef = useRef(null);
   const [hovered, setHovered] = useState(false);
+
+  useEffect(() => {
+    if (!blockRef.current || !onHeightChange) return;
+    const el = blockRef.current;
+    const report = () => onHeightChange(el.getBoundingClientRect().height);
+    report();
+    const ro = new ResizeObserver(report);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [onHeightChange]);
 
   function scroll(dir) {
     const el = scrollRef.current;
@@ -92,7 +107,7 @@ function FavoritesRow({ favs, lang, selectedIds, onToggleSelect, onDrop }) {
   }
 
   return (
-    <DropZone className="category-block" onDrop={id => onDrop(id, { isFavorite: true })}>
+    <DropZone className="favs-block" onDrop={id => onDrop(id, { isFavorite: true })} blockRef={blockRef}>
       <div className="grid-section-label">
         {t('favorites', lang)}<span className="section-count">{favs.length}</span>
       </div>
@@ -129,7 +144,7 @@ function FavoritesRow({ favs, lang, selectedIds, onToggleSelect, onDrop }) {
 
 export default function PromptGrid() {
   const { state, dispatch } = useApp();
-  const { prompts, currentView, currentFilter, searchQuery, sapContext, settings, catalog, selectedIds } = state;
+  const { prompts, currentView, currentFilter, searchQuery, sapContext, settings, catalog, selectedIds, draggingId } = state;
   const lang = settings?.lang || 'en';
   const categories = catalog.categories || [];
   const storyFlows = catalog.storyFlows || [];
@@ -150,11 +165,57 @@ export default function PromptGrid() {
     dispatch({ type: 'TOGGLE_SELECT', payload: id });
   }
 
+  const [activeTab, setActiveTab] = useState(null);
+  const gridOuterRef = useRef(null);
+  const dragTabRef = useRef(null);
+  const [undoState, setUndoState] = useState(null); // { prev, countdown }
+  const undoTimerRef = useRef(null);
+  const undoIntervalRef = useRef(null);
+
+  useEffect(() => {
+    // Global dragend catches the case where the source card unmounts mid-drag
+    // (tab switches during DnD), so onDragEnd on the card never fires.
+    function onGlobalDragEnd() { dispatch({ type: 'SET_DRAGGING', payload: null }); }
+    document.addEventListener('dragend', onGlobalDragEnd);
+    return () => {
+      document.removeEventListener('dragend', onGlobalDragEnd);
+      clearTimeout(undoTimerRef.current);
+      clearInterval(undoIntervalRef.current);
+    };
+  }, []);
+
   async function handleDrop(promptId, updates) {
     const prompt = prompts.find(p => p.id === promptId);
     if (!prompt) return;
     dispatch({ type: 'SET_DRAGGING', payload: null });
+
+    const prev = { ...prompt };
     await StorageAPI.upsertPrompt({ ...prompt, ...updates });
+    const [fresh, freshCatalog] = await Promise.all([
+      StorageAPI.getAllPrompts(), StorageAPI.getCatalog()
+    ]);
+    dispatch({ type: 'SET_PROMPTS', payload: fresh });
+    dispatch({ type: 'SET_CATALOG', payload: freshCatalog });
+
+    // Start undo window
+    clearTimeout(undoTimerRef.current);
+    clearInterval(undoIntervalRef.current);
+    setUndoState({ prev, countdown: 5 });
+    undoIntervalRef.current = setInterval(() => {
+      setUndoState(s => s ? { ...s, countdown: s.countdown - 1 } : null);
+    }, 1000);
+    undoTimerRef.current = setTimeout(() => {
+      clearInterval(undoIntervalRef.current);
+      setUndoState(null);
+    }, 5000);
+  }
+
+  async function handleUndo() {
+    if (!undoState) return;
+    clearTimeout(undoTimerRef.current);
+    clearInterval(undoIntervalRef.current);
+    setUndoState(null);
+    await StorageAPI.upsertPrompt(undoState.prev);
     const [fresh, freshCatalog] = await Promise.all([
       StorageAPI.getAllPrompts(), StorageAPI.getCatalog()
     ]);
@@ -166,53 +227,116 @@ export default function PromptGrid() {
 
   if (currentView === 'all' && !searchQuery.trim()) {
     const favs = ranked.filter(p => p.isFavorite);
-    const categoryBlocks = [];
 
-    for (const cat of categories) {
-      const catPrompts = ranked.filter(p => !p.isFavorite && p.category === cat);
-      if (catPrompts.length > 0) {
-        categoryBlocks.push({ key: cat, label: cat, prompts: catPrompts });
-      }
-    }
+    // Always include all catalog categories (even empty), plus uncategorized if any
+    const allTabs = categories.map(cat => ({
+      key: cat,
+      label: cat,
+      prompts: ranked.filter(p => p.category === cat),
+    }));
     const uncategorized = ranked.filter(p => !p.isFavorite && !p.category);
+    if (uncategorized.length > 0) {
+      allTabs.push({ key: '__uncategorized__', label: t('noCategory', lang), prompts: uncategorized });
+    }
+
+    const tabKey = activeTab && allTabs.some(b => b.key === activeTab)
+      ? activeTab
+      : allTabs[0]?.key ?? null;
+    const activeBlock = allTabs.find(b => b.key === tabKey);
+
+    // Switch tab when dragging over a tab button — use a ref to debounce so
+    // continuous dragOver doesn't re-trigger setActiveTab on every event.
+    function handleTabDragOver(e, key) {
+      e.preventDefault();
+      if (dragTabRef.current === key) return;
+      dragTabRef.current = key;
+      if (draggingId) setActiveTab(key);
+    }
+    function handleTabDragLeave() {
+      dragTabRef.current = null;
+    }
 
     return (
       <>
         <BulkActionBar visibleIds={visibleIds} />
-        <div id="prompt-grid-outer">
+        {undoState && (
+          <div className="dnd-undo-bar">
+            <span>Card moved.</span>
+            <button className="dnd-undo-btn" onClick={handleUndo}>
+              Undo <span className="dnd-undo-countdown">{undoState.countdown}s</span>
+            </button>
+          </div>
+        )}
+        <div id="prompt-grid-outer" ref={gridOuterRef} className={draggingId ? 'is-drag-active' : ''}>
           <FavoritesRow
-              favs={favs}
-              lang={lang}
-              selectedIds={selectedIds}
-              onToggleSelect={onToggleSelect}
-              onDrop={handleDrop}
-            />
+            favs={favs}
+            lang={lang}
+            selectedIds={selectedIds}
+            onToggleSelect={onToggleSelect}
+            onDrop={handleDrop}
+            onHeightChange={h => { if (gridOuterRef.current) gridOuterRef.current.style.setProperty('--favs-h', h + 'px'); }}
+          />
 
-          {categoryBlocks.map(block => (
+          <div className="category-tabs-wrap" style={{ position: 'sticky', top: `var(--favs-h, 0px)`, zIndex: 19, background: 'var(--pm-bg)', paddingBottom: 4, marginBottom: 6 }}>
+            <button
+              className="category-tabs-nav nav-left"
+              disabled={allTabs.findIndex(b => b.key === tabKey) === 0}
+              onClick={() => {
+                const i = allTabs.findIndex(b => b.key === tabKey);
+                if (i > 0) setActiveTab(allTabs[i - 1].key);
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+
+            <div className="category-tabs">
+              {allTabs.map(block => (
+                <button
+                  key={block.key}
+                  className={`category-tab${tabKey === block.key ? ' category-tab-active' : ''}${block.prompts.length === 0 ? ' category-tab-empty' : ''}`}
+                  onClick={() => setActiveTab(block.key)}
+                  onDragEnter={() => { if (draggingId) { dragTabRef.current = block.key; setActiveTab(block.key); } }}
+                  onDragOver={e => handleTabDragOver(e, block.key)}
+                  onDragLeave={handleTabDragLeave}
+                  onDrop={e => {
+                    e.preventDefault();
+                    const id = e.dataTransfer.getData('promptId');
+                    if (id) handleDrop(id, {
+                      category: block.key === '__uncategorized__' ? null : block.key,
+                      storyFlow: null,
+                    });
+                  }}
+                >
+                  {block.label}
+                  <span className="category-tab-count">{block.prompts.length}</span>
+                </button>
+              ))}
+            </div>
+
+            <button
+              className="category-tabs-nav nav-right"
+              disabled={allTabs.findIndex(b => b.key === tabKey) === allTabs.length - 1}
+              onClick={() => {
+                const i = allTabs.findIndex(b => b.key === tabKey);
+                if (i < allTabs.length - 1) setActiveTab(allTabs[i + 1].key);
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+          </div>
+
+          {activeBlock && (
             <CategoryBlock
-              key={block.key}
-              catKey={block.key}
-              label={block.label}
-              prompts={block.prompts}
+              key={activeBlock.key}
+              catKey={activeBlock.key === '__uncategorized__' ? null : activeBlock.key}
+              label={activeBlock.label}
+              prompts={activeBlock.prompts}
               storyFlows={storyFlows}
               lang={lang}
               selectedIds={selectedIds}
               onToggleSelect={onToggleSelect}
               onDrop={handleDrop}
-            />
-          ))}
-
-          {uncategorized.length > 0 && (
-            <CategoryBlock
-              key="__uncategorized__"
-              catKey={null}
-              label={t('noCategory', lang)}
-              prompts={uncategorized}
-              storyFlows={storyFlows}
-              lang={lang}
-              selectedIds={selectedIds}
-              onToggleSelect={onToggleSelect}
-              onDrop={handleDrop}
+              hideLabel
             />
           )}
         </div>

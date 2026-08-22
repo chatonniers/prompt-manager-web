@@ -807,3 +807,149 @@
 }
 .subst-btn-primary:hover { background: var(--pm-accent2); }
 
+
+/* ── PIN Modal ─────────────────────────────────────────────────────────── */
+.pin-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10,15,30,0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+}
+
+.pin-modal {
+  background: var(--pm-surface);
+  border: 1px solid var(--pm-border);
+  border-radius: 16px;
+  width: 320px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+
+.pin-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid var(--pm-border);
+  background: linear-gradient(135deg, #0A0F1E, #131B3A);
+  color: #fff;
+}
+.pin-lock-icon { color: var(--pm-accent); flex-shrink: 0; }
+.pin-modal-title { font-size: 14px; font-weight: 700; flex: 1; }
+.pin-modal-close {
+  background: none; border: none; color: rgba(255,255,255,0.5);
+  cursor: pointer; padding: 2px; line-height: 1;
+  transition: color 0.12s;
+}
+.pin-modal-close:hover { color: #fff; }
+
+.pin-modal-body {
+  padding: 20px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.pin-modal-hint {
+  font-size: 12px;
+  color: var(--pm-text2);
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.pin-dots {
+  display: flex;
+  gap: 14px;
+}
+.pin-dot {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--pm-border2);
+  background: transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+.pin-dot.filled { background: var(--pm-accent); border-color: var(--pm-accent); }
+.pin-dot.error  { background: var(--pm-danger); border-color: var(--pm-danger); }
+
+.pin-hidden-input {
+  position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px;
+}
+
+.pin-numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 72px);
+  gap: 8px;
+}
+.pin-key {
+  height: 52px;
+  background: var(--pm-bg);
+  border: 1px solid var(--pm-border);
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--pm-text);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s, border-color 0.1s;
+}
+.pin-key:hover:not(:disabled) { background: var(--pm-accent-bg); border-color: var(--pm-accent); color: var(--pm-accent); }
+.pin-key:active:not(:disabled) { transform: scale(0.95); }
+.pin-key-empty { visibility: hidden; }
+
+.pin-error {
+  font-size: 11px;
+  color: var(--pm-danger);
+  font-weight: 600;
+  margin: 0;
+  animation: pin-shake 0.3s ease;
+}
+@keyframes pin-shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.pin-reset-link {
+  background: none; border: none;
+  color: var(--pm-accent);
+  font-size: 11px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  text-decoration: underline;
+  padding: 0; opacity: 0.8;
+  transition: opacity 0.12s;
+}
+.pin-reset-link:hover { opacity: 1; }
+
+.pin-reset-actions {
+  display: flex; gap: 8px; width: 100%;
+}
+.pin-btn-primary {
+  flex: 1; background: var(--pm-accent); color: #fff; border: none;
+  border-radius: 8px; padding: 9px 14px; font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: inherit; transition: background 0.12s;
+}
+.pin-btn-primary:hover { background: var(--pm-accent2); }
+.pin-btn-secondary {
+  background: var(--pm-bg); color: var(--pm-text2);
+  border: 1px solid var(--pm-border); border-radius: 8px;
+  padding: 9px 14px; font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: background 0.12s;
+}
+.pin-btn-secondary:hover { background: var(--pm-surface); }
+
+.pin-token-input {
+  width: 100%; box-sizing: border-box;
+  background: var(--pm-bg); border: 1.5px solid var(--pm-border);
+  border-radius: 8px; padding: 9px 12px;
+  font-size: 13px; font-family: monospace;
+  color: var(--pm-text); outline: none;
+  text-transform: uppercase; letter-spacing: 1px;
+  transition: border-color 0.15s;
+}
+.pin-token-input:focus { border-color: var(--pm-accent); }

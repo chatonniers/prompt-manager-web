@@ -11,7 +11,7 @@ import Toast from './shared/Toast.jsx';
 export default function AppShell() {
   useStorage();
   const { state } = useApp();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   if (!state.initialized) {
     return <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', color:'var(--pm-text3)' }}>Loading…</div>;

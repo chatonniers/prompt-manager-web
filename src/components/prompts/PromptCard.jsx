@@ -167,11 +167,13 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
     p.promptItems?.length ? p.promptItems[0].id : items[0].id
   );
   const [itemTab, setItemTab] = useState('en');
+  const [backTab, setBackTab] = useState('content');
   const [category, setCategory] = useState(p.category || '');
   const [storyFlow, setStoryFlow] = useState(p.storyFlow || '');
   const [status, setStatus] = useState(p.status || '');
   const [personas, setPersonas] = useState(p.personas || []);
   const [notes, setNotes] = useState(p.notes || '');
+  const [solutions, setSolutions] = useState(p.solutions || []);
   const [tags, setTags] = useState(p.tags || []);
   const [tagInput, setTagInput] = useState('');
   const [systems, setSystems] = useState(() => getSystems(p));
@@ -251,6 +253,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
       status: status || null,
       personas,
       notes: notes.trim(),
+      solutions,
       tags: tags.filter(t => t.trim()),
       systems,
       demoLinks: demoLinks.filter(l => l.url.trim()),
@@ -265,7 +268,6 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
 
   return (
     <div className="card-edit-back" onClick={e => e.stopPropagation()}>
-      <div className="card-edit-body">
       <div className="card-edit-header">
         <span className="card-edit-title">{t('editPromptTitle', lang)}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -278,192 +280,214 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
         </div>
       </div>
 
-      <div className="card-edit-field">
-        <label className="card-edit-label">{t('titleLabel', lang)}</label>
-        <input className="card-edit-input" type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('titlePlaceholder', lang)} maxLength={120} />
+      <div className="card-edit-back-tabs">
+        <button className={`card-edit-back-tab${backTab === 'content' ? ' active' : ''}`} onClick={() => setBackTab('content')}>Content</button>
+        <button className={`card-edit-back-tab${backTab === 'details' ? ' active' : ''}`} onClick={() => setBackTab('details')}>Details</button>
       </div>
 
-      <div className="card-edit-field">
-        <label className="card-edit-label">{t('personasLabel', lang)}</label>
-        {(catalog.personas || []).length > 0 ? (
-          <div className="card-edit-systems">
-            {catalog.personas.map(persona => {
-              const selected = personas.includes(persona);
-              return (
-                <button key={persona} type="button" className={`card-edit-sys-chip${selected ? ' selected' : ''}`} onClick={() => setPersonas(prev => selected ? prev.filter(x => x !== persona) : [...prev, persona])}>
-                  {selected ? '· ' : ''}{persona}
-                </button>
-              );
-            })}
+      {backTab === 'content' && (
+        <div className="card-edit-body">
+          <div className="card-edit-field">
+            <label className="card-edit-label">{t('titleLabel', lang)}</label>
+            <input className="card-edit-input" type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('titlePlaceholder', lang)} maxLength={120} />
           </div>
-        ) : (
-          <p className="card-edit-hint">{t('noPersonasYet', lang)}</p>
-        )}
-      </div>
 
-      <div className="card-edit-field">
-        <label className="card-edit-label">{t('notesLabel', lang)}</label>
-        <textarea className="card-edit-textarea" value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder={t('notesPlaceholderCard', lang)} />
-      </div>
+          <div className="card-edit-field">
+            <label className="card-edit-label">{t('personasLabel', lang)}</label>
+            {(catalog.personas || []).length > 0 ? (
+              <div className="card-edit-systems">
+                {catalog.personas.map(persona => {
+                  const selected = personas.includes(persona);
+                  return (
+                    <button key={persona} type="button" className={`card-edit-sys-chip${selected ? ' selected' : ''}`} onClick={() => setPersonas(prev => selected ? prev.filter(x => x !== persona) : [...prev, persona])}>
+                      {selected ? '· ' : ''}{persona}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="card-edit-hint">{t('noPersonasYet', lang)}</p>
+            )}
+          </div>
 
-      <div className="card-edit-item-tabs">
-        {items.map((item, idx) => (
-          <button key={item.id} className={`card-edit-item-tab${activeItemId === item.id ? ' active' : ''}${!item.label.trim() ? ' tab-error' : ''}`} onClick={() => setActiveItemId(item.id)}>
-            {item.label || `#${idx + 1}`}
-          </button>
-        ))}
-        <button className="card-edit-item-tab" style={{ opacity: 0.7 }} onClick={() => { const newItem = makeItem(); setItems(prev => [...prev, newItem]); setActiveItemId(newItem.id); }} title={t('addPromptItem', lang)}>+</button>
-        {items.length > 1 && (
-          <button className="card-edit-item-tab" style={{ opacity: 0.7, color: 'var(--pm-danger)' }} onClick={() => { const remaining = items.filter(i => i.id !== activeItemId); setItems(remaining); setActiveItemId(remaining[remaining.length - 1]?.id); }} title={t('removePrompt', lang)}>−</button>
-        )}
-      </div>
+          <div className="card-edit-field">
+            <label className="card-edit-label">{t('notesLabel', lang)}</label>
+            <textarea className="card-edit-textarea" value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder={t('notesPlaceholderCard', lang)} />
+          </div>
 
-      {activeItem && (
-        <div className="card-edit-field">
-          <div className="card-edit-lang-row">
-            <label className="card-edit-label">{t('bodyLabel', lang)}</label>
-            <div className="card-edit-lang-btns">
-              <button className={`card-edit-lang-btn${itemTab === 'en' ? ' active' : ''}`} onClick={() => setItemTab('en')}>EN</button>
-              <button className={`card-edit-lang-btn${itemTab === 'fr' ? ' active' : ''}`} onClick={() => setItemTab('fr')}>FR</button>
+          <div className="card-edit-item-tabs">
+            {items.map((item, idx) => (
+              <button key={item.id} className={`card-edit-item-tab${activeItemId === item.id ? ' active' : ''}${!item.label.trim() ? ' tab-error' : ''}`} onClick={() => setActiveItemId(item.id)}>
+                {item.label || `#${idx + 1}`}
+              </button>
+            ))}
+            <button className="card-edit-item-tab" style={{ opacity: 0.7 }} onClick={() => { const newItem = makeItem(); setItems(prev => [...prev, newItem]); setActiveItemId(newItem.id); }} title={t('addPromptItem', lang)}>+</button>
+            {items.length > 1 && (
+              <button className="card-edit-item-tab" style={{ opacity: 0.7, color: 'var(--pm-danger)' }} onClick={() => { const remaining = items.filter(i => i.id !== activeItemId); setItems(remaining); setActiveItemId(remaining[remaining.length - 1]?.id); }} title={t('removePrompt', lang)}>−</button>
+            )}
+          </div>
+
+          {activeItem && (
+            <div className="card-edit-field">
+              <div className="card-edit-lang-row">
+                <label className="card-edit-label">{t('bodyLabel', lang)}</label>
+                <div className="card-edit-lang-btns">
+                  <button className={`card-edit-lang-btn${itemTab === 'en' ? ' active' : ''}`} onClick={() => setItemTab('en')}>EN</button>
+                  <button className={`card-edit-lang-btn${itemTab === 'fr' ? ' active' : ''}`} onClick={() => setItemTab('fr')}>FR</button>
+                </div>
+              </div>
+              <input className="card-edit-input" type="text" value={activeItem.label} onChange={e => updateItemBody(activeItem.id, 'label', e.target.value)} placeholder={t('promptItemLabel', lang)} style={{ marginBottom: 4, fontSize: 12, borderColor: activeItem.label.trim() ? '' : 'var(--pm-danger)' }} />
+              {itemTab === 'en' ? (
+                <textarea className="card-edit-textarea" value={activeItem.body} onChange={e => updateItemBody(activeItem.id, 'body', e.target.value)} rows={4} placeholder={t('bodyEnPlaceholder', lang)} />
+              ) : (
+                <textarea className="card-edit-textarea" value={activeItem.body_fr || ''} onChange={e => updateItemBody(activeItem.id, 'body_fr', e.target.value)} rows={4} placeholder={t('bodyFrPlaceholder', lang)} />
+              )}
             </div>
-          </div>
-          <input className="card-edit-input" type="text" value={activeItem.label} onChange={e => updateItemBody(activeItem.id, 'label', e.target.value)} placeholder={t('promptItemLabel', lang)} style={{ marginBottom: 4, fontSize: 12, borderColor: activeItem.label.trim() ? '' : 'var(--pm-danger)' }} />
-          {itemTab === 'en' ? (
-            <textarea className="card-edit-textarea" value={activeItem.body} onChange={e => updateItemBody(activeItem.id, 'body', e.target.value)} rows={4} placeholder={t('bodyEnPlaceholder', lang)} />
-          ) : (
-            <textarea className="card-edit-textarea" value={activeItem.body_fr || ''} onChange={e => updateItemBody(activeItem.id, 'body_fr', e.target.value)} rows={4} placeholder={t('bodyFrPlaceholder', lang)} />
           )}
         </div>
       )}
 
-      <div className="card-edit-2col">
-        <div className="card-edit-field">
-          <label className="card-edit-label">{t('category', lang)}</label>
-          <select className="card-edit-select" value={category} onChange={e => setCategory(e.target.value)}>
-            <option value="">{t('selectNone', lang)}</option>
-            {(catalog.categories || []).map(cat => <option key={cat} value={cat}>{cat}</option>)}
-          </select>
-        </div>
-        <div className="card-edit-field">
-          <label className="card-edit-label">{t('storyFlow', lang)}</label>
-          <select className="card-edit-select" value={storyFlow} onChange={e => setStoryFlow(e.target.value)}>
-            <option value="">{t('selectNone', lang)}</option>
-            {(catalog.storyFlows || []).map(f => <option key={f} value={f}>{f}</option>)}
-          </select>
-        </div>
-      </div>
-
-      <div className="card-edit-field">
-        <label className="card-edit-label">Status</label>
-        <div className="card-status-btns">
-          {['', 'draft', 'ready', 'validated'].map(s => (
-            <button
-              key={s}
-              type="button"
-              className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`}
-              onClick={() => setStatus(s)}
-            >
-              {s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="card-edit-field">
-        <label className="card-edit-label">{t('demoLinksLabel', lang)}</label>
-        {demoLinks.map((link, idx) => (
-          <div key={link.id} className="card-edit-demo-link-row">
-            <input className="card-edit-input card-edit-demo-desc" type="text" value={link.desc || ''} onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, desc: e.target.value } : l))} placeholder={t('demoLinkDescPlaceholder', lang)} />
-            <input className="card-edit-input card-edit-demo-url" type="url" value={link.url} onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, url: e.target.value } : l))} placeholder={t('demoLinkUrlPlaceholder', lang)} />
-            <button type="button" className="card-edit-att-del" onClick={() => setDemoLinks(prev => prev.filter((_, i) => i !== idx))}>×</button>
+      {backTab === 'details' && (
+        <div className="card-edit-body">
+          <div className="card-edit-2col">
+            <div className="card-edit-field">
+              <label className="card-edit-label">{t('category', lang)}</label>
+              <select className="card-edit-select" value={category} onChange={e => setCategory(e.target.value)}>
+                <option value="">{t('selectNone', lang)}</option>
+                {(catalog.categories || []).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              </select>
+            </div>
+            <div className="card-edit-field">
+              <label className="card-edit-label">Flow</label>
+              <select className="card-edit-select" value={storyFlow} onChange={e => setStoryFlow(e.target.value)}>
+                <option value="">{t('selectNone', lang)}</option>
+                {(catalog.storyFlows || []).map(f => <option key={f} value={f}>{f}</option>)}
+              </select>
+            </div>
           </div>
-        ))}
-        <button type="button" className="card-edit-att-add" onClick={() => setDemoLinks(prev => [...prev, { id: crypto.randomUUID(), url: '', desc: '' }])}>{t('addDemoLink', lang)}</button>
-      </div>
 
-      {(catalog.systems || []).length > 0 && (
-        <div className="card-edit-field">
-          <label className="card-edit-label">{t('landscapeCard', lang)}</label>
-          <div className="card-edit-systems">
-            {catalog.systems.map(sys => {
-              const selected = systems.some(s => s.id === sys.id);
-              return (
-                <button key={sys.id} type="button" className={`card-edit-sys-chip${selected ? ' selected' : ''}`} onClick={() => setSystems(prev => selected ? prev.filter(s => s.id !== sys.id) : [...prev, sys])}>
-                  {selected ? '· ' : ''}{sys.name || sys.url}
-                  {sys.endpoints?.length > 0 && <span style={{ opacity: 0.6, marginLeft: 3, fontSize: 10 }}>cred</span>}
+          {(catalog.solutions || []).length > 0 && (
+            <div className="card-edit-field">
+              <label className="card-edit-label">Solutions</label>
+              <div className="card-edit-systems">
+                {catalog.solutions.map(sol => {
+                  const selected = solutions.includes(sol);
+                  return (
+                    <button key={sol} type="button" className={`card-edit-sys-chip${selected ? ' selected' : ''}`} onClick={() => setSolutions(prev => selected ? prev.filter(x => x !== sol) : [...prev, sol])}>
+                      {selected ? '· ' : ''}{sol}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="card-edit-field">
+            <label className="card-edit-label">Status</label>
+            <div className="card-status-btns">
+              {['', 'draft', 'ready', 'validated'].map(s => (
+                <button key={s} type="button" className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`} onClick={() => setStatus(s)}>
+                  {s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'}
                 </button>
-              );
-            })}
+              ))}
+            </div>
+          </div>
+
+          <div className="card-edit-field">
+            <label className="card-edit-label">{t('demoLinksLabel', lang)}</label>
+            {demoLinks.map((link, idx) => (
+              <div key={link.id} className="card-edit-demo-link-row">
+                <input className="card-edit-input card-edit-demo-desc" type="text" value={link.desc || ''} onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, desc: e.target.value } : l))} placeholder={t('demoLinkDescPlaceholder', lang)} />
+                <input className="card-edit-input card-edit-demo-url" type="url" value={link.url} onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, url: e.target.value } : l))} placeholder={t('demoLinkUrlPlaceholder', lang)} />
+                <button type="button" className="card-edit-att-del" onClick={() => setDemoLinks(prev => prev.filter((_, i) => i !== idx))}>×</button>
+              </div>
+            ))}
+            <button type="button" className="card-edit-att-add" onClick={() => setDemoLinks(prev => [...prev, { id: crypto.randomUUID(), url: '', desc: '' }])}>{t('addDemoLink', lang)}</button>
+          </div>
+
+          {(catalog.systems || []).length > 0 && (
+            <div className="card-edit-field">
+              <label className="card-edit-label">{t('landscapeCard', lang)}</label>
+              <div className="card-edit-systems">
+                {catalog.systems.map(sys => {
+                  const selected = systems.some(s => s.id === sys.id);
+                  return (
+                    <button key={sys.id} type="button" className={`card-edit-sys-chip${selected ? ' selected' : ''}`} onClick={() => setSystems(prev => selected ? prev.filter(s => s.id !== sys.id) : [...prev, sys])}>
+                      {selected ? '· ' : ''}{sys.name || sys.url}
+                      {sys.endpoints?.length > 0 && <span style={{ opacity: 0.6, marginLeft: 3, fontSize: 10 }}>cred</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="card-edit-field" style={{ position: 'relative' }}>
+            <label className="card-edit-label">{t('tagsLabel', lang)}</label>
+            <div className="card-edit-tags">
+              {tags.map(tag => (
+                <span key={tag} className="card-edit-tag-chip">
+                  #{tag}
+                  <button type="button" className="card-edit-tag-del" onClick={() => setTags(prev => prev.filter(t => t !== tag))}>×</button>
+                </span>
+              ))}
+              <input
+                className="card-edit-tag-input"
+                type="text"
+                value={tagInput}
+                onChange={e => setTagInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Escape') { setTagInput(''); return; }
+                  if ((e.key === 'Enter' || e.key === ',') && tagInput.trim()) {
+                    e.preventDefault();
+                    const val = tagInput.trim().replace(/^#/, '');
+                    if (val && !tags.includes(val)) setTags(prev => [...prev, val]);
+                    setTagInput('');
+                  } else if (e.key === 'Backspace' && !tagInput && tags.length) {
+                    setTags(prev => prev.slice(0, -1));
+                  }
+                }}
+                placeholder={tags.length === 0 ? t('tagPlaceholder', lang) : ''}
+              />
+            </div>
+            {tagInput.trim() && (() => {
+              const q = tagInput.trim().replace(/^#/, '').toLowerCase();
+              const suggestions = allTags.filter(t => t.toLowerCase().includes(q) && !tags.includes(t));
+              return suggestions.length > 0 ? (
+                <div className="tag-suggestions">
+                  {suggestions.map(s => (
+                    <button key={s} type="button" className="tag-suggestion-item" onMouseDown={e => { e.preventDefault(); setTags(prev => [...prev, s]); setTagInput(''); }}>#{s}</button>
+                  ))}
+                </div>
+              ) : null;
+            })()}
+          </div>
+
+          <div className="card-edit-field">
+            <label className="card-edit-label">{t('attachmentsLabel', lang)}</label>
+            <div className="card-edit-attachments">
+              {attachments.filter(a => !pendingDeletes.includes(a.id)).map(att => (
+                <div key={att.id} className="card-edit-att-row">
+                  <span>{fileIcon(att.type)}</span>
+                  <button className="card-edit-att-name-btn" onClick={() => downloadAtt(att)} title="Download">{att.name}</button>
+                  <span className="card-edit-att-size">{fmtSize(att.size)}</span>
+                  <button className="card-edit-att-del" onClick={() => setPendingDeletes(prev => [...prev, att.id])} title="Remove">×</button>
+                </div>
+              ))}
+              {pendingFiles.map(f => (
+                <div key={f._tempId} className="card-edit-att-row pending">
+                  <span>{fileIcon(f.type)}</span>
+                  <span className="card-edit-att-name">{f.name}</span>
+                  <span className="card-edit-att-size">{fmtSize(f.size)}</span>
+                  <button className="card-edit-att-del" onClick={() => setPendingFiles(prev => prev.filter(x => x._tempId !== f._tempId))} title="Remove">×</button>
+                </div>
+              ))}
+              <button type="button" className="card-edit-att-add" onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}>+ {t('addFileBtn', lang)}</button>
+              <input type="file" ref={fileInputRef} multiple style={{ display: 'none' }} onChange={e => addFiles(e.target.files)} />
+            </div>
           </div>
         </div>
       )}
-
-      <div className="card-edit-field" style={{ position: 'relative' }}>
-        <label className="card-edit-label">{t('tagsLabel', lang)}</label>
-        <div className="card-edit-tags">
-          {tags.map(tag => (
-            <span key={tag} className="card-edit-tag-chip">
-              #{tag}
-              <button type="button" className="card-edit-tag-del" onClick={() => setTags(prev => prev.filter(t => t !== tag))}>×</button>
-            </span>
-          ))}
-          <input
-            className="card-edit-tag-input"
-            type="text"
-            value={tagInput}
-            onChange={e => setTagInput(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Escape') { setTagInput(''); return; }
-              if ((e.key === 'Enter' || e.key === ',') && tagInput.trim()) {
-                e.preventDefault();
-                const val = tagInput.trim().replace(/^#/, '');
-                if (val && !tags.includes(val)) setTags(prev => [...prev, val]);
-                setTagInput('');
-              } else if (e.key === 'Backspace' && !tagInput && tags.length) {
-                setTags(prev => prev.slice(0, -1));
-              }
-            }}
-            placeholder={tags.length === 0 ? t('tagPlaceholder', lang) : ''}
-          />
-        </div>
-        {tagInput.trim() && (() => {
-          const q = tagInput.trim().replace(/^#/, '').toLowerCase();
-          const suggestions = allTags.filter(t => t.toLowerCase().includes(q) && !tags.includes(t));
-          return suggestions.length > 0 ? (
-            <div className="tag-suggestions">
-              {suggestions.map(s => (
-                <button key={s} type="button" className="tag-suggestion-item" onMouseDown={e => { e.preventDefault(); setTags(prev => [...prev, s]); setTagInput(''); }}>#{s}</button>
-              ))}
-            </div>
-          ) : null;
-        })()}
-      </div>
-
-      <div className="card-edit-field">
-        <label className="card-edit-label">{t('attachmentsLabel', lang)}</label>
-        <div className="card-edit-attachments">
-          {attachments.filter(a => !pendingDeletes.includes(a.id)).map(att => (
-            <div key={att.id} className="card-edit-att-row">
-              <span>{fileIcon(att.type)}</span>
-              <button className="card-edit-att-name-btn" onClick={() => downloadAtt(att)} title="Download">{att.name}</button>
-              <span className="card-edit-att-size">{fmtSize(att.size)}</span>
-              <button className="card-edit-att-del" onClick={() => setPendingDeletes(prev => [...prev, att.id])} title="Remove">×</button>
-            </div>
-          ))}
-          {pendingFiles.map(f => (
-            <div key={f._tempId} className="card-edit-att-row pending">
-              <span>{fileIcon(f.type)}</span>
-              <span className="card-edit-att-name">{f.name}</span>
-              <span className="card-edit-att-size">{fmtSize(f.size)}</span>
-              <button className="card-edit-att-del" onClick={() => setPendingFiles(prev => prev.filter(x => x._tempId !== f._tempId))} title="Remove">×</button>
-            </div>
-          ))}
-          <button type="button" className="card-edit-att-add" onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}>+ {t('addFileBtn', lang)}</button>
-          <input type="file" ref={fileInputRef} multiple style={{ display: 'none' }} onChange={e => addFiles(e.target.files)} />
-        </div>
-      </div>
-
-      </div>{/* end card-edit-body */}
 
       <div className="card-edit-actions">
         <button className="card-edit-cancel-btn" onClick={onCancel}>{t('cancel', lang)}</button>
@@ -501,7 +525,9 @@ function PromptItemRow({ item, idx, label, body, isCopied, lang, onCopy }) {
   }
 
   return (
-    <div ref={rowRef} className="prompt-item-row"
+    <div ref={rowRef}
+      className={`prompt-item-row${isCopied ? ' prompt-item-copied' : ''}`}
+      onClick={e => { e.stopPropagation(); onCopy(e); }}
       onMouseEnter={showPopover}
       onMouseLeave={() => setPopover(null)}
     >
@@ -510,18 +536,10 @@ function PromptItemRow({ item, idx, label, body, isCopied, lang, onCopy }) {
         <div className="prompt-item-preview-wrap">
           <span className="prompt-item-preview">{label}</span>
         </div>
+        {isCopied && (
+          <svg className="prompt-item-copied-icon" width="13" height="13" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        )}
       </div>
-      <button
-        className={`prompt-item-copy-btn${isCopied ? ' copied' : ''}`}
-        title={t('copy', lang)}
-        onClick={onCopy}
-        style={isCopied ? { background: 'var(--pm-success)', borderColor: 'var(--pm-success)', color: '#fff' } : {}}
-      >
-        {isCopied
-          ? <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          : <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2H3.5A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-        }
-      </button>
       {popover && createPortal(
         <div className="prompt-popover" style={{ top: popover.top, left: popover.left }}>
           <div
