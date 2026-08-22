@@ -135,6 +135,20 @@
 .login-submit:hover:not(:disabled) { background: var(--pm-accent2); }
 .login-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
+.login-forgot {
+  background: none;
+  border: none;
+  color: var(--pm-accent);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-align: center;
+  opacity: 0.8;
+  transition: opacity 0.12s;
+}
+.login-forgot:hover { opacity: 1; }
+
 .login-footer {
   font-size: 11px;
   color: var(--pm-text3);
@@ -226,7 +240,29 @@
   border-bottom: 1px solid var(--pm-border2);
   vertical-align: middle;
 }
-.user-row-self td { background: rgba(99,102,241,0.04); }
+.user-row-blocked td { opacity: 0.5; }
+
+.user-action-btn {
+  background: none;
+  border: 1px solid var(--pm-border);
+  border-radius: 5px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--pm-text2);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.user-action-btn:hover { background: var(--pm-surface2); color: var(--pm-text); }
+.user-action-save { color: var(--pm-accent); border-color: rgba(99,102,241,0.4); }
+.user-action-save:hover { background: rgba(99,102,241,0.1); }
+.user-action-block { color: #F87171; border-color: rgba(239,68,68,0.3); }
+.user-action-block:hover { background: rgba(239,68,68,0.1); color: #EF4444; }
+.user-action-unblock { color: #34D399; border-color: rgba(52,211,153,0.3); }
+.user-action-unblock:hover { background: rgba(52,211,153,0.1); color: #10B981; }
+.user-action-delete { color: #F87171; border-color: rgba(239,68,68,0.3); }
+.user-action-delete:hover { background: rgba(239,68,68,0.1); color: #EF4444; }
 .user-email { font-weight: 600; color: var(--pm-text); }
 .user-date  { color: var(--pm-text3); font-size: 11px; }
 
@@ -287,6 +323,71 @@
   white-space: nowrap;
 }
 .invite-btn:hover { background: var(--pm-accent2); }
+
+/* ── User online dot ─────────────────────────────────────────────────── */
+.user-online-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  margin-right: 6px;
+  flex-shrink: 0;
+  vertical-align: middle;
+  transition: background 0.3s;
+}
+
+/* ── Save success feedback ───────────────────────────────────────────── */
+.user-save-ok {
+  font-size: 10px;
+  font-weight: 700;
+  color: #34D399;
+  white-space: nowrap;
+  animation: fadeInOut 2s forwards;
+}
+@keyframes fadeInOut {
+  0%   { opacity: 0; transform: translateY(-2px); }
+  15%  { opacity: 1; transform: translateY(0); }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ── Disconnect (Kick) button ────────────────────────────────────────── */
+.user-action-disconnect { color: #FBBF24; border-color: rgba(251,191,36,0.3); }
+.user-action-disconnect:hover { background: rgba(251,191,36,0.1); color: #F59E0B; }
+
+/* ── Domain expertise pills ──────────────────────────────────────────── */
+.domain-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.domain-pill {
+  background: var(--pm-bg);
+  border: 1.5px solid var(--pm-border);
+  border-radius: 20px;
+  padding: 3px 9px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--pm-text2);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+
+.domain-pill:hover:not(:disabled) {
+  border-color: var(--pm-accent);
+  color: var(--pm-accent);
+}
+
+.domain-pill.active {
+  background: var(--pm-accent-bg);
+  border-color: var(--pm-accent);
+  color: var(--pm-accent);
+  font-weight: 700;
+}
+
+.domain-pill:disabled { opacity: 0.4; cursor: default; }
 
 .invite-msg {
   margin: 8px 0 0;

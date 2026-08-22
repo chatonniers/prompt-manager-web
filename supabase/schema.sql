@@ -81,6 +81,9 @@ create policy "catalog: editor write"
   on public.catalog for all
   using (exists (
     select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor')
+  ))
+  with check (exists (
+    select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor')
   ));
 
 -- Seed one catalog row
@@ -101,7 +104,7 @@ create table public.prompts (
   personas      text[] not null default '{}',
   tags          text[] not null default '{}',
   notes         text,
-  status        text check (status in ('draft','ready','validated')),
+  status        text check (status in ('draft','published')),
   is_favorite   boolean not null default false,
   usage_count   integer not null default 0,
   last_used_at  timestamptz,
@@ -113,27 +116,44 @@ create table public.prompts (
 );
 alter table public.prompts enable row level security;
 
--- Everyone can read all prompts
-create policy "prompts: read all" on public.prompts for select using (true);
+-- Read: published prompts visible to all; drafts only to owner or admin
+create policy "prompts: read"
+  on public.prompts for select
+  using (
+    status = 'published'
+    or owner_id = auth.uid()
+    or exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
+  );
 
--- Editors/admins can insert
-create policy "prompts: editor insert"
+-- Any authenticated user can insert their own prompt; viewers restricted to draft status
+create policy "prompts: insert"
   on public.prompts for insert
   with check (
     auth.uid() = owner_id and
-    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+    (
+      -- editors/admins can set any status
+      exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+      -- viewers can only insert drafts
+      or (status = 'draft' and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'viewer'))
+    )
   );
 
--- Owner can update their own; admin can update any
-create policy "prompts: owner or admin update"
+-- Owner can update their own; admin can update any; viewers can only update drafts they own (cannot publish)
+create policy "prompts: update"
   on public.prompts for update
   using (
     owner_id = auth.uid() or
     exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
+  )
+  with check (
+    -- editors/admins: unrestricted
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+    -- viewers: can only save as draft
+    or (status = 'draft' and owner_id = auth.uid())
   );
 
--- Owner can delete their own; admin can delete any
-create policy "prompts: owner or admin delete"
+-- Owner can delete their own drafts; admin can delete any
+create policy "prompts: delete"
   on public.prompts for delete
   using (
     owner_id = auth.uid() or
@@ -225,3 +245,63 @@ create trigger set_catalog_updated_at
 -- Enable realtime for prompts and catalog
 alter publication supabase_realtime add table public.prompts;
 alter publication supabase_realtime add table public.catalog;
+
+-- ── Privacy flag migration (run in Supabase SQL Editor) ───────
+-- Step A: add is_private column + update policies
+/*
+alter table public.prompts add column if not exists is_private boolean not null default true;
+
+drop policy if exists "prompts: read" on public.prompts;
+create policy "prompts: read"
+  on public.prompts for select
+  using (
+    status = 'published'
+    or owner_id = auth.uid()
+    or (status = 'draft' and is_private = false
+        and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor')))
+    or exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
+  );
+
+drop policy if exists "prompts: update" on public.prompts;
+create policy "prompts: update"
+  on public.prompts for update
+  using (owner_id = auth.uid() or exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+    or (status = 'draft' and is_private = true and owner_id = auth.uid())
+  );
+*/
+
+-- ── Publish requests (run in Supabase SQL Editor) ─────────────
+-- Step B: create publish_requests table + RLS
+/*
+create table if not exists public.publish_requests (
+  id           uuid primary key default uuid_generate_v4(),
+  prompt_id    uuid not null references public.prompts(id) on delete cascade,
+  requester_id uuid not null references public.profiles(id) on delete cascade,
+  status       text not null default 'pending' check (status in ('pending','approved','rejected')),
+  reviewed_by  uuid references public.profiles(id),
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now(),
+  unique (prompt_id, requester_id)
+);
+alter table public.publish_requests enable row level security;
+
+create policy "publish_requests: read"
+  on public.publish_requests for select
+  using (auth.uid() = requester_id or
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor')));
+
+create policy "publish_requests: viewer insert"
+  on public.publish_requests for insert
+  with check (auth.uid() = requester_id);
+
+create policy "publish_requests: editor update"
+  on public.publish_requests for update
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor')))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor')));
+
+create trigger set_publish_requests_updated_at
+  before update on public.publish_requests
+  for each row execute function public.set_updated_at();
+*/

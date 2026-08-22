@@ -2,7 +2,6 @@ import { useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
-import { detectSAPContext } from '../../lib/url-detector.js';
 import { encodeShareUrl } from '../../lib/share.js';
 import { t } from '../../lib/i18n.js';
 import AdminCatalogCard from './AdminCatalogCard.jsx';
@@ -11,55 +10,41 @@ import AdminSystemsCard from './AdminSystemsCard.jsx';
 import AdminTagsCard from './AdminTagsCard.jsx';
 import ImportModeModal from '../shared/ImportModeModal.jsx';
 import UserManagement from './UserManagement.jsx';
+import AdminStatsView from './AdminStatsView.jsx';
 
-const BASE_SECTIONS = [
-  { id: 'general',       labelKey: 'settingsTitle' },
-  { id: 'categories',    labelKey: 'categoriesAdmin' },
-  { id: 'flows',         labelKey: 'flowsAdmin' },
-  { id: 'import-export', labelKey: 'importExport' },
-  { id: 'personas',      labelKey: 'personasAdmin' },
-  { id: 'solutions',     labelKey: 'solutionsAdmin' },
-  { id: 'systems',       labelKey: 'systemsAdmin' },
-  { id: 'tags',          labelKey: 'tagsAdmin' },
+const FUNCTIONAL_SECTIONS = [
+  { id: 'categories', labelKey: 'categoriesAdmin' },
+  { id: 'flows',      labelKey: 'flowsAdmin' },
+  { id: 'personas',   labelKey: 'personasAdmin' },
+  { id: 'solutions',  labelKey: 'solutionsAdmin' },
+  { id: 'systems',    labelKey: 'systemsAdmin' },
+  { id: 'tags',       labelKey: 'tagsAdmin' },
 ];
 
-const ADMIN_SECTIONS = [
+const TECHNICAL_SECTIONS = [
+  { id: 'import-export', labelKey: 'importExport' },
+];
+
+const ADMIN_TECHNICAL_SECTIONS = [
   { id: 'users', labelKey: null, label: 'Users' },
+  { id: 'stats', labelKey: null, label: 'Statistics' },
 ];
 
 export default function SettingsView() {
   const { state, dispatch } = useApp();
   const { isAdmin } = useAuth();
   const lang = state.settings?.lang || 'en';
-  const [activeSection, setActiveSection] = useState('general');
-  const [autoFilter, setAutoFilter] = useState(state.settings?.autoFilterEnabled ?? true);
-  const [sapUrl, setSapUrl] = useState('');
+  const [activeSection, setActiveSection] = useState('categories');
 
-  const SECTIONS = isAdmin ? [...BASE_SECTIONS, ...ADMIN_SECTIONS] : BASE_SECTIONS;
+  const allSections = [
+    ...FUNCTIONAL_SECTIONS,
+    ...TECHNICAL_SECTIONS,
+    ...(isAdmin ? ADMIN_TECHNICAL_SECTIONS : []),
+  ];
 
-  // Import/Export state
   const fileRef = useRef(null);
   const [importData, setImportData] = useState(null);
   const [importStatus, setImportStatus] = useState(null);
-
-  async function handleSave() {
-    const updated = { ...state.settings, autoFilterEnabled: autoFilter };
-    await StorageAPI.saveSettings(updated);
-    dispatch({ type: 'SET_SETTINGS', payload: updated });
-    dispatch({ type: 'SHOW_TOAST', payload: t('settingsSaved', lang) });
-  }
-
-  function handleDetect() {
-    if (!sapUrl.trim()) return;
-    const ctx = detectSAPContext(sapUrl.trim());
-    dispatch({ type: 'SET_SAP_CONTEXT', payload: ctx });
-    if (ctx?.detected) {
-      dispatch({ type: 'SHOW_TOAST', payload: t('detectedContext', lang, ctx.solution) });
-      dispatch({ type: 'SET_VIEW', payload: { view: 'all', filter: { storyFlow: null, solution: null } } });
-    } else {
-      dispatch({ type: 'SHOW_TOAST', payload: t('noSapDetected', lang) });
-    }
-  }
 
   async function handleShareUrl() {
     const data = await StorageAPI.exportAll();
@@ -118,54 +103,42 @@ export default function SettingsView() {
     setImportData(null);
   }
 
+  function NavSection({ sections, label }) {
+    return (
+      <>
+        {label && <div className="settings-nav-group-label">{label}</div>}
+        {sections.map(sec => (
+          <button
+            key={sec.id}
+            className={`settings-nav-item${activeSection === sec.id ? ' active' : ''}`}
+            onClick={() => setActiveSection(sec.id)}
+          >
+            {sec.labelKey ? t(sec.labelKey, lang) : sec.label}
+          </button>
+        ))}
+      </>
+    );
+  }
+
   return (
     <div id="view-settings">
       <div className="settings-layout">
 
         {/* Left nav */}
         <nav className="settings-nav">
-          {SECTIONS.map(sec => (
-            <button
-              key={sec.id}
-              className={`settings-nav-item${activeSection === sec.id ? ' active' : ''}`}
-              onClick={() => setActiveSection(sec.id)}
-            >
-              {sec.labelKey ? t(sec.labelKey, lang) : sec.label}
-            </button>
-          ))}
+          <NavSection sections={FUNCTIONAL_SECTIONS} />
+          <div className="settings-nav-divider" />
+          <NavSection sections={TECHNICAL_SECTIONS} label="Data" />
+          {isAdmin && (
+            <>
+              <div className="settings-nav-divider" />
+              <NavSection sections={ADMIN_TECHNICAL_SECTIONS} label="Admin" />
+            </>
+          )}
         </nav>
 
         {/* Panel */}
         <div className="settings-panel">
-
-          {activeSection === 'general' && (
-            <div className="view-card">
-              <h2>{t('settingsTitle', lang)}</h2>
-              <div className="setting-row">
-                <label className="setting-label">
-                  <input type="checkbox" checked={autoFilter} onChange={e => setAutoFilter(e.target.checked)} />
-                  <span> {t('autoFilter', lang)}</span>
-                </label>
-                <p className="setting-hint">{t('autoFilterHint', lang)}</p>
-              </div>
-              <div className="setting-row">
-                <label className="setting-label">{t('sapUrlLabel', lang)}</label>
-                <p className="setting-hint">{t('sapUrlHint', lang)}</p>
-                <div style={{ display:'flex', gap:8, marginTop:6 }}>
-                  <input
-                    type="text"
-                    value={sapUrl}
-                    onChange={e => setSapUrl(e.target.value)}
-                    placeholder="https://my12345.ibpcloud.sap.com/…"
-                    style={{ flex:1 }}
-                    onKeyDown={e => e.key === 'Enter' && handleDetect()}
-                  />
-                  <button className="action-btn" onClick={handleDetect}>{t('detect', lang)}</button>
-                </div>
-              </div>
-              <button className="action-btn primary" style={{ marginTop: 16 }} onClick={handleSave}>{t('saveSettings', lang)}</button>
-            </div>
-          )}
 
           {activeSection === 'categories' && <AdminCategoriesCard />}
 
@@ -203,6 +176,7 @@ export default function SettingsView() {
               )}
             </div>
           )}
+
           {activeSection === 'personas' && (
             <AdminCatalogCard
               titleKey="personasAdmin"
@@ -241,6 +215,7 @@ export default function SettingsView() {
           )}
 
           {activeSection === 'users' && <UserManagement />}
+          {activeSection === 'stats' && <AdminStatsView />}
 
         </div>
       </div>

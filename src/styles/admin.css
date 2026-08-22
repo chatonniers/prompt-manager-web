@@ -412,3 +412,115 @@
 .admin-sys-edit-ep-num { font-size: 10px; font-weight: 700; color: var(--pm-text3); text-transform: uppercase; letter-spacing: 0.5px; }
 
 .admin-sys-edit-actions { display: flex; gap: 6px; margin-top: 4px; }
+
+/* ── Statistics ──────────────────────────────────────────────────────── */
+.stats-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.stats-kpi-card {
+  background: var(--pm-bg);
+  border: 1px solid var(--pm-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.stats-kpi-value { font-size: 28px; font-weight: 800; line-height: 1; }
+.stats-kpi-label { font-size: 11px; font-weight: 700; color: var(--pm-text2); text-transform: uppercase; letter-spacing: 0.5px; }
+.stats-kpi-sub { font-size: 10px; color: var(--pm-text3); margin-top: 2px; }
+
+.stats-section-title {
+  font-size: 11px; font-weight: 800; letter-spacing: 0.6px;
+  text-transform: uppercase; color: var(--pm-text2);
+  margin: 16px 0 8px;
+}
+
+.stats-bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 110px;
+  margin-top: 12px;
+  padding-bottom: 20px;
+  position: relative;
+}
+.stats-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  height: 100%;
+}
+.stats-bar-value { font-size: 10px; font-weight: 700; color: var(--pm-text2); min-height: 14px; }
+.stats-bar {
+  width: 100%;
+  background: var(--pm-accent);
+  border-radius: 4px 4px 0 0;
+  min-height: 3px;
+  opacity: 0.8;
+  transition: height 0.3s;
+}
+.stats-bar-label { font-size: 10px; color: var(--pm-text3); font-weight: 600; position: absolute; bottom: 0; }
+
+.stats-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.stats-table tr { border-bottom: 1px solid var(--pm-border2); }
+.stats-table tr:last-child { border-bottom: none; }
+.stats-table-name { font-size: 12px; padding: 5px 4px; color: var(--pm-text); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stats-table-count { font-size: 12px; font-weight: 700; padding: 5px 4px; text-align: right; color: var(--pm-accent); white-space: nowrap; }
+
+.stats-status-grid { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.stats-status-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
+.stats-status-row strong { font-size: 14px; font-weight: 800; color: var(--pm-text); }
+
+/* ── Settings nav groups ─────────────────────────────────────────────── */
+.settings-nav-divider {
+  height: 1px;
+  background: var(--pm-border);
+  margin: 8px 0;
+}
+
+.settings-nav-group-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--pm-text3);
+  padding: 4px 14px 2px;
+}
+
+/* ── Sessions table ──────────────────────────────────────────────────── */
+.stats-sessions-table th { text-align: left; padding-bottom: 6px; border-bottom: 1px solid var(--pm-border); }
+
+/* ── Activity range pills ────────────────────────────────────────────── */
+.stats-range-pills {
+  display: flex;
+  gap: 4px;
+}
+
+.stats-range-pill {
+  background: none;
+  border: 1px solid var(--pm-border);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--pm-text2);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+
+.stats-range-pill:hover { border-color: var(--pm-accent); color: var(--pm-accent); }
+
+.stats-range-pill.active {
+  background: var(--pm-accent-bg);
+  border-color: var(--pm-accent);
+  color: var(--pm-accent);
+}

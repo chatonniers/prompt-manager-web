@@ -43,6 +43,7 @@ function dbToPrompt(row) {
     systems:      row.systems      || [],
     attachments:  row.attachments  || [],
     ownerId:      row.owner_id,
+    isPrivate:    row.is_private ?? true,
     createdAt:    row.created_at,
     updatedAt:    row.updated_at,
   };
@@ -64,6 +65,7 @@ function promptToDb(p, userId) {
     notes:         p.notes      || null,
     status:        p.status     || null,
     is_favorite:   p.isFavorite || false,
+    is_private:    p.isPrivate  ?? true,
     demo_links:    p.demoLinks  || [],
     systems:       p.systems    || [],
     attachments:   p.attachments|| [],
@@ -73,9 +75,9 @@ function promptToDb(p, userId) {
 function dbToCatalog(row) {
   if (!row) return { ...DEFAULT_CATALOG };
   return {
-    solutions:  row.solutions   || [...DEFAULT_CATALOG.solutions],
-    storyFlows: row.story_flows || [...DEFAULT_CATALOG.storyFlows],
-    categories: row.categories  || [...DEFAULT_CATALOG.categories],
+    solutions:  row.solutions?.length   ? row.solutions   : [...DEFAULT_CATALOG.solutions],
+    storyFlows: row.story_flows?.length ? row.story_flows : [...DEFAULT_CATALOG.storyFlows],
+    categories: row.categories?.length  ? row.categories  : [...DEFAULT_CATALOG.categories],
     systems:    row.systems     || [],
     personas:   row.personas    || [],
     tags:       row.tags        || [],
@@ -157,7 +159,13 @@ export const StorageAPI = {
       }
     }
 
-    const { error } = await supabase.from('prompts').upsert(row);
+    const isNew = !prompt.id || !(await supabase.from('prompts').select('id').eq('id', prompt.id).maybeSingle()).data;
+    let error;
+    if (isNew) {
+      ({ error } = await supabase.from('prompts').insert(row));
+    } else {
+      ({ error } = await supabase.from('prompts').update(row).eq('id', row.id));
+    }
     if (error) throw error;
   },
 
@@ -253,6 +261,54 @@ export const StorageAPI = {
     return { imported: toAdd.length, skipped: data.prompts.length - toAdd.length };
   },
 
+  // ── Publish requests ───────────────────────────────────────────────────
+  async getPublishRequests() {
+    const { data, error } = await supabase
+      .from('publish_requests')
+      .select('*, prompt:prompts(title,body,prompt_items), requester:profiles!requester_id(display_name,email)')
+      .order('created_at', { ascending: false });
+    if (error) {
+      // Table may not exist yet (pre-migration) — fail silently
+      if (error.code === 'PGRST116' || error.code === '42P01') return [];
+      throw error;
+    }
+    return data || [];
+  },
+
+  async createPublishRequest(promptId) {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from('publish_requests')
+      .upsert(
+        { prompt_id: promptId, requester_id: user.id, status: 'pending' },
+        { onConflict: 'prompt_id,requester_id' }
+      );
+    if (error) throw error;
+  },
+
+  async deletePublishRequest(promptId) {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from('publish_requests')
+      .delete()
+      .eq('prompt_id', promptId)
+      .eq('requester_id', user.id);
+    if (error) throw error;
+  },
+
+  async reviewPublishRequest(requestId, promptId, approve) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (approve) {
+      const { error: pe } = await supabase.from('prompts').update({ is_private: false }).eq('id', promptId);
+      if (pe) throw pe;
+    }
+    const { error } = await supabase
+      .from('publish_requests')
+      .update({ status: approve ? 'approved' : 'rejected', reviewed_by: user.id })
+      .eq('id', requestId);
+    if (error) throw error;
+  },
+
   // ── Real-time subscription ─────────────────────────────────────────────
   subscribeToPrompts(onUpdate) {
     return supabase
@@ -265,6 +321,13 @@ export const StorageAPI = {
     return supabase
       .channel('catalog-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'catalog' }, onUpdate)
+      .subscribe();
+  },
+
+  subscribeToPublishRequests(onUpdate) {
+    return supabase
+      .channel('publish-requests-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'publish_requests' }, onUpdate)
       .subscribe();
   },
 

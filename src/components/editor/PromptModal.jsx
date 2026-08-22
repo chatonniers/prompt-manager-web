@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { AttachmentsDB } from '../../lib/attachments.js';
 import { t } from '../../lib/i18n.js';
@@ -20,6 +21,8 @@ function makeItem(body = '', body_fr = '') {
 
 export default function PromptModal() {
   const { state, dispatch } = useApp();
+  const { isEditor, isAdmin } = useAuth();
+  const canPublish = isEditor || isAdmin;
   const lang = state.settings?.lang || 'en';
   const { isModalOpen, editingPromptId, catalog, prompts } = state;
   const isNew = editingPromptId === undefined || editingPromptId === null;
@@ -38,7 +41,7 @@ export default function PromptModal() {
   const [systems, setSystems] = useState([]);
   const [demoLinks, setDemoLinks] = useState([]);
   const [notes, setNotes] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState('draft');
   const [pendingFiles, setPendingFiles] = useState([]);
   const [existingAtts, setExistingAtts] = useState([]);
   const [pendingDeletes, setPendingDeletes] = useState([]);
@@ -90,7 +93,7 @@ export default function PromptModal() {
         setSystems(legacySystems);
       }
       setNotes(existing.notes || '');
-      setStatus(existing.status || '');
+      setStatus(existing.status || 'draft');
       setDemoLinks(Array.isArray(existing.demoLinks) ? existing.demoLinks.map(l => ({ ...l })) : []);
       AttachmentsDB.getForPrompt(existing.id).then(atts => setExistingAtts(atts));
     } else {
@@ -106,7 +109,7 @@ export default function PromptModal() {
       setSystems([]);
       setDemoLinks([]);
       setNotes('');
-      setStatus('');
+      setStatus('draft');
       setExistingAtts([]);
       setPendingFiles([]);
     }
@@ -360,12 +363,13 @@ export default function PromptModal() {
           <div className="field-row">
             <label>Status</label>
             <div className="card-status-btns">
-              {['', 'draft', 'ready', 'validated'].map(s => (
+              {(canPublish ? ['', 'draft', 'published'] : ['draft']).map(s => (
                 <button
                   key={s}
                   type="button"
                   className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`}
                   onClick={() => setStatus(s)}
+                  disabled={!canPublish && s !== 'draft'}
                 >
                   {s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'}
                 </button>

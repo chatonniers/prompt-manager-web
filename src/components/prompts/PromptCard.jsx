@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useApp } from '../../context/AppContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { AttachmentsDB } from '../../lib/attachments.js';
 import { t } from '../../lib/i18n.js';
@@ -154,7 +155,7 @@ function makeItem(body = '', body_fr = '') {
   return { id: crypto.randomUUID(), label: '', body, body_fr };
 }
 
-function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate, onDelete }) {
+function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate, onDelete, dupeTarget, setDupeTarget, canPublish, canEdit, approvedRequest }) {
   const { state } = useApp();
   const allTags = [...new Set([...(state.catalog.tags || []), ...(state.prompts || []).flatMap(pr => pr.tags || [])])].sort();
   const [title, setTitle] = useState(p.title || '');
@@ -224,44 +225,60 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
     if (!title.trim()) return;
     const validItems = items.filter(i => i.body.trim());
     if (validItems.length === 0) return;
-    if (validItems.some(i => !i.label.trim())) return;
     setSaving(true);
-    const finalItems = validItems.map(i => ({ ...i, body: i.body.trim(), body_fr: i.body_fr?.trim() || null }));
+    const finalItems = validItems.map((i, idx) => ({
+      ...i,
+      label: i.label.trim() || (validItems.length === 1 ? title.trim() : `Part ${idx + 1}`),
+      body: i.body.trim(),
+      body_fr: i.body_fr?.trim() || null,
+    }));
 
-    const savedNewAtts = [];
-    for (const f of pendingFiles) {
-      const attId = crypto.randomUUID();
-      await AttachmentsDB.save({ id: attId, promptId: p.id, name: f.name, type: f.type, size: f.size, data: f.data });
-      savedNewAtts.push({ id: attId, name: f.name, type: f.type, size: f.size });
-    }
-    for (const attId of pendingDeletes) {
-      await AttachmentsDB.delete(attId);
-    }
-    const attachmentsMeta = [
-      ...attachments.filter(a => !pendingDeletes.includes(a.id)).map(a => ({ id: a.id, name: a.name, type: a.type, size: a.size })),
-      ...savedNewAtts,
-    ];
+    try {
+      const savedNewAtts = [];
+      for (const f of pendingFiles) {
+        const attId = crypto.randomUUID();
+        await AttachmentsDB.save({ id: attId, promptId: p.id, name: f.name, type: f.type, size: f.size, data: f.data });
+        savedNewAtts.push({ id: attId, name: f.name, type: f.type, size: f.size });
+      }
+      for (const attId of pendingDeletes) {
+        await AttachmentsDB.delete(attId);
+      }
+      const attachmentsMeta = [
+        ...attachments.filter(a => !pendingDeletes.includes(a.id)).map(a => ({ id: a.id, name: a.name, type: a.type, size: a.size })),
+        ...savedNewAtts,
+      ];
 
-    await StorageAPI.upsertPrompt({
-      ...p,
-      title: title.trim(),
-      body: finalItems[0]?.body || '',
-      body_fr: finalItems[0]?.body_fr || null,
-      promptItems: finalItems,
-      category: category || null,
-      storyFlow,
-      status: status || null,
-      personas,
-      notes: notes.trim(),
-      solutions,
-      tags: tags.filter(t => t.trim()),
-      systems,
-      demoLinks: demoLinks.filter(l => l.url.trim()),
-      attachments: attachmentsMeta,
-    });
-    setSaving(false);
-    const [freshPrompts, freshCatalog] = await Promise.all([StorageAPI.getAllPrompts(), StorageAPI.getCatalog()]);
-    onSave(freshPrompts, freshCatalog);
+      await StorageAPI.upsertPrompt({
+        ...p,
+        title: title.trim(),
+        body: finalItems[0]?.body || '',
+        body_fr: finalItems[0]?.body_fr || null,
+        promptItems: finalItems,
+        category: category || null,
+        storyFlow,
+        status: status || null,
+        isPrivate: approvedRequest ? true : (p.isPrivate ?? true),
+        personas,
+        notes: notes.trim(),
+        solutions,
+        tags: tags.filter(t => t.trim()),
+        systems,
+        demoLinks: demoLinks.filter(l => l.url.trim()),
+        attachments: attachmentsMeta,
+      });
+      if (approvedRequest) {
+        await StorageAPI.deletePublishRequest(p.id);
+      }
+      const [freshPrompts, freshCatalog, freshRequests] = await Promise.all([
+        StorageAPI.getAllPrompts(),
+        StorageAPI.getCatalog(),
+        approvedRequest ? StorageAPI.getPublishRequests() : Promise.resolve(null),
+      ]);
+      if (freshRequests) onSave(freshPrompts, freshCatalog, freshRequests);
+      else onSave(freshPrompts, freshCatalog);
+    } finally {
+      setSaving(false);
+    }
   }
 
   const activeItem = items.find(i => i.id === activeItemId) || items[0];
@@ -270,10 +287,19 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
     <div className="card-edit-back" onClick={e => e.stopPropagation()}>
       <div className="card-edit-header">
         <span className="card-edit-title">{t('editPromptTitle', lang)}</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <button className="card-edit-close" onClick={onDuplicate} title={t('duplicateTitle', lang)}>
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.4"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2H3.5A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          {dupeTarget ? (
+            <div className="dupe-popover">
+              <span className="dupe-popover-label">Copy to:</span>
+              <button className="dupe-popover-btn library" onClick={() => onDuplicate('library')}>Library</button>
+              <button className="dupe-popover-btn mine" onClick={() => onDuplicate('mine')}>Mine</button>
+              <button className="dupe-popover-cancel" onClick={() => setDupeTarget(false)}>✕</button>
+            </div>
+          ) : (
+            <button className="card-edit-close" onClick={() => setDupeTarget(true)} title={t('duplicateTitle', lang)}>
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.4"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2H3.5A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+            </button>
+          )}
           <button className="card-edit-close" onClick={onCancel}>
             <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
           </button>
@@ -358,7 +384,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
               </select>
             </div>
             <div className="card-edit-field">
-              <label className="card-edit-label">Flow</label>
+              <label className="card-edit-label">{t('flowLabel', lang)}</label>
               <select className="card-edit-select" value={storyFlow} onChange={e => setStoryFlow(e.target.value)}>
                 <option value="">{t('selectNone', lang)}</option>
                 {(catalog.storyFlows || []).map(f => <option key={f} value={f}>{f}</option>)}
@@ -368,7 +394,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
 
           {(catalog.solutions || []).length > 0 && (
             <div className="card-edit-field">
-              <label className="card-edit-label">Solutions</label>
+              <label className="card-edit-label">{t('solutionsLabel', lang)}</label>
               <div className="card-edit-systems">
                 {catalog.solutions.map(sol => {
                   const selected = solutions.includes(sol);
@@ -383,9 +409,9 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
           )}
 
           <div className="card-edit-field">
-            <label className="card-edit-label">Status</label>
+            <label className="card-edit-label">{t('statusLabel', lang)}</label>
             <div className="card-status-btns">
-              {['', 'draft', 'ready', 'validated'].map(s => (
+              {(canPublish ? ['', 'draft', 'published'] : ['draft']).map(s => (
                 <button key={s} type="button" className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`} onClick={() => setStatus(s)}>
                   {s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'}
                 </button>
@@ -394,7 +420,6 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
           </div>
 
           <div className="card-edit-field">
-            <label className="card-edit-label">{t('demoLinksLabel', lang)}</label>
             {demoLinks.map((link, idx) => (
               <div key={link.id} className="card-edit-demo-link-row">
                 <input className="card-edit-input card-edit-demo-desc" type="text" value={link.desc || ''} onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, desc: e.target.value } : l))} placeholder={t('demoLinkDescPlaceholder', lang)} />
@@ -490,8 +515,26 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
       )}
 
       <div className="card-edit-actions">
+        {(canEdit && p.status === 'draft') && (
+          <div className="card-privacy-seg">
+            <button
+              type="button"
+              className={`card-privacy-btn${p.isPrivate !== false ? ' active private' : ''}`}
+              onClick={async () => { if (p.isPrivate !== true) await StorageAPI.upsertPrompt({ ...p, isPrivate: true }); }}
+            >{t('visibilityPrivate', lang)}</button>
+            <button
+              type="button"
+              className={`card-privacy-btn${p.isPrivate === false ? ' active shared' : ''}`}
+              onClick={async () => { if (p.isPrivate !== false) await StorageAPI.upsertPrompt({ ...p, isPrivate: false }); }}
+            >{t('visibilityPublic', lang)}</button>
+          </div>
+        )}
+        <div style={{ flex: 1 }} />
         <button className="card-edit-cancel-btn" onClick={onCancel}>{t('cancel', lang)}</button>
-        <button className="card-edit-save-btn" onClick={handleSave} disabled={saving || !title.trim() || items.some(i => !i.label.trim())}>
+        {onDelete && (
+          <button className="card-edit-del-btn" onClick={onDelete}>{t('del', lang)}</button>
+        )}
+        <button className="card-edit-save-btn" onClick={handleSave} disabled={saving || !title.trim()}>
           {saving ? t('savingLabel', lang) : t('save', lang)}
         </button>
       </div>
@@ -557,13 +600,25 @@ function PromptItemRow({ item, idx, label, body, isCopied, lang, onCopy }) {
 
 export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
   const { state, dispatch } = useApp();
+  const { isAdmin, isEditor, profile } = useAuth();
+  const canEdit = isAdmin || isEditor || p.ownerId === profile?.id;
+  const canPublish = isAdmin || isEditor;
   const lang = state.settings?.lang || 'en';
   const catalog = state.catalog;
   const isDragging = state.draggingId === p.id;
+  const workspace = state.workspace ?? 'library';
+
+  // Publish request state for this card
+  const myRequest = state.publishRequests?.find(r => r.prompt_id === p.id);
+  const isPendingRequest = myRequest?.status === 'pending';
+  const isApprovedRequest = myRequest?.status === 'approved';
+  // Request button: viewer, Mine workspace, own draft, public, and not already approved
+  const showRequestBtn = workspace === 'mine' && !canPublish && p.status === 'draft' && p.ownerId === profile?.id && p.isPrivate === false && !isApprovedRequest;
 
   const [flipped, setFlipped] = useState(false);
   const [flashSaved, setFlashSaved] = useState(false);
   const [substItem, setSubstItem] = useState(null);
+  const [dupeTarget, setDupeTarget] = useState(false); // shows copy-to popover
   // Per-item copy state: itemId → 'copied' | null
   const [copiedItemId, setCopiedItemId] = useState(null);
   const [ctaCopied, setCtaCopied] = useState(false);
@@ -610,23 +665,28 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
 
   async function handleToggleFav() {
     const updated = { ...p, isFavorite: !p.isFavorite };
+    // Optimistic update — instant UI feedback
+    dispatch({ type: 'SET_PROMPTS', payload: state.prompts.map(x => x.id === p.id ? updated : x) });
     await StorageAPI.upsertPrompt(updated);
     const prompts = await StorageAPI.getAllPrompts();
     dispatch({ type: 'SET_PROMPTS', payload: prompts });
   }
 
-  async function handleDuplicate() {
+  async function handleDuplicate(target) {
     const now = new Date().toISOString();
-    const dupe = { ...p, id: crypto.randomUUID(), title: p.title + ' ' + t('copyDuplicate', lang), isFavorite: false, usageCount: 0, lastUsedAt: null, createdAt: now, updatedAt: now };
+    const status = target === 'mine' ? 'draft' : 'published';
+    const dupe = { ...p, id: crypto.randomUUID(), title: p.title + ' ' + t('copyDuplicate', lang), isFavorite: false, usageCount: 0, lastUsedAt: null, createdAt: now, updatedAt: now, status, ownerId: undefined };
+    setDupeTarget(false);
     await StorageAPI.upsertPrompt(dupe);
     const prompts = await StorageAPI.getAllPrompts();
     dispatch({ type: 'SET_PROMPTS', payload: prompts });
     dispatch({ type: 'SHOW_TOAST', payload: t('promptCreated', lang) });
   }
 
-  async function handleEditSave(freshPrompts, freshCatalog) {
+  async function handleEditSave(freshPrompts, freshCatalog, freshRequests) {
     dispatch({ type: 'SET_PROMPTS', payload: freshPrompts });
     dispatch({ type: 'SET_CATALOG', payload: freshCatalog });
+    if (freshRequests) dispatch({ type: 'SET_PUBLISH_REQUESTS', payload: freshRequests });
     dispatch({ type: 'SHOW_TOAST', payload: t('promptUpdated', lang) });
     setFlipped(false);
     setFlashSaved(true);
@@ -655,8 +715,8 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
         draggable={true}
         onDragStart={e => { e.dataTransfer.setData('promptId', p.id); dispatch({ type: 'SET_DRAGGING', payload: p.id }); }}
         onDragEnd={() => dispatch({ type: 'SET_DRAGGING', payload: null })}
-        onClick={() => setFlipped(true)}
-        onKeyDown={e => { if (e.key === 'Enter') setFlipped(true); }}
+        onClick={() => canEdit && setFlipped(true)}
+        onKeyDown={e => { if (e.key === 'Enter' && canEdit) setFlipped(true); }}
       >
         {onToggleSelect && (
           <input
@@ -722,6 +782,35 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
           {p.usageCount > 0 && <span className="usage-hint" style={{ marginLeft: 'auto' }}>Used {t('usedCount', lang, p.usageCount)}{p.lastUsedAt ? ` · ${relTime(p.lastUsedAt, lang)}` : ''}</span>}
         </div>
 
+        {/* Request publish button (viewers, Mine workspace) */}
+        {isPendingRequest && workspace === 'mine' && !canPublish && p.ownerId === profile?.id && (
+          <div className="card-request-pending">
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.4"/><path d="M6 3.5v3l1.5 1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+            {t('requestedPublish', lang)}
+          </div>
+        )}
+        {showRequestBtn && (
+          <div style={{ marginTop: 6 }}>
+            <button
+              className={`card-request-btn${isPendingRequest ? ' requested' : ''}`}
+              disabled={isPendingRequest}
+              onClick={async e => {
+                e.stopPropagation();
+                try {
+                  await StorageAPI.createPublishRequest(p.id);
+                  const reqs = await StorageAPI.getPublishRequests();
+                  dispatch({ type: 'SET_PUBLISH_REQUESTS', payload: reqs });
+                  dispatch({ type: 'SHOW_TOAST', payload: t('publishRequestSent', lang) });
+                } catch (err) {
+                  dispatch({ type: 'SHOW_TOAST', payload: `Error: ${err.message}` });
+                }
+              }}
+            >
+              {isPendingRequest ? t('requestedPublish', lang) : t('requestPublish', lang)}
+            </button>
+          </div>
+        )}
+
         {/* Systems */}
         {systems.length > 0 && (
           <div className="card-systems-list">
@@ -744,10 +833,23 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
         )}
 
         </div>{/* end prompt-card-body */}
+
+        {/* Publish request status badge */}
+        {myRequest?.status === 'approved' && (
+          <div className="card-request-badge approved" title="Publish request approved">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="11" fill="#059669"/><path d="M6.5 11l3 3 6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </div>
+        )}
+        {myRequest?.status === 'rejected' && (
+          <div className="card-request-badge rejected" title="Publish request rejected">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="11" fill="#DC2626"/><path d="M7 7l8 8M15 7l-8 8" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
+          </div>
+        )}
+
       </div>
 
       {/* Back face — edit form */}
-      {flipped && (
+      {flipped && canEdit && (
         <div className="prompt-card prompt-card-face prompt-card-back" onKeyDown={e => { if (e.key === 'Escape') setFlipped(false); }}>
           <CardEditBack
             prompt={p}
@@ -755,8 +857,13 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
             lang={lang}
             onSave={handleEditSave}
             onCancel={() => setFlipped(false)}
-            onDuplicate={() => { setFlipped(false); handleDuplicate(); }}
-            onDelete={handleDelete}
+            onDuplicate={target => { setFlipped(false); handleDuplicate(target); }}
+            onDelete={canPublish || (p.isPrivate !== false && p.status === 'draft' && p.ownerId === profile?.id) ? handleDelete : undefined}
+            dupeTarget={dupeTarget}
+            setDupeTarget={setDupeTarget}
+            canPublish={canPublish}
+            canEdit={canEdit}
+            approvedRequest={isApprovedRequest ? myRequest : null}
           />
         </div>
       )}

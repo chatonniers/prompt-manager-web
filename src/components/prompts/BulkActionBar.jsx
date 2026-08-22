@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useApp } from '../../context/AppContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { t } from '../../lib/i18n.js';
 
@@ -35,6 +36,8 @@ function BulkDropdown({ label, options, onSelect }) {
 
 export default function BulkActionBar({ visibleIds }) {
   const { state, dispatch } = useApp();
+  const { isAdmin, isEditor } = useAuth();
+  const canEdit = isAdmin || isEditor;
   const lang = state.settings?.lang || 'en';
   const { selectedIds, catalog, prompts } = state;
   const count = selectedIds.size;
@@ -110,7 +113,7 @@ export default function BulkActionBar({ visibleIds }) {
         onSelect={v => moveToFlow(v === '__none__' ? '' : v)}
       />
       <div className="bulk-divider" />
-      {confirmDelete ? (
+      {canEdit && (confirmDelete ? (
         <>
           <span style={{ fontSize: 11, fontWeight: 600, color: '#fca5a5' }}>
             {t('deleteConfirmInline', lang, `${count} prompt${count !== 1 ? 's' : ''}`)}
@@ -120,7 +123,7 @@ export default function BulkActionBar({ visibleIds }) {
         </>
       ) : (
         <button className="bulk-action-btn bulk-action-del" onClick={() => setConfirmDelete(true)}>{t('del', lang)}</button>
-      )}
+      ))}
     </div>,
     document.body
   );

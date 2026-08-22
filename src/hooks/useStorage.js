@@ -11,10 +11,11 @@ export function useStorage() {
     let cancelled = false;
 
     async function init() {
-      let [prompts, catalog, settings] = await Promise.all([
+      let [prompts, catalog, settings, publishRequests] = await Promise.all([
         StorageAPI.getAllPrompts(),
         StorageAPI.getCatalog(),
         StorageAPI.getSettings(),
+        StorageAPI.getPublishRequests().catch(() => []),
       ]);
       if (cancelled) return;
 
@@ -26,7 +27,8 @@ export function useStorage() {
       }
 
       if (!cancelled) {
-        dispatch({ type: 'LOAD_INITIAL', payload: { prompts, catalog, settings } });
+        dispatch({ type: 'LOAD_INITIAL', payload: { prompts, catalog, settings, publishRequests } });
+        document.documentElement.dataset.theme = settings.theme || 'dark';
       }
 
       // Real-time subscriptions
@@ -40,7 +42,12 @@ export function useStorage() {
         dispatch({ type: 'SET_CATALOG', payload: fresh });
       });
 
-      channelsRef.current = [promptsCh, catalogCh];
+      const requestsCh = StorageAPI.subscribeToPublishRequests(async () => {
+        const fresh = await StorageAPI.getPublishRequests().catch(() => []);
+        dispatch({ type: 'SET_PUBLISH_REQUESTS', payload: fresh });
+      });
+
+      channelsRef.current = [promptsCh, catalogCh, requestsCh];
     }
 
     init();

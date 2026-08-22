@@ -5,10 +5,11 @@ export const AppContext = createContext(null);
 const initialState = {
   prompts: [],
   catalog: { solutions: [], storyFlows: [], categories: [], systems: [], personas: [], tags: [] },
-  settings: { autoFilterEnabled: true, lang: 'en' },
+  settings: { autoFilterEnabled: true, lang: 'en', theme: localStorage.getItem('pm-theme') || 'dark' },
   currentView: 'all',
   currentFilter: null,
   searchQuery: '',
+  statusFilter: null,
   sapContext: null,
   isModalOpen: false,
   editingPromptId: undefined,
@@ -19,7 +20,10 @@ const initialState = {
   initialized: false,
   selectedIds: new Set(),
   draggingId: null,
+  workspace: localStorage.getItem('pm-workspace') || 'library',
+  publishRequests: [],
   zoom: (() => { const v = parseFloat(localStorage.getItem('pm-zoom')); return v >= 0.5 && v <= 2 ? v : 1; })(),
+  displayMode: localStorage.getItem('pm-display') || 'cards',
 };
 
 function reducer(state, action) {
@@ -41,9 +45,12 @@ function reducer(state, action) {
         currentView: action.payload?.view ?? action.view,
         currentFilter: (action.payload?.filter ?? action.filter) ?? { storyFlow: null, solution: null, category: null },
         searchQuery: '',
+        statusFilter: action.payload?.statusFilter ?? null,
       };
+    case 'SET_STATUS_FILTER':
+      return { ...state, statusFilter: action.payload, searchQuery: '' };
     case 'SET_SEARCH':
-      return { ...state, searchQuery: action.payload ?? action.query };
+      return { ...state, searchQuery: action.payload ?? action.query, statusFilter: null };
     case 'SET_SAP_CONTEXT':
       return { ...state, sapContext: action.payload ?? action.context };
     case 'OPEN_MODAL':
@@ -79,6 +86,14 @@ function reducer(state, action) {
     }
     case 'SET_DRAGGING':
       return { ...state, draggingId: action.payload ?? null };
+    case 'SET_DISPLAY_MODE':
+      localStorage.setItem('pm-display', action.payload);
+      return { ...state, displayMode: action.payload };
+    case 'SET_WORKSPACE':
+      localStorage.setItem('pm-workspace', action.payload);
+      return { ...state, workspace: action.payload };
+    case 'SET_PUBLISH_REQUESTS':
+      return { ...state, publishRequests: action.payload };
     default:
       return state;
   }

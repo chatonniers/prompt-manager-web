@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { filterAndRank } from '../../lib/search.js';
 import { t } from '../../lib/i18n.js';
@@ -8,7 +9,109 @@ import PromptCard from './PromptCard.jsx';
 import EmptyState from './EmptyState.jsx';
 import BulkActionBar from './BulkActionBar.jsx';
 
-function applyViewFilter(prompts, view, filter) {
+function relTime(iso) {
+  if (!iso) return '—';
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 2) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen }) {
+  const [sort, setSort] = useState({ col: 'title', dir: 1 });
+
+  function toggleSort(col) {
+    setSort(s => s.col === col ? { col, dir: -s.dir } : { col, dir: 1 });
+  }
+
+  const sorted = [...prompts].sort((a, b) => {
+    let av, bv;
+    if (sort.col === 'title')    { av = a.title || ''; bv = b.title || ''; }
+    else if (sort.col === 'status')   { av = a.status || ''; bv = b.status || ''; }
+    else if (sort.col === 'category') { av = a.category || ''; bv = b.category || ''; }
+    else if (sort.col === 'flow')     { av = a.storyFlow || ''; bv = b.storyFlow || ''; }
+    else if (sort.col === 'used')     { av = a.usageCount || 0; bv = b.usageCount || 0; return (bv - av) * sort.dir; }
+    else if (sort.col === 'updated')  { av = a.updatedAt || ''; bv = b.updatedAt || ''; }
+    else { av = ''; bv = ''; }
+    return av.localeCompare(bv) * sort.dir;
+  });
+
+  function Th({ col, label }) {
+    const active = sort.col === col;
+    return (
+      <th className={`pt-th${active ? ' pt-th-active' : ''}`} onClick={() => toggleSort(col)}>
+        {label} {active ? (sort.dir === 1 ? '↑' : '↓') : ''}
+      </th>
+    );
+  }
+
+  return (
+    <div className="prompt-table-wrap">
+      <table className="prompt-table">
+        <thead>
+          <tr>
+            <th className="pt-th pt-th-check" />
+            <Th col="title" label="Title" />
+            <Th col="status" label="Status" />
+            <Th col="category" label="Category" />
+            <Th col="flow" label="Flow" />
+            <th className="pt-th">Solutions</th>
+            <th className="pt-th">Tags</th>
+            <Th col="used" label="Used" />
+            <Th col="updated" label="Updated" />
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map(p => {
+            const flowColor = p.storyFlow ? getFlowColor(p.storyFlow) : null;
+            return (
+              <tr key={p.id} className={`pt-row${selectedIds?.has(p.id) ? ' pt-row-selected' : ''}`} onClick={() => onOpen(p.id)}>
+                <td className="pt-td pt-td-check" onClick={e => e.stopPropagation()}>
+                  <input type="checkbox" checked={!!selectedIds?.has(p.id)} onChange={() => onToggleSelect(p.id)} />
+                </td>
+                <td className="pt-td pt-td-title">{p.title}</td>
+                <td className="pt-td">
+                  {p.status && <span className={`pill status-${p.status}`}>{p.status}</span>}
+                </td>
+                <td className="pt-td pt-td-dim">{p.category || '—'}</td>
+                <td className="pt-td">
+                  {p.storyFlow
+                    ? <span className="pill flow" style={flowColor ? { background: flowColor.bg, color: flowColor.text } : {}}>{p.storyFlow}</span>
+                    : <span className="pt-td-dim">—</span>}
+                </td>
+                <td className="pt-td pt-td-pills">
+                  {(p.solutions || []).slice(0, 3).map(s => <span key={s} className="pill">{s}</span>)}
+                  {(p.solutions || []).length > 3 && <span className="pt-more">+{p.solutions.length - 3}</span>}
+                </td>
+                <td className="pt-td pt-td-pills">
+                  {(p.tags || []).slice(0, 3).map(tag => <span key={tag} className="pill tag">#{tag}</span>)}
+                  {(p.tags || []).length > 3 && <span className="pt-more">+{p.tags.length - 3}</span>}
+                </td>
+                <td className="pt-td pt-td-num">{p.usageCount > 0 ? p.usageCount : '—'}</td>
+                <td className="pt-td pt-td-dim">{relTime(p.updatedAt)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function applyViewFilter(prompts, view, filter, workspace, userId, canPublish) {
+  // Workspace pre-filter
+  if (workspace === 'mine') {
+    prompts = prompts.filter(p => p.status === 'draft' && p.ownerId === userId);
+  } else {
+    // Library: published for all + shared drafts (is_private=false) for editors/admins
+    prompts = prompts.filter(p =>
+      p.status === 'published' ||
+      (canPublish && p.status === 'draft' && p.isPrivate === false)
+    );
+  }
   if (view === 'favorites') return prompts.filter(p => p.isFavorite);
   if (view === 'most-used') return [...prompts].sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0)).filter(p => p.usageCount > 0);
   if (view === 'flow') return prompts.filter(p => p.storyFlow === (filter?.storyFlow ?? filter));
@@ -144,12 +247,15 @@ function FavoritesRow({ favs, lang, selectedIds, onToggleSelect, onDrop, onHeigh
 
 export default function PromptGrid() {
   const { state, dispatch } = useApp();
-  const { prompts, currentView, currentFilter, searchQuery, sapContext, settings, catalog, selectedIds, draggingId } = state;
+  const { isAdmin, isEditor, profile } = useAuth();
+  const canPublish = isAdmin || isEditor;
+  const { prompts, currentView, currentFilter, searchQuery, sapContext, settings, catalog, selectedIds, draggingId, workspace, statusFilter, displayMode } = state;
   const lang = settings?.lang || 'en';
   const categories = catalog.categories || [];
   const storyFlows = catalog.storyFlows || [];
 
-  let pool = applyViewFilter(prompts, currentView, currentFilter);
+  let pool = applyViewFilter(prompts, currentView, currentFilter, workspace, profile?.id, canPublish);
+  if (statusFilter) pool = pool.filter(p => p.status === statusFilter);
 
   const showAll = currentView !== 'all' || !!searchQuery.trim();
   let ranked;
@@ -225,7 +331,21 @@ export default function PromptGrid() {
 
   if (ranked.length === 0) return <EmptyState />;
 
-  if (currentView === 'all' && !searchQuery.trim()) {
+  if (displayMode === 'table') {
+    return (
+      <>
+        <BulkActionBar visibleIds={visibleIds} />
+        <PromptTable
+          prompts={ranked}
+          selectedIds={selectedIds}
+          onToggleSelect={onToggleSelect}
+          onOpen={id => dispatch({ type: 'OPEN_EDIT', payload: id })}
+        />
+      </>
+    );
+  }
+
+  if (currentView === 'all' && !searchQuery.trim() && !statusFilter) {
     const favs = ranked.filter(p => p.isFavorite);
 
     // Always include all catalog categories (even empty), plus uncategorized if any

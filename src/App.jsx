@@ -10,6 +10,7 @@ import ConfirmModal from './components/shared/ConfirmModal.jsx'
 import Toast from './components/shared/Toast.jsx'
 import HelpModal from './components/layout/HelpModal.jsx'
 import LoginPage from './components/auth/LoginPage.jsx'
+import ResetPasswordPage from './components/auth/ResetPasswordPage.jsx'
 import { StorageAPI } from './lib/storage.js'
 import { decodeShareUrl } from './lib/share.js'
 import './styles/variables.css'
@@ -64,7 +65,7 @@ function AppInner() {
       <TopBar onHelp={() => setHelpOpen(true)} onSignOut={signOut} profile={profile} isAdmin={isAdmin} />
       <div id="main-layout">
         <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(v => !v)} />
-        <main id="content">
+        <main id="content" data-workspace={state.workspace ?? 'library'}>
           <MainContent />
         </main>
       </div>
@@ -77,7 +78,7 @@ function AppInner() {
 }
 
 function AuthGate() {
-  const { session, loading } = useAuth()
+  const { session, loading, isPasswordRecovery } = useAuth()
 
   if (loading) {
     return (
@@ -86,6 +87,8 @@ function AuthGate() {
       </div>
     )
   }
+
+  if (isPasswordRecovery) return <ResetPasswordPage />
 
   if (!session) return <LoginPage />
 
