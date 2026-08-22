@@ -6,46 +6,8 @@ const SETTINGS_DEFAULTS = {
   overlayPosition: 'right',
   theme: 'dark',
   lang: 'en',
-  visibilityRules: {
-    admin:  {
-      library: { statuses: ['published', 'draft'], includePrivate: true },
-      mine:    { statuses: ['draft'],               includePrivate: true },
-    },
-    editor: {
-      library: { statuses: ['published', 'draft'], includePrivate: true },
-      mine:    { statuses: ['draft'],               includePrivate: true },
-    },
-    viewer: {
-      library: { statuses: ['published'],           includePrivate: false },
-      mine:    { statuses: ['draft'],               includePrivate: false },
-    },
-  },
-  kpiRules: {
-    admin:          ['users', 'published', 'draft', 'pending', 'approved', 'rejected'],
-    editor:         ['published', 'draft', 'pending', 'approved', 'rejected'],
-    viewer_library: ['published', 'draft'],
-    viewer_mine:    ['draft', 'pending', 'approved', 'rejected'],
-  },
 };
 
-export const DEFAULT_CATEGORIES = [
-  "Autonomous Finance",
-  "Autonomous Supply Chain",
-  "Autonomous Spend",
-  "Autonomous HCM",
-  "Autonomous CX",
-];
-
-const DEFAULT_CATALOG = {
-  solutions:  ["S/4HANA","IBP","Ariba","Joule","Joule Studio","BTP","Datasphere","SuccessFactors","Digital Manufacturing"],
-  storyFlows: ["Procure-to-Pay","Order-to-Cash","Plan-to-Inventory","Hire-to-Retire","Record-to-Report","Lead-to-Cash","Design-to-Operate","Other"],
-  categories: DEFAULT_CATEGORIES,
-  systems: [],
-  personas: [],
-  tags: [],
-};
-
-export const AUTONOMOUS_CATEGORIES = DEFAULT_CATEGORIES;
 const CATALOG_ID = '00000000-0000-0000-0000-000000000001';
 
 // ── shape converters ──────────────────────────────────────────────────────
@@ -105,16 +67,16 @@ function promptToDb(p, userId) {
 }
 
 function dbToCatalog(row) {
-  if (!row) return { ...DEFAULT_CATALOG };
+  if (!row) return { solutions: [], storyFlows: [], categories: [], systems: [], personas: [], tags: [], visibilityRules: null, kpiRules: null };
   return {
-    solutions:  row.solutions?.length   ? row.solutions   : [...DEFAULT_CATALOG.solutions],
-    storyFlows: row.story_flows?.length ? row.story_flows : [...DEFAULT_CATALOG.storyFlows],
-    categories: row.categories?.length  ? row.categories  : [...DEFAULT_CATALOG.categories],
-    systems:    row.systems     || [],
-    personas:   row.personas    || [],
-    tags:       row.tags        || [],
-    visibilityRules: row.visibility_rules ?? SETTINGS_DEFAULTS.visibilityRules,
-    kpiRules:        row.kpi_rules        ?? SETTINGS_DEFAULTS.kpiRules,
+    solutions:       row.solutions   || [],
+    storyFlows:      row.story_flows || [],
+    categories:      row.categories  || [],
+    systems:         row.systems     || [],
+    personas:        row.personas    || [],
+    tags:            row.tags        || [],
+    visibilityRules: row.visibility_rules ?? null,
+    kpiRules:        row.kpi_rules        ?? null,
   };
 }
 

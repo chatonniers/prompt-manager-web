@@ -8,13 +8,6 @@ import PublishRequestBell from '../shared/PublishRequestBell.jsx';
 
 const STEP = 0.1;
 
-const FALLBACK_KPIS = {
-  admin:          ['users', 'published', 'draft', 'pending', 'approved', 'rejected'],
-  editor:         ['published', 'draft', 'pending', 'approved', 'rejected'],
-  viewer_library: ['published', 'draft'],
-  viewer_mine:    ['draft', 'pending', 'approved', 'rejected'],
-};
-
 function DisplayMenu({ theme, lang, zoom, zoomPct, isFullscreen, displayMode, onTheme, onLang, onZoom, onFullscreen, onHelp, onDisplayMode }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -170,7 +163,7 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
 
   const kpiRules = state.catalog?.kpiRules;
   const kpiRoleKey = canAdmin ? 'admin' : isEditor ? 'editor' : workspace === 'library' ? 'viewer_library' : 'viewer_mine';
-  const allowedKpis = kpiRules?.[kpiRoleKey] ?? FALLBACK_KPIS[kpiRoleKey];
+  const allowedKpis = kpiRules?.[kpiRoleKey] ?? [];
 
   useEffect(() => {
     function onChange() { setIsFullscreen(!!document.fullscreenElement); }
