@@ -128,8 +128,8 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
     <>
       <tr
         ref={rowRef}
-        className={`pt-row${selectedIds?.has(p.id) ? ' pt-row-selected' : ''}`}
-        onClick={() => onOpen(p.id)}
+        className={`pt-row${selectedIds?.has(p.id) ? ' pt-row-selected' : ''}${canEdit ? ' pt-row-clickable' : ''}`}
+        onClick={() => canEdit && onOpen(p.id)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
