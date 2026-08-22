@@ -40,20 +40,15 @@ const REQ_ICONS = {
   rejected: { label: 'Rejected', color: '#DC2626' },
 };
 
-function RowPreview({ p, anchor, lang }) {
-  if (!anchor) return null;
-
-  const rect = anchor.getBoundingClientRect();
+function RowPreview({ p, mouseX, mouseY, lang }) {
   const pw = 380;
   const vw = window.innerWidth;
   const vh = window.innerHeight;
 
-  // Position to the right of the title span
-  let left = rect.right + 12;
-  if (left + pw > vw - 8) left = rect.left - pw - 12;
-  // Vertically centred on the row cell, clamped to viewport
-  let top = rect.top - 10;
-  if (top + 300 > vh - 8) top = vh - 308;
+  let left = mouseX + 16;
+  if (left + pw > vw - 8) left = mouseX - pw - 16;
+  let top = mouseY + 12;
+  if (top + 320 > vh - 8) top = mouseY - 320;
 
   const items = p.promptItems?.length ? p.promptItems : [{ id: p.id, label: '', body: p.body || '', body_fr: p.body_fr || '' }];
 
@@ -80,11 +75,13 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
   const [copiedIdx, setCopiedIdx] = useState(null);
   const [substItem, setSubstItem] = useState(null);
   const [hovered, setHovered] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const hoverTimerRef = useRef(null);
   const rowRef = useRef(null);
   const titleSpanRef = useRef(null);
 
-  function handleMouseEnter() {
+  function handleMouseEnter(e) {
+    setMousePos({ x: e.clientX, y: e.clientY });
     hoverTimerRef.current = setTimeout(() => setHovered(true), 500);
   }
   function handleMouseLeave() {
@@ -189,7 +186,7 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
           onClose={() => setSubstItem(null)}
         />
       )}
-      {hovered && !substItem && <RowPreview p={p} anchor={titleSpanRef.current} lang={lang} />}
+      {hovered && !substItem && <RowPreview p={p} mouseX={mousePos.x} mouseY={mousePos.y} lang={lang} />}
     </>
   );
 }
