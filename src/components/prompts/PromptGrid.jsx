@@ -269,15 +269,8 @@ function applyViewFilter(prompts, view, filter, workspace, userId, canPublish, v
       return true;
     });
   } else {
-    // fallback: legacy hardcoded logic
-    if (workspace === 'mine') {
-      prompts = prompts.filter(p => p.status === 'draft' && p.ownerId === userId);
-    } else {
-      prompts = prompts.filter(p =>
-        p.status === 'published' ||
-        (canPublish && p.status === 'draft' && p.isPrivate === false)
-      );
-    }
+    // visibilityRules not yet loaded — show nothing until catalog is ready
+    return [];
   }
   if (view === 'favorites') return prompts.filter(p => p.isFavorite);
   if (view === 'most-used') return [...prompts].sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0)).filter(p => p.usageCount > 0);
