@@ -140,9 +140,21 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin }) {
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
   const [onlineCount, setOnlineCount] = useState(1);
   const presenceRef = useRef(null);
-  const publishedCount = state.prompts?.filter(p => p.status === 'published').length || 0;
-  const draftCount = state.prompts?.filter(p => p.status === 'draft').length || 0;
-  const mineDraftCount = state.prompts?.filter(p => p.status === 'draft' && p.ownerId === authProfile?.id).length || 0;
+  const visiblePrompts = (() => {
+    const vr = state.catalog?.visibilityRules;
+    const role = authProfile?.role || 'viewer';
+    const roleKey = canAdmin ? 'admin' : isEditor ? 'editor' : 'viewer';
+    const wsRules = vr?.[roleKey]?.[workspace];
+    if (!wsRules) return state.prompts || [];
+    return (state.prompts || []).filter(p => {
+      if (!wsRules.statuses.includes(p.status)) return false;
+      if (!wsRules.includePrivate && p.isPrivate) return false;
+      return true;
+    });
+  })();
+  const publishedCount = visiblePrompts.filter(p => p.status === 'published').length;
+  const draftCount = visiblePrompts.filter(p => p.status === 'draft').length;
+  const mineDraftCount = (state.prompts || []).filter(p => p.status === 'draft' && p.ownerId === authProfile?.id).length;
 
   const allRequests = state.publishRequests || [];
   const myRequests = allRequests.filter(r => r.requester_id === authProfile?.id);
