@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
@@ -39,10 +40,50 @@ const REQ_ICONS = {
   rejected: { label: 'Rejected', color: '#DC2626' },
 };
 
+function RowPreview({ p, anchor, lang }) {
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!anchor || !ref.current) return;
+    const rect = anchor.getBoundingClientRect();
+    const pw = ref.current.offsetWidth || 380;
+    const ph = ref.current.offsetHeight || 200;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    let left = rect.right + 12;
+    if (left + pw > vw - 8) left = rect.left - pw - 12;
+    let top = rect.top;
+    if (top + ph > vh - 8) top = vh - ph - 8;
+    setPos({ top: Math.max(8, top), left: Math.max(8, left) });
+  }, [anchor]);
+
+  const items = p.promptItems?.length ? p.promptItems : [{ id: p.id, label: '', body: p.body || '', body_fr: p.body_fr || '' }];
+
+  return createPortal(
+    <div ref={ref} className="pt-row-preview" style={{ top: pos.top, left: pos.left }}>
+      <div className="pt-rp-title">{p.title}</div>
+      {p.notes && <div className="pt-rp-notes">{p.notes}</div>}
+      {items.map((item, idx) => {
+        const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;
+        return (
+          <div key={item.id || idx} className="pt-rp-item">
+            {items.length > 1 && <div className="pt-rp-item-label">{item.label || `#${idx + 1}`}</div>}
+            <div className="pt-rp-body">{body}</div>
+          </div>
+        );
+      })}
+    </div>,
+    document.body
+  );
+}
+
 function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequests, canEdit, lang, dispatch }) {
   const [activeItem, setActiveItem] = useState(0);
   const [copiedIdx, setCopiedIdx] = useState(null);
   const [substItem, setSubstItem] = useState(null);
+  const [hovered, setHovered] = useState(false);
+  const rowRef = useRef(null);
 
   const items = p.promptItems?.length ? p.promptItems : [{ id: p.id, label: '', body: p.body || '', body_fr: p.body_fr || '' }];
   const flowColor = p.storyFlow ? getFlowColor(p.storyFlow) : null;
@@ -73,7 +114,12 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
 
   return (
     <>
-      <tr className={`pt-row${selectedIds?.has(p.id) ? ' pt-row-selected' : ''}`}>
+      <tr
+        ref={rowRef}
+        className={`pt-row${selectedIds?.has(p.id) ? ' pt-row-selected' : ''}`}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
         <td className="pt-td pt-td-check">
           <input type="checkbox" checked={!!selectedIds?.has(p.id)} onChange={() => onToggleSelect(p.id)} />
         </td>
@@ -137,6 +183,7 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
           onClose={() => setSubstItem(null)}
         />
       )}
+      {hovered && !substItem && <RowPreview p={p} anchor={rowRef.current} lang={lang} />}
     </>
   );
 }
