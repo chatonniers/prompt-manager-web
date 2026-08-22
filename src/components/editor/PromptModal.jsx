@@ -438,8 +438,7 @@ export default function PromptModal() {
                   </button>
                   <button type="button"
                     className={`card-privacy-btn${isPrivate === false ? ' active shared' : ''}`}
-                    onClick={() => setIsPrivate(false)}
-                    disabled={!canPublish}>
+                    onClick={() => setIsPrivate(false)}>
                     {t('visibilityPublic', lang)}
                   </button>
                 </div>
