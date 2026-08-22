@@ -94,7 +94,7 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
       <td className="pt-td" style={{ textAlign: 'center' }}>
         {p.isPrivate
           ? <span title="Private" style={{ color: '#D97706', fontWeight: 700, fontSize: 11 }}>Private</span>
-          : <span title="Shared" style={{ color: '#059669', fontWeight: 700, fontSize: 11 }}>Shared</span>}
+          : <span title="Public" style={{ color: '#059669', fontWeight: 700, fontSize: 11 }}>Public</span>}
       </td>
       <td className="pt-td" style={{ textAlign: 'center' }}>
         {reqInfo && <span style={{ color: reqInfo.color, fontWeight: 700, fontSize: 11 }}>{reqInfo.label}</span>}
