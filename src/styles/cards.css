@@ -1201,6 +1201,7 @@
 .pt-row {
   border-bottom: 1px solid var(--pm-border);
   transition: background 0.1s;
+  cursor: pointer;
 }
 .pt-row:last-child { border-bottom: none; }
 .pt-row:hover { background: var(--pm-accent-bg); }

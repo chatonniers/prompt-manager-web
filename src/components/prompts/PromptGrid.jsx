@@ -127,17 +127,18 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
       <tr
         ref={rowRef}
         className={`pt-row${selectedIds?.has(p.id) ? ' pt-row-selected' : ''}`}
+        onClick={() => onOpen(p.id)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <td className="pt-td pt-td-check">
+        <td className="pt-td pt-td-check" onClick={e => e.stopPropagation()}>
           <input type="checkbox" checked={!!selectedIds?.has(p.id)} onChange={() => onToggleSelect(p.id)} />
         </td>
 
         {/* Title + copy tabs */}
         <td className="pt-td pt-td-title-cell">
           <div className="pt-title-row">
-            <span className="pt-title-text" onClick={() => onOpen(p.id)} style={{ cursor: 'pointer' }}>{p.title}</span>
+            <span className="pt-title-text">{p.title}</span>
           </div>
           {/* Prompt item tabs */}
           <div className="pt-item-tabs">
@@ -147,7 +148,7 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
                 <button
                   key={item.id || idx}
                   className={`pt-item-tab${activeItem === idx ? ' active' : ''}${copiedIdx === idx ? ' copied' : ''}`}
-                  onClick={() => { setActiveItem(idx); handleCopy(idx); }}
+                  onClick={e => { e.stopPropagation(); setActiveItem(idx); handleCopy(idx); }}
                   title={item.label?.trim() || `Copy prompt ${idx + 1}`}
                 >
                   {copiedIdx === idx ? '✓' : label}
