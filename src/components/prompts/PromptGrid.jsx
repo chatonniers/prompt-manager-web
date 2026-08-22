@@ -69,11 +69,6 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
       <td className="pt-td pt-td-title-cell">
         <div className="pt-title-row">
           <span className="pt-title-text" onClick={() => canEdit && onOpen(p.id)} style={canEdit ? { cursor: 'pointer' } : {}}>{p.title}</span>
-          {canEdit && (
-            <button className="pt-edit-btn" onClick={() => onOpen(p.id)} title="Edit">
-              <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M11.5 2.5l2 2-9 9H2.5v-2l9-9z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>
-            </button>
-          )}
         </div>
         {/* Prompt item tabs */}
         <div className="pt-item-tabs">
