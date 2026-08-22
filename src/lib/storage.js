@@ -1,6 +1,33 @@
 import { supabase } from './supabase.js';
 import { AttachmentsDB } from './attachments.js';
 
+const SETTINGS_DEFAULTS = {
+  autoFilterEnabled: true,
+  overlayPosition: 'right',
+  theme: 'dark',
+  lang: 'en',
+  visibilityRules: {
+    admin:  {
+      library: { statuses: ['published', 'draft'], includePrivate: true },
+      mine:    { statuses: ['draft'],               includePrivate: true },
+    },
+    editor: {
+      library: { statuses: ['published', 'draft'], includePrivate: true },
+      mine:    { statuses: ['draft'],               includePrivate: true },
+    },
+    viewer: {
+      library: { statuses: ['published'],           includePrivate: false },
+      mine:    { statuses: ['draft'],               includePrivate: false },
+    },
+  },
+  kpiRules: {
+    admin:          ['users', 'published', 'draft', 'pending', 'approved', 'rejected'],
+    editor:         ['published', 'draft', 'pending', 'approved', 'rejected'],
+    viewer_library: ['published', 'draft'],
+    viewer_mine:    ['draft', 'pending', 'approved', 'rejected'],
+  },
+};
+
 export const DEFAULT_CATEGORIES = [
   "Autonomous Finance",
   "Autonomous Supply Chain",
@@ -190,14 +217,8 @@ export const StorageAPI = {
   },
 
   async getSettings() {
-    // Settings are still per-device (lang, zoom etc.) — keep in localStorage
     const raw = localStorage.getItem('pm-settings');
-    return raw ? JSON.parse(raw) : {
-      autoFilterEnabled: true,
-      overlayPosition: 'right',
-      theme: 'light',
-      lang: 'en',
-    };
+    return raw ? { ...SETTINGS_DEFAULTS, ...JSON.parse(raw) } : { ...SETTINGS_DEFAULTS };
   },
 
   async saveSettings(settings) {

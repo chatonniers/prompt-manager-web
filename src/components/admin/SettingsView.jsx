@@ -8,6 +8,7 @@ import AdminCatalogCard from './AdminCatalogCard.jsx';
 import AdminCategoriesCard from './AdminCategoriesCard.jsx';
 import AdminSystemsCard from './AdminSystemsCard.jsx';
 import AdminTagsCard from './AdminTagsCard.jsx';
+import AdminVisibilityCard from './AdminVisibilityCard.jsx';
 import ImportModeModal from '../shared/ImportModeModal.jsx';
 import UserManagement from './UserManagement.jsx';
 import AdminStatsView from './AdminStatsView.jsx';
@@ -26,8 +27,9 @@ const TECHNICAL_SECTIONS = [
 ];
 
 const ADMIN_TECHNICAL_SECTIONS = [
-  { id: 'users', labelKey: null, label: 'Users' },
-  { id: 'stats', labelKey: null, label: 'Statistics' },
+  { id: 'users',      labelKey: null, label: 'Users' },
+  { id: 'stats',      labelKey: null, label: 'Statistics' },
+  { id: 'visibility', labelKey: null, label: 'Visibility Rules' },
 ];
 
 export default function SettingsView() {
@@ -216,6 +218,7 @@ export default function SettingsView() {
 
           {activeSection === 'users' && <UserManagement />}
           {activeSection === 'stats' && <AdminStatsView />}
+          {activeSection === 'visibility' && <AdminVisibilityCard />}
 
         </div>
       </div>

@@ -101,16 +101,27 @@ function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen }) {
   );
 }
 
-function applyViewFilter(prompts, view, filter, workspace, userId, canPublish) {
-  // Workspace pre-filter
-  if (workspace === 'mine') {
-    prompts = prompts.filter(p => p.status === 'draft' && p.ownerId === userId);
+function applyViewFilter(prompts, view, filter, workspace, userId, canPublish, visibilityRules, role) {
+  const roleKey = role === 'admin' ? 'admin' : role === 'editor' ? 'editor' : 'viewer';
+  const wsRules = visibilityRules?.[roleKey]?.[workspace];
+
+  if (wsRules) {
+    prompts = prompts.filter(p => {
+      if (!wsRules.statuses.includes(p.status)) return false;
+      if (workspace === 'mine') return p.ownerId === userId;
+      if (!wsRules.includePrivate && p.isPrivate) return false;
+      return true;
+    });
   } else {
-    // Library: published for all + shared drafts (is_private=false) for editors/admins
-    prompts = prompts.filter(p =>
-      p.status === 'published' ||
-      (canPublish && p.status === 'draft' && p.isPrivate === false)
-    );
+    // fallback: legacy hardcoded logic
+    if (workspace === 'mine') {
+      prompts = prompts.filter(p => p.status === 'draft' && p.ownerId === userId);
+    } else {
+      prompts = prompts.filter(p =>
+        p.status === 'published' ||
+        (canPublish && p.status === 'draft' && p.isPrivate === false)
+      );
+    }
   }
   if (view === 'favorites') return prompts.filter(p => p.isFavorite);
   if (view === 'most-used') return [...prompts].sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0)).filter(p => p.usageCount > 0);
@@ -253,8 +264,10 @@ export default function PromptGrid() {
   const lang = settings?.lang || 'en';
   const categories = catalog.categories || [];
   const storyFlows = catalog.storyFlows || [];
+  const visibilityRules = settings?.visibilityRules;
+  const role = profile?.role || 'viewer';
 
-  let pool = applyViewFilter(prompts, currentView, currentFilter, workspace, profile?.id, canPublish);
+  let pool = applyViewFilter(prompts, currentView, currentFilter, workspace, profile?.id, canPublish, visibilityRules, role);
   if (statusFilter) pool = pool.filter(p => p.status === statusFilter);
 
   const showAll = currentView !== 'all' || !!searchQuery.trim();

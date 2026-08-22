@@ -8,6 +8,13 @@ import PublishRequestBell from '../shared/PublishRequestBell.jsx';
 
 const STEP = 0.1;
 
+const FALLBACK_KPIS = {
+  admin:          ['users', 'published', 'draft', 'pending', 'approved', 'rejected'],
+  editor:         ['published', 'draft', 'pending', 'approved', 'rejected'],
+  viewer_library: ['published', 'draft'],
+  viewer_mine:    ['draft', 'pending', 'approved', 'rejected'],
+};
+
 function DisplayMenu({ theme, lang, zoom, zoomPct, isFullscreen, displayMode, onTheme, onLang, onZoom, onFullscreen, onHelp, onDisplayMode }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -149,6 +156,10 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin }) {
   const { searchQuery, currentView, statusFilter } = state;
   const showSearch = currentView !== 'settings';
 
+  const kpiRules = state.settings?.kpiRules;
+  const kpiRoleKey = canAdmin ? 'admin' : isEditor ? 'editor' : workspace === 'library' ? 'viewer_library' : 'viewer_mine';
+  const allowedKpis = kpiRules?.[kpiRoleKey] ?? FALLBACK_KPIS[kpiRoleKey];
+
   useEffect(() => {
     function onChange() { setIsFullscreen(!!document.fullscreenElement); }
     document.addEventListener('fullscreenchange', onChange);
@@ -231,81 +242,45 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin }) {
               <span className="title-main">{t('appTitle', lang)}</span>
             </div>
           </div>
-          {/* KPIs — vary by role + workspace */}
-          {canPublish ? (
-            // Admin / editor: always show full set
-            <>
-              {canAdmin && (
-                <div className="tb-stat-pill">
-                  <span className="tb-stat-dot" style={{ background: '#F59E0B', boxShadow: '0 0 6px #F59E0B' }} />
-                  {onlineCount} users
-                </div>
-              )}
-              <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'published' ? ' active' : ''}`} onClick={() => handleKpiClick('published', 'library')}>
-                <span className="tb-stat-dot" style={{ background: '#4ADE80', boxShadow: '0 0 6px #4ADE80' }} />
-                {publishedCount} published
-              </button>
-              <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'draft' ? ' active' : ''}`} onClick={() => handleKpiClick('draft', 'library')}>
-                <span className="tb-stat-dot" style={{ background: '#818CF8', boxShadow: '0 0 6px #818CF8' }} />
-                {draftCount} draft
-              </button>
-              {pendingCount > 0 && (
-                <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'pending' ? ' active' : ''}`} onClick={() => handleKpiClick('pending', 'library')}>
-                  <span className="tb-stat-dot" style={{ background: '#D97706', boxShadow: '0 0 6px #D97706' }} />
-                  {pendingCount} pending
-                </button>
-              )}
-              {approvedCount > 0 && (
-                <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'approved' ? ' active' : ''}`} onClick={() => handleKpiClick('approved', 'library')}>
-                  <span className="tb-stat-dot" style={{ background: '#059669', boxShadow: '0 0 6px #059669' }} />
-                  {approvedCount} approved
-                </button>
-              )}
-              {rejectedCount > 0 && (
-                <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'rejected' ? ' active' : ''}`} onClick={() => handleKpiClick('rejected', 'library')}>
-                  <span className="tb-stat-dot" style={{ background: '#DC2626', boxShadow: '0 0 6px #DC2626' }} />
-                  {rejectedCount} rejected
-                </button>
-              )}
-            </>
-          ) : workspace === 'library' ? (
-            // Viewer, Library: published + total drafts
-            <>
-              <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'published' ? ' active' : ''}`} onClick={() => handleKpiClick('published', 'library')}>
-                <span className="tb-stat-dot" style={{ background: '#4ADE80', boxShadow: '0 0 6px #4ADE80' }} />
-                {publishedCount} published
-              </button>
-              <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'draft' ? ' active' : ''}`} onClick={() => handleKpiClick('draft', 'library')}>
-                <span className="tb-stat-dot" style={{ background: '#818CF8', boxShadow: '0 0 6px #818CF8' }} />
-                {draftCount} draft
-              </button>
-            </>
-          ) : (
-            // Viewer, Mine: draft (mine only) + pending/approved/rejected (own requests)
-            <>
-              <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'draft' && workspace === 'mine' ? ' active' : ''}`} onClick={() => handleKpiClick('draft', 'mine')}>
-                <span className="tb-stat-dot" style={{ background: '#34D399', boxShadow: '0 0 6px #34D399' }} />
-                {mineDraftCount} draft
-              </button>
-              {pendingCount > 0 && (
-                <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'pending' ? ' active' : ''}`} onClick={() => handleKpiClick('pending', 'mine')}>
-                  <span className="tb-stat-dot" style={{ background: '#D97706', boxShadow: '0 0 6px #D97706' }} />
-                  {pendingCount} pending
-                </button>
-              )}
-              {approvedCount > 0 && (
-                <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'approved' ? ' active' : ''}`} onClick={() => handleKpiClick('approved', 'mine')}>
-                  <span className="tb-stat-dot" style={{ background: '#059669', boxShadow: '0 0 6px #059669' }} />
-                  {approvedCount} approved
-                </button>
-              )}
-              {rejectedCount > 0 && (
-                <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'rejected' ? ' active' : ''}`} onClick={() => handleKpiClick('rejected', 'mine')}>
-                  <span className="tb-stat-dot" style={{ background: '#DC2626', boxShadow: '0 0 6px #DC2626' }} />
-                  {rejectedCount} rejected
-                </button>
-              )}
-            </>
+          {/* KPIs — driven by kpiRules from settings */}
+          {allowedKpis.includes('users') && canAdmin && (
+            <div className="tb-stat-pill">
+              <span className="tb-stat-dot" style={{ background: '#F59E0B', boxShadow: '0 0 6px #F59E0B' }} />
+              {onlineCount} users
+            </div>
+          )}
+          {allowedKpis.includes('published') && (
+            <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'published' ? ' active' : ''}`} onClick={() => handleKpiClick('published', 'library')}>
+              <span className="tb-stat-dot" style={{ background: '#4ADE80', boxShadow: '0 0 6px #4ADE80' }} />
+              {publishedCount} published
+            </button>
+          )}
+          {allowedKpis.includes('draft') && (
+            <button
+              className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'draft' ? ' active' : ''}`}
+              onClick={() => handleKpiClick('draft', canPublish ? 'library' : workspace === 'mine' ? 'mine' : 'library')}
+            >
+              <span className="tb-stat-dot" style={{ background: workspace === 'mine' && !canPublish ? '#34D399' : '#818CF8', boxShadow: `0 0 6px ${workspace === 'mine' && !canPublish ? '#34D399' : '#818CF8'}` }} />
+              {workspace === 'mine' && !canPublish ? mineDraftCount : draftCount} draft
+            </button>
+          )}
+          {allowedKpis.includes('pending') && pendingCount > 0 && (
+            <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'pending' ? ' active' : ''}`} onClick={() => handleKpiClick('pending', canPublish ? 'library' : 'mine')}>
+              <span className="tb-stat-dot" style={{ background: '#D97706', boxShadow: '0 0 6px #D97706' }} />
+              {pendingCount} pending
+            </button>
+          )}
+          {allowedKpis.includes('approved') && approvedCount > 0 && (
+            <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'approved' ? ' active' : ''}`} onClick={() => handleKpiClick('approved', canPublish ? 'library' : 'mine')}>
+              <span className="tb-stat-dot" style={{ background: '#059669', boxShadow: '0 0 6px #059669' }} />
+              {approvedCount} approved
+            </button>
+          )}
+          {allowedKpis.includes('rejected') && rejectedCount > 0 && (
+            <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'rejected' ? ' active' : ''}`} onClick={() => handleKpiClick('rejected', canPublish ? 'library' : 'mine')}>
+              <span className="tb-stat-dot" style={{ background: '#DC2626', boxShadow: '0 0 6px #DC2626' }} />
+              {rejectedCount} rejected
+            </button>
           )}
         </div>
 
