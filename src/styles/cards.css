@@ -1200,7 +1200,6 @@
 
 .pt-row {
   border-bottom: 1px solid var(--pm-border);
-  cursor: pointer;
   transition: background 0.1s;
 }
 .pt-row:last-child { border-bottom: none; }
@@ -1213,7 +1212,49 @@
   vertical-align: middle;
   white-space: nowrap;
 }
-.pt-td-title { font-weight: 600; max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
+.pt-td-title-cell { max-width: 300px; }
+.pt-title-row { display: flex; align-items: center; gap: 6px; }
+.pt-title-text { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pt-edit-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  border-radius: 4px;
+  color: var(--pm-text3);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+.pt-row:hover .pt-edit-btn { opacity: 1; }
+.pt-edit-btn:hover { color: var(--pm-accent); }
+
+/* Inline copy tabs per row */
+.pt-item-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+.pt-item-tab {
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  border: 1px solid var(--pm-border);
+  background: var(--pm-bg2);
+  color: var(--pm-text2);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  white-space: nowrap;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pt-item-tab:hover { background: var(--pm-accent); color: #fff; border-color: var(--pm-accent); }
+.pt-item-tab.active { background: var(--pm-accent-bg); color: var(--pm-accent); border-color: var(--pm-accent); }
+.pt-item-tab.copied { background: #059669; color: #fff; border-color: #059669; }
+
 .pt-td-dim { color: var(--pm-text3); font-size: 12px; }
 .pt-td-check { width: 36px; }
 .pt-td-pills { max-width: 200px; }

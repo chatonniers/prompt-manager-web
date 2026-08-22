@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
@@ -8,6 +8,17 @@ import { getFlowColor } from '../../lib/flowColors.js';
 import PromptCard from './PromptCard.jsx';
 import EmptyState from './EmptyState.jsx';
 import BulkActionBar from './BulkActionBar.jsx';
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+}
 
 function relTime(iso) {
   if (!iso) return '—';
@@ -20,7 +31,100 @@ function relTime(iso) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
-function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen, publishRequests }) {
+const REQ_ICONS = {
+  pending:  { label: 'Pending',  color: '#D97706' },
+  approved: { label: 'Approved', color: '#059669' },
+  rejected: { label: 'Rejected', color: '#DC2626' },
+};
+
+function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequests, canEdit, lang, dispatch }) {
+  const [activeItem, setActiveItem] = useState(0);
+  const [copiedIdx, setCopiedIdx] = useState(null);
+
+  const items = p.promptItems?.length ? p.promptItems : [{ id: p.id, label: '', body: p.body || '', body_fr: p.body_fr || '' }];
+  const flowColor = p.storyFlow ? getFlowColor(p.storyFlow) : null;
+  const req = (publishRequests || []).find(r => r.prompt_id === p.id);
+  const reqInfo = req ? REQ_ICONS[req.status] : null;
+
+  async function handleCopy(idx) {
+    const item = items[idx];
+    const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;
+    if (!body) return;
+    await copyText(body);
+    await StorageAPI.incrementUsage(p.id);
+    const fresh = await StorageAPI.getAllPrompts();
+    dispatch({ type: 'SET_PROMPTS', payload: fresh });
+    dispatch({ type: 'SHOW_TOAST', payload: t('copied', lang) });
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx(null), 1500);
+  }
+
+  return (
+    <tr className={`pt-row${selectedIds?.has(p.id) ? ' pt-row-selected' : ''}`}>
+      <td className="pt-td pt-td-check">
+        <input type="checkbox" checked={!!selectedIds?.has(p.id)} onChange={() => onToggleSelect(p.id)} />
+      </td>
+
+      {/* Title + copy tabs */}
+      <td className="pt-td pt-td-title-cell">
+        <div className="pt-title-row">
+          <span className="pt-title-text" onClick={() => canEdit && onOpen(p.id)} style={canEdit ? { cursor: 'pointer' } : {}}>{p.title}</span>
+          {canEdit && (
+            <button className="pt-edit-btn" onClick={() => onOpen(p.id)} title="Edit">
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M11.5 2.5l2 2-9 9H2.5v-2l9-9z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>
+            </button>
+          )}
+        </div>
+        {/* Prompt item tabs */}
+        <div className="pt-item-tabs">
+          {items.map((item, idx) => {
+            const label = item.label?.trim() || (items.length === 1 ? t('copy', lang) : `#${idx + 1}`);
+            return (
+              <button
+                key={item.id || idx}
+                className={`pt-item-tab${activeItem === idx ? ' active' : ''}${copiedIdx === idx ? ' copied' : ''}`}
+                onClick={() => { setActiveItem(idx); handleCopy(idx); }}
+                title={item.label?.trim() || `Copy prompt ${idx + 1}`}
+              >
+                {copiedIdx === idx ? '✓' : label}
+              </button>
+            );
+          })}
+        </div>
+      </td>
+
+      <td className="pt-td">
+        {p.status && <span className={`pill status-${p.status}`}>{p.status}</span>}
+      </td>
+      <td className="pt-td" style={{ textAlign: 'center' }}>
+        {p.isPrivate
+          ? <span title="Private" style={{ color: '#D97706', fontWeight: 700, fontSize: 11 }}>Private</span>
+          : <span title="Shared" style={{ color: '#059669', fontWeight: 700, fontSize: 11 }}>Shared</span>}
+      </td>
+      <td className="pt-td" style={{ textAlign: 'center' }}>
+        {reqInfo && <span style={{ color: reqInfo.color, fontWeight: 700, fontSize: 11 }}>{reqInfo.label}</span>}
+      </td>
+      <td className="pt-td pt-td-dim">{p.category || '—'}</td>
+      <td className="pt-td">
+        {p.storyFlow
+          ? <span className="pill flow" style={flowColor ? { background: flowColor.bg, color: flowColor.text } : {}}>{p.storyFlow}</span>
+          : <span className="pt-td-dim">—</span>}
+      </td>
+      <td className="pt-td pt-td-pills">
+        {(p.solutions || []).slice(0, 3).map(s => <span key={s} className="pill">{s}</span>)}
+        {(p.solutions || []).length > 3 && <span className="pt-more">+{p.solutions.length - 3}</span>}
+      </td>
+      <td className="pt-td pt-td-pills">
+        {(p.tags || []).slice(0, 3).map(tag => <span key={tag} className="pill tag">#{tag}</span>)}
+        {(p.tags || []).length > 3 && <span className="pt-more">+{p.tags.length - 3}</span>}
+      </td>
+      <td className="pt-td pt-td-num">{p.usageCount > 0 ? p.usageCount : '—'}</td>
+      <td className="pt-td pt-td-dim">{relTime(p.updatedAt)}</td>
+    </tr>
+  );
+}
+
+function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen, publishRequests, canEdit, lang, dispatch }) {
   const [sort, setSort] = useState({ col: 'title', dir: 1 });
 
   function toggleSort(col) {
@@ -29,7 +133,7 @@ function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen, publishRequ
 
   const sorted = [...prompts].sort((a, b) => {
     let av, bv;
-    if (sort.col === 'title')    { av = a.title || ''; bv = b.title || ''; }
+    if (sort.col === 'title')         { av = a.title || ''; bv = b.title || ''; }
     else if (sort.col === 'status')   { av = a.status || ''; bv = b.status || ''; }
     else if (sort.col === 'category') { av = a.category || ''; bv = b.category || ''; }
     else if (sort.col === 'flow')     { av = a.storyFlow || ''; bv = b.storyFlow || ''; }
@@ -38,12 +142,6 @@ function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen, publishRequ
     else { av = ''; bv = ''; }
     return av.localeCompare(bv) * sort.dir;
   });
-
-  const REQ_ICONS = {
-    pending:  { icon: '⏳', title: 'Publish request pending',  color: '#D97706' },
-    approved: { icon: '✓',  title: 'Publish request approved', color: '#059669' },
-    rejected: { icon: '✗',  title: 'Publish request rejected', color: '#DC2626' },
-  };
 
   function Th({ col, label }) {
     const active = sort.col === col;
@@ -60,7 +158,7 @@ function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen, publishRequ
         <thead>
           <tr>
             <th className="pt-th pt-th-check" />
-            <Th col="title" label="Title" />
+            <Th col="title" label="Title / Copy" />
             <Th col="status" label="Status" />
             <th className="pt-th">Visibility</th>
             <th className="pt-th">Request</th>
@@ -73,50 +171,19 @@ function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen, publishRequ
           </tr>
         </thead>
         <tbody>
-          {sorted.map(p => {
-            const flowColor = p.storyFlow ? getFlowColor(p.storyFlow) : null;
-            const req = (publishRequests || []).find(r => r.prompt_id === p.id);
-            const reqInfo = req ? REQ_ICONS[req.status] : null;
-            return (
-              <tr key={p.id} className={`pt-row${selectedIds?.has(p.id) ? ' pt-row-selected' : ''}`} onClick={() => onOpen(p.id)}>
-                <td className="pt-td pt-td-check" onClick={e => e.stopPropagation()}>
-                  <input type="checkbox" checked={!!selectedIds?.has(p.id)} onChange={() => onToggleSelect(p.id)} />
-                </td>
-                <td className="pt-td pt-td-title">{p.title}</td>
-                <td className="pt-td">
-                  {p.status && <span className={`pill status-${p.status}`}>{p.status}</span>}
-                </td>
-                <td className="pt-td" style={{ textAlign: 'center' }}>
-                  {p.isPrivate
-                    ? <span title="Private — only visible to owner" style={{ color: '#D97706', fontWeight: 700, fontSize: 11 }}>Private</span>
-                    : <span title="Shared — visible to editors/admins" style={{ color: '#059669', fontWeight: 700, fontSize: 11 }}>Shared</span>}
-                </td>
-                <td className="pt-td" style={{ textAlign: 'center' }}>
-                  {reqInfo && (
-                    <span title={reqInfo.title} style={{ color: reqInfo.color, fontWeight: 700, fontSize: 13 }}>
-                      {reqInfo.icon}
-                    </span>
-                  )}
-                </td>
-                <td className="pt-td pt-td-dim">{p.category || '—'}</td>
-                <td className="pt-td">
-                  {p.storyFlow
-                    ? <span className="pill flow" style={flowColor ? { background: flowColor.bg, color: flowColor.text } : {}}>{p.storyFlow}</span>
-                    : <span className="pt-td-dim">—</span>}
-                </td>
-                <td className="pt-td pt-td-pills">
-                  {(p.solutions || []).slice(0, 3).map(s => <span key={s} className="pill">{s}</span>)}
-                  {(p.solutions || []).length > 3 && <span className="pt-more">+{p.solutions.length - 3}</span>}
-                </td>
-                <td className="pt-td pt-td-pills">
-                  {(p.tags || []).slice(0, 3).map(tag => <span key={tag} className="pill tag">#{tag}</span>)}
-                  {(p.tags || []).length > 3 && <span className="pt-more">+{p.tags.length - 3}</span>}
-                </td>
-                <td className="pt-td pt-td-num">{p.usageCount > 0 ? p.usageCount : '—'}</td>
-                <td className="pt-td pt-td-dim">{relTime(p.updatedAt)}</td>
-              </tr>
-            );
-          })}
+          {sorted.map(p => (
+            <PromptTableRow
+              key={p.id}
+              p={p}
+              selectedIds={selectedIds}
+              onToggleSelect={onToggleSelect}
+              onOpen={onOpen}
+              publishRequests={publishRequests}
+              canEdit={canEdit}
+              lang={lang}
+              dispatch={dispatch}
+            />
+          ))}
         </tbody>
       </table>
     </div>
@@ -366,6 +433,9 @@ export default function PromptGrid() {
 
   if (ranked.length === 0) return <EmptyState />;
 
+  // Viewers cannot edit in library mode
+  const canEdit = canPublish || workspace === 'mine';
+
   if (displayMode === 'table') {
     return (
       <>
@@ -376,6 +446,9 @@ export default function PromptGrid() {
           onToggleSelect={onToggleSelect}
           onOpen={id => dispatch({ type: 'OPEN_EDIT', payload: id })}
           publishRequests={state.publishRequests}
+          canEdit={canEdit}
+          lang={lang}
+          dispatch={dispatch}
         />
       </>
     );
