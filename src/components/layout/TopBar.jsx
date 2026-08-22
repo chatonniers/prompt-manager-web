@@ -235,6 +235,12 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin }) {
           {canPublish ? (
             // Admin / editor: always show full set
             <>
+              {canAdmin && (
+                <div className="tb-stat-pill">
+                  <span className="tb-stat-dot" style={{ background: '#F59E0B', boxShadow: '0 0 6px #F59E0B' }} />
+                  {onlineCount} users
+                </div>
+              )}
               <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'published' ? ' active' : ''}`} onClick={() => handleKpiClick('published', 'library')}>
                 <span className="tb-stat-dot" style={{ background: '#4ADE80', boxShadow: '0 0 6px #4ADE80' }} />
                 {publishedCount} published
@@ -243,12 +249,6 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin }) {
                 <span className="tb-stat-dot" style={{ background: '#818CF8', boxShadow: '0 0 6px #818CF8' }} />
                 {draftCount} draft
               </button>
-              {canAdmin && (
-                <div className="tb-stat-pill">
-                  <span className="tb-stat-dot" style={{ background: '#F59E0B', boxShadow: '0 0 6px #F59E0B' }} />
-                  {onlineCount} online
-                </div>
-              )}
               {pendingCount > 0 && (
                 <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'pending' ? ' active' : ''}`} onClick={() => handleKpiClick('pending', 'library')}>
                   <span className="tb-stat-dot" style={{ background: '#D97706', boxShadow: '0 0 6px #D97706' }} />
