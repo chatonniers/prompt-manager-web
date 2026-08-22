@@ -48,14 +48,17 @@ function RowPreview({ p, anchor, lang }) {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
 
-  let left = rect.left;
-  if (left + pw > vw - 8) left = vw - pw - 8;
-  const top = rect.bottom + 6;
+  // Position to the right of the title span
+  let left = rect.right + 12;
+  if (left + pw > vw - 8) left = rect.left - pw - 12;
+  // Vertically centred on the row cell, clamped to viewport
+  let top = rect.top - 10;
+  if (top + 300 > vh - 8) top = vh - 308;
 
   const items = p.promptItems?.length ? p.promptItems : [{ id: p.id, label: '', body: p.body || '', body_fr: p.body_fr || '' }];
 
   return createPortal(
-    <div className="pt-row-preview" style={{ top, left }}>
+    <div className="pt-row-preview" style={{ top: Math.max(8, top), left: Math.max(8, left) }}>
       <div className="pt-rp-title">{p.title}</div>
       {p.notes && <div className="pt-rp-notes">{p.notes}</div>}
       {items.map((item, idx) => {
@@ -128,9 +131,9 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
         </td>
 
         {/* Title + copy tabs */}
-        <td className="pt-td pt-td-title-cell">
+        <td ref={titleSpanRef} className="pt-td pt-td-title-cell">
           <div className="pt-title-row">
-            <span ref={titleSpanRef} className="pt-title-text" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>{p.title}</span>
+            <span className="pt-title-text" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>{p.title}</span>
           </div>
           {/* Prompt item tabs */}
           <div className="pt-item-tabs">
