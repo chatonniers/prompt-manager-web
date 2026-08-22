@@ -21,12 +21,14 @@ function makeItem(body = '', body_fr = '') {
 
 export default function PromptModal() {
   const { state, dispatch } = useApp();
-  const { isEditor, isAdmin } = useAuth();
+  const { isEditor, isAdmin, profile } = useAuth();
   const canPublish = isEditor || isAdmin;
   const lang = state.settings?.lang || 'en';
   const { isModalOpen, editingPromptId, catalog, prompts } = state;
   const isNew = editingPromptId === undefined || editingPromptId === null;
   const existing = isNew ? null : prompts.find(p => p.id === editingPromptId);
+  const isOwner = !existing || existing.ownerId === profile?.id;
+  const canEdit = canPublish || isOwner;
 
   const [activeTab, setActiveTab] = useState('content');
   const [title, setTitle] = useState('');
@@ -522,8 +524,8 @@ export default function PromptModal() {
         </div>
 
         <div id="modal-footer">
-          <button className="action-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>{t('cancel', lang)}</button>
-          <button className="action-btn primary" onClick={handleSave} disabled={saving}>{saving ? t('savingLabel', lang) : t('save', lang)}</button>
+          <button className="action-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>{canEdit ? t('cancel', lang) : 'Close'}</button>
+          {canEdit && <button className="action-btn primary" onClick={handleSave} disabled={saving}>{saving ? t('savingLabel', lang) : t('save', lang)}</button>}
         </div>
       </div>
     </div>

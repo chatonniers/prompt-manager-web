@@ -68,7 +68,7 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
       {/* Title + copy tabs */}
       <td className="pt-td pt-td-title-cell">
         <div className="pt-title-row">
-          <span className="pt-title-text" onClick={() => canEdit && onOpen(p.id)} style={canEdit ? { cursor: 'pointer' } : {}}>{p.title}</span>
+          <span className="pt-title-text" onClick={() => onOpen(p.id)} style={{ cursor: 'pointer' }}>{p.title}</span>
         </div>
         {/* Prompt item tabs */}
         <div className="pt-item-tabs">
