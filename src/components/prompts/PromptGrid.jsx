@@ -51,11 +51,12 @@ function RowPreview({ p, anchor, lang }) {
     const ph = ref.current.offsetHeight || 200;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    // prefer below the row
-    let top = rect.bottom + 6;
-    if (top + ph > vh - 8) top = rect.top - ph - 6;
-    // align to right edge of screen with margin
-    let left = vw - pw - 24;
+    // position to the right of the title cell
+    let left = rect.right + 10;
+    if (left + pw > vw - 8) left = rect.left - pw - 10;
+    // vertically align with top of the cell
+    let top = rect.top;
+    if (top + ph > vh - 8) top = vh - ph - 8;
     setPos({ top: Math.max(8, top), left: Math.max(8, left) });
   }, [anchor]);
 
@@ -86,6 +87,7 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
   const [hovered, setHovered] = useState(false);
   const hoverTimerRef = useRef(null);
   const rowRef = useRef(null);
+  const titleCellRef = useRef(null);
 
   function handleMouseEnter() {
     hoverTimerRef.current = setTimeout(() => setHovered(true), 500);
@@ -136,7 +138,7 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
         </td>
 
         {/* Title + copy tabs */}
-        <td className="pt-td pt-td-title-cell">
+        <td ref={titleCellRef} className="pt-td pt-td-title-cell">
           <div className="pt-title-row">
             <span className="pt-title-text">{p.title}</span>
           </div>
@@ -194,7 +196,7 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
           onClose={() => setSubstItem(null)}
         />
       )}
-      {hovered && !substItem && <RowPreview p={p} anchor={rowRef.current} lang={lang} />}
+      {hovered && !substItem && <RowPreview p={p} anchor={titleCellRef.current} lang={lang} />}
     </>
   );
 }
