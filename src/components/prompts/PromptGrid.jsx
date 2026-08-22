@@ -51,12 +51,12 @@ function RowPreview({ p, anchor, lang }) {
     const ph = ref.current.offsetHeight || 200;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    // position to the right of the title cell
-    let left = rect.right + 10;
-    if (left + pw > vw - 8) left = rect.left - pw - 10;
-    // vertically align with top of the cell
-    let top = rect.top;
-    if (top + ph > vh - 8) top = vh - ph - 8;
+    // position below the title text
+    let top = rect.bottom + 6;
+    if (top + ph > vh - 8) top = rect.top - ph - 6;
+    // align left with the title, but don't overflow right edge
+    let left = rect.left;
+    if (left + pw > vw - 8) left = vw - pw - 8;
     setPos({ top: Math.max(8, top), left: Math.max(8, left) });
   }, [anchor]);
 
