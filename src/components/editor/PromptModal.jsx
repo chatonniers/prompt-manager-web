@@ -574,20 +574,21 @@ export default function PromptModal() {
         </div>
 
         <div id="modal-footer">
-          <button className="action-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>{canEdit ? t('cancel', lang) : 'Close'}</button>
           {/* Delete: canPublish OR viewer's own private draft */}
           {!isNew && (canPublish || (isOwner && existing?.isPrivate !== false && existing?.status === 'draft')) && (
-            <button className="action-btn action-btn-danger" onClick={handleDelete}>
-              {t('delete', lang) || 'Delete'}
+            <button className="card-edit-del-btn" onClick={handleDelete}>
+              {t('del', lang) || 'Delete'}
             </button>
           )}
           {/* Publish request: viewer, own draft, public visibility, not yet approved */}
           {!isNew && !canPublish && isOwner && existing?.status === 'draft' && isPrivate === false && !isApprovedRequest && (
-            <button className="action-btn action-btn-request" onClick={handlePublishRequest}>
+            <button className="card-request-btn" onClick={handlePublishRequest}>
               {isPendingRequest ? 'Cancel request' : t('requestPublish', lang) || 'Request publish'}
             </button>
           )}
-          {canEdit && <button className="action-btn primary" onClick={handleSave} disabled={saving}>{saving ? t('savingLabel', lang) : t('save', lang)}</button>}
+          {canEdit && <button className="card-edit-save-btn" onClick={handleSave} disabled={saving}>{saving ? t('savingLabel', lang) : t('save', lang)}</button>}
+          {canEdit && <button className="card-edit-cancel-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>{t('cancel', lang)}</button>}
+          {!canEdit && <button className="card-edit-cancel-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>Close</button>}
         </div>
       </div>
     </div>

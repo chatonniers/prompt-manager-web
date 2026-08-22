@@ -218,7 +218,7 @@
   background: var(--pm-bg);
 }
 /* Push delete to the left */
-#modal-footer .action-btn-danger { margin-right: auto; }
+#modal-footer .card-edit-del-btn { margin-right: auto; flex: 0 0 auto; }
 
 .action-btn-danger {
   background: none;
