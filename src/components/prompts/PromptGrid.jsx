@@ -351,8 +351,17 @@ export default function PromptGrid() {
   const visibilityRules = catalog?.visibilityRules;
   const role = profile?.role || 'viewer';
 
+  const publishRequests = state.publishRequests || [];
   let pool = applyViewFilter(prompts, currentView, currentFilter, workspace, profile?.id, canPublish, visibilityRules, role);
-  if (statusFilter) pool = pool.filter(p => p.status === statusFilter);
+  if (statusFilter) {
+    const REQ_STATUSES = new Set(['pending', 'approved', 'rejected']);
+    if (REQ_STATUSES.has(statusFilter)) {
+      const matchIds = new Set(publishRequests.filter(r => r.status === statusFilter).map(r => r.prompt_id));
+      pool = pool.filter(p => matchIds.has(p.id));
+    } else {
+      pool = pool.filter(p => p.status === statusFilter);
+    }
+  }
 
   const showAll = currentView !== 'all' || !!searchQuery.trim();
   let ranked;
@@ -440,7 +449,7 @@ export default function PromptGrid() {
           selectedIds={selectedIds}
           onToggleSelect={onToggleSelect}
           onOpen={id => dispatch({ type: 'OPEN_EDIT', payload: id })}
-          publishRequests={state.publishRequests}
+          publishRequests={publishRequests}
           canEdit={canEdit}
           lang={lang}
           dispatch={dispatch}
