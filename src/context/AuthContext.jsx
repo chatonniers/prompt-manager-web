@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase.js';
 
 const AuthContext = createContext(null);
+const IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 hours
+const IDLE_EVENTS = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll', 'click'];
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(undefined);
@@ -11,6 +13,25 @@ export function AuthProvider({ children }) {
   const pollRef = useRef(null);
   const userIdRef = useRef(null);
   const sessionRowRef = useRef(null);
+  const idleTimerRef = useRef(null);
+
+  function resetIdleTimer() {
+    clearTimeout(idleTimerRef.current);
+    idleTimerRef.current = setTimeout(() => {
+      sessionStorage.setItem('pm-auth-error', 'Your session expired after 2 hours of inactivity.');
+      supabase.auth.signOut();
+    }, IDLE_TIMEOUT_MS);
+  }
+
+  function startIdleWatcher() {
+    resetIdleTimer();
+    IDLE_EVENTS.forEach(e => window.addEventListener(e, resetIdleTimer, { passive: true }));
+  }
+
+  function stopIdleWatcher() {
+    clearTimeout(idleTimerRef.current);
+    IDLE_EVENTS.forEach(e => window.removeEventListener(e, resetIdleTimer));
+  }
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -31,6 +52,7 @@ export function AuthProvider({ children }) {
       if (session) loadProfile(session.user.id);
       else {
         endSession();
+        stopIdleWatcher();
         setProfile(null);
         userIdRef.current = null;
         profileChannelRef.current?.unsubscribe();
@@ -46,6 +68,7 @@ export function AuthProvider({ children }) {
       subscription.unsubscribe();
       profileChannelRef.current?.unsubscribe();
       clearInterval(pollRef.current);
+      stopIdleWatcher();
       window.removeEventListener('beforeunload', handleUnload);
     };
   }, []);
@@ -88,6 +111,7 @@ export function AuthProvider({ children }) {
     setProfile(data);
     subscribeToProfile(userId);
     startPolling(userId);
+    startIdleWatcher();
     if (!sessionRowRef.current) startSession(userId);
   }
 
