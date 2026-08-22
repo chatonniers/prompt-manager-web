@@ -953,3 +953,84 @@
   transition: border-color 0.15s;
 }
 .pin-token-input:focus { border-color: var(--pm-accent); }
+
+/* ── Modal tabs (Content / Details) ─────────────────────────────────── */
+.modal-tabs {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  margin: 0 16px;
+}
+.modal-tab {
+  background: rgba(255,255,255,0.08);
+  border: none;
+  border-radius: 7px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.55);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s, color 0.12s;
+}
+.modal-tab:hover { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.85); }
+.modal-tab.active { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* ── Modal item selector tabs ────────────────────────────────────────── */
+.modal-item-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.modal-item-tab {
+  background: var(--pm-bg2);
+  border: 1px solid var(--pm-border);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pm-text3);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s, color 0.1s;
+}
+.modal-item-tab:hover { background: var(--pm-border); color: var(--pm-text2); }
+.modal-item-tab.active { background: var(--pm-accent); border-color: var(--pm-accent); color: #fff; }
+.modal-item-tab-add { background: none; border-style: dashed; color: var(--pm-accent); font-size: 14px; padding: 1px 9px; }
+.modal-item-tab-add:hover { background: var(--pm-accent-bg); }
+.modal-item-tab-del { background: none; border-color: rgba(220,38,38,0.3); color: #F87171; font-size: 14px; padding: 1px 9px; }
+.modal-item-tab-del:hover { background: rgba(220,38,38,0.08); }
+
+/* ── Modal item body editor ──────────────────────────────────────────── */
+.modal-item-editor { display: flex; flex-direction: column; gap: 6px; }
+.modal-item-label-input {
+  border: 1.5px solid var(--pm-border2);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--pm-text1);
+  background: var(--pm-surface);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.modal-item-label-input:focus { border-color: var(--pm-accent); }
+.modal-item-label-input::placeholder { color: var(--pm-text4); font-weight: 400; }
+
+.modal-lang-tabs { display: flex; gap: 4px; }
+.modal-lang-btn {
+  background: var(--pm-bg2);
+  border: 1px solid var(--pm-border);
+  border-radius: 5px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--pm-text3);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s, color 0.1s;
+}
+.modal-lang-btn:hover { background: var(--pm-border); color: var(--pm-text2); }
+.modal-lang-btn.active { background: var(--pm-accent); border-color: var(--pm-accent); color: #fff; }

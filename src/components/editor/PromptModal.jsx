@@ -28,8 +28,10 @@ export default function PromptModal() {
   const isNew = editingPromptId === undefined || editingPromptId === null;
   const existing = isNew ? null : prompts.find(p => p.id === editingPromptId);
 
+  const [activeTab, setActiveTab] = useState('content');
   const [title, setTitle] = useState('');
   const [promptItems, setPromptItems] = useState([makeItem()]);
+  const [activeItemIdx, setActiveItemIdx] = useState(0);
   const [itemTabs, setItemTabs] = useState({});
   const [storyFlow, setStoryFlow] = useState('');
   const [category, setCategory] = useState('');
@@ -51,6 +53,8 @@ export default function PromptModal() {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
+    setActiveTab('content');
+    setActiveItemIdx(0);
     if (existing) {
       setTitle(existing.title || '');
       const items = existing.promptItems?.length
@@ -64,12 +68,10 @@ export default function PromptModal() {
       setSelectedSolutions(existing.solutions || []);
       setPersonas(existing.personas || []);
       setTags(existing.tags || []);
-      // Migrate legacy landscapes + mcpCredentials into systems array
       const savedSystems = existing.systems || [];
       if (savedSystems.length) {
         setSystems(savedSystems);
       } else {
-        // Build from legacy fields
         const legacySystems = [];
         for (const ls of (existing.landscapes || [])) {
           const name = typeof ls === 'string' ? ls : (ls.name || ls.url || '');
@@ -146,7 +148,11 @@ export default function PromptModal() {
   }
 
   function removeItem(id) {
-    setPromptItems(prev => prev.filter(item => item.id !== id));
+    setPromptItems(prev => {
+      const next = prev.filter(item => item.id !== id);
+      setActiveItemIdx(i => Math.min(i, next.length - 1));
+      return next;
+    });
   }
 
   function getItemTab(id) {
@@ -193,11 +199,9 @@ export default function PromptModal() {
     if (!title.trim()) { setErrors({ title: t('titleRequired', lang) }); return; }
     const validItems = promptItems.filter(item => item.body.trim());
     if (validItems.length === 0) { setErrors({ body: t('bodyRequired', lang) }); return; }
-    if (validItems.some(item => !item.label.trim())) { setErrors({ label: true }); return; }
     setSaving(true);
 
     const promptId = existing?.id || crypto.randomUUID();
-
     const savedNewAtts = [];
     for (const f of pendingFiles) {
       const attId = crypto.randomUUID();
@@ -213,9 +217,12 @@ export default function PromptModal() {
       ...savedNewAtts,
     ];
 
-    const finalItems = promptItems
-      .filter(item => item.body.trim())
-      .map(item => ({ ...item, body: item.body.trim(), body_fr: item.body_fr?.trim() || null }));
+    const finalItems = validItems.map((item, idx) => ({
+      ...item,
+      label: item.label.trim() || (validItems.length === 1 ? title.trim() : `Part ${idx + 1}`),
+      body: item.body.trim(),
+      body_fr: item.body_fr?.trim() || null,
+    }));
 
     await StorageAPI.upsertPrompt({
       id: promptId,
@@ -247,306 +254,276 @@ export default function PromptModal() {
 
   if (!isModalOpen) return null;
 
+  const activeItem = promptItems[activeItemIdx] || promptItems[0];
+  const itemLang = activeItem ? getItemTab(activeItem.id) : 'en';
+
   return (
     <div id="modal-backdrop" onClick={e => { if (e.target.id === 'modal-backdrop') dispatch({ type: 'CLOSE_MODAL' }); }}>
       <div id="modal">
         <div id="modal-header">
           <h2 id="modal-title">{isNew ? t('newPrompt', lang) : t('edit', lang)}</h2>
+          {/* Tabs */}
+          <div className="modal-tabs">
+            <button className={`modal-tab${activeTab === 'content' ? ' active' : ''}`} onClick={() => setActiveTab('content')}>Content</button>
+            <button className={`modal-tab${activeTab === 'details' ? ' active' : ''}`} onClick={() => setActiveTab('details')}>Details</button>
+          </div>
           <button className="modal-close-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
           </button>
         </div>
+
         <div id="modal-body">
 
-          {/* Title */}
-          <div className="field-row">
-            <label>Title <span className="req">*</span></label>
-            <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('titlePlaceholder', lang)} maxLength={120} className={errors.title ? 'input-error' : ''} />
-            {errors.title && <span className="field-error">{errors.title}</span>}
-          </div>
+          {/* ── CONTENT TAB ─────────────────────────────────────── */}
+          {activeTab === 'content' && <>
 
-          {/* Personas */}
-          <div className="field-row">
-            <label>{t('personasLabel', lang)}</label>
-            {(catalog.personas || []).length > 0 ? (
-              <div className="catalog-picker">
-                {catalog.personas.map(persona => {
-                  const selected = personas.includes(persona);
-                  return (
-                    <button
-                      key={persona}
-                      type="button"
-                      className={`catalog-chip${selected ? ' selected' : ''}`}
-                      onClick={() => setPersonas(prev => selected ? prev.filter(x => x !== persona) : [...prev, persona])}
-                    >
-                      {persona}
-                    </button>
-                  );
-                })}
+            {/* Title */}
+            <div className="field-row">
+              <label>Title <span className="req">*</span></label>
+              <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('titlePlaceholder', lang)} maxLength={120} className={errors.title ? 'input-error' : ''} />
+              {errors.title && <span className="field-error">{errors.title}</span>}
+            </div>
+
+            {/* Personas */}
+            <div className="field-row">
+              <label>{t('personasLabel', lang)}</label>
+              {(catalog.personas || []).length > 0 ? (
+                <div className="catalog-picker">
+                  {catalog.personas.map(persona => {
+                    const selected = personas.includes(persona);
+                    return (
+                      <button key={persona} type="button" className={`catalog-chip${selected ? ' selected' : ''}`}
+                        onClick={() => setPersonas(prev => selected ? prev.filter(x => x !== persona) : [...prev, persona])}>
+                        {persona}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="hint" style={{ fontSize: 12, margin: '4px 0 0' }}>{t('noPersonasYet', lang)}</p>
+              )}
+            </div>
+
+            {/* Notes */}
+            <div className="field-row">
+              <label>{t('notes', lang)} <span className="hint">({t('notesHintModal', lang)})</span></label>
+              <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={t('notesPlaceholder', lang)} rows={2} />
+            </div>
+
+            {/* Prompt Items — card-style tabs */}
+            <div className="field-row">
+              <label>{t('promptBodiesLabel', lang)} <span className="req">*</span></label>
+              {errors.body && <span className="field-error">{errors.body}</span>}
+
+              {/* Item selector tabs */}
+              <div className="modal-item-tabs">
+                {promptItems.map((item, idx) => (
+                  <button
+                    key={item.id}
+                    className={`modal-item-tab${activeItemIdx === idx ? ' active' : ''}`}
+                    onClick={() => setActiveItemIdx(idx)}
+                  >
+                    {item.label.trim() || `#${idx + 1}`}
+                  </button>
+                ))}
+                <button className="modal-item-tab modal-item-tab-add" onClick={() => {
+                  setPromptItems(prev => [...prev, makeItem()]);
+                  setActiveItemIdx(promptItems.length);
+                }}>+</button>
+                {promptItems.length > 1 && (
+                  <button className="modal-item-tab modal-item-tab-del" onClick={() => removeItem(activeItem.id)}>−</button>
+                )}
               </div>
-            ) : (
-              <p className="hint" style={{ fontSize: 12, margin: '4px 0 0' }}>{t('noPersonasYet', lang)}</p>
-            )}
-          </div>
 
-          {/* Notes */}
-          <div className="field-row">
-            <label>{t('notes', lang)} <span className="hint">({t('notesHintModal', lang)})</span></label>
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={t('notesPlaceholder', lang)} rows={3} />
-          </div>
-
-          {/* Prompt Items */}
-          <div className="field-row">
-            <label>{t('promptBodiesLabel', lang)} <span className="req">*</span> <span className="hint">({t('promptBodiesCopyHint', lang)})</span></label>
-            {errors.body && <span className="field-error">{errors.body}</span>}
-            <div className="prompt-items-editor">
-              {promptItems.map((item, idx) => {
-                const tab = getItemTab(item.id);
-                const activeBody = tab === 'en' ? item.body : (item.body_fr || '');
-                return (
-                  <div key={item.id} className="prompt-item-editor">
-                    <div className="prompt-item-editor-header">
-                      <span className="prompt-item-editor-num">#{idx + 1}</span>
-                      <input
-                        type="text"
-                        className={`prompt-item-label-input${!item.label.trim() ? ' input-error' : ''}`}
-                        value={item.label}
-                        onChange={e => updateItem(item.id, 'label', e.target.value)}
-                        placeholder={t('promptItemLabel', lang)}
-                      />
-                      {promptItems.length > 1 && (
-                        <button className="prompt-item-delete-btn" title={t('removePrompt', lang)} onClick={() => removeItem(item.id)}>
-                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                        </button>
-                      )}
-                    </div>
-                    <div className="body-tabs">
-                      <button className={`body-tab${tab === 'en' ? ' active-tab' : ''}`} onClick={() => setItemTab(item.id, 'en')}>EN</button>
-                      <button className={`body-tab${tab === 'fr' ? ' active-tab' : ''}`} onClick={() => setItemTab(item.id, 'fr')}>FR</button>
-                      <span className="body-tab-hint">{t('enRequired', lang)}</span>
-                    </div>
-                    {tab === 'en' ? (
-                      <textarea
-                        value={item.body}
-                        onChange={e => updateItem(item.id, 'body', e.target.value)}
-                        placeholder={t('bodyEnPlaceholder', lang)}
-                        rows={5}
-                      />
-                    ) : (
-                      <textarea
-                        value={item.body_fr || ''}
-                        onChange={e => updateItem(item.id, 'body_fr', e.target.value)}
-                        placeholder={t('bodyFrPlaceholder', lang)}
-                        rows={5}
-                      />
-                    )}
-                    <span className="char-count">{t('charCount', lang, activeBody.length)}</span>
+              {/* Active item editor */}
+              {activeItem && (
+                <div className="modal-item-editor">
+                  <input
+                    type="text"
+                    className="modal-item-label-input"
+                    value={activeItem.label}
+                    onChange={e => updateItem(activeItem.id, 'label', e.target.value)}
+                    placeholder={t('promptItemLabel', lang)}
+                  />
+                  {/* EN / FR lang tabs */}
+                  <div className="modal-lang-tabs">
+                    <button className={`modal-lang-btn${itemLang === 'en' ? ' active' : ''}`} onClick={() => setItemTab(activeItem.id, 'en')}>EN</button>
+                    <button className={`modal-lang-btn${itemLang === 'fr' ? ' active' : ''}`} onClick={() => setItemTab(activeItem.id, 'fr')}>FR</button>
                   </div>
-                );
-              })}
+                  {itemLang === 'en' ? (
+                    <textarea value={activeItem.body} onChange={e => updateItem(activeItem.id, 'body', e.target.value)}
+                      placeholder={t('bodyEnPlaceholder', lang)} rows={7} />
+                  ) : (
+                    <textarea value={activeItem.body_fr || ''} onChange={e => updateItem(activeItem.id, 'body_fr', e.target.value)}
+                      placeholder={t('bodyFrPlaceholder', lang)} rows={7} />
+                  )}
+                  <span className="char-count">{t('charCount', lang, (itemLang === 'en' ? activeItem.body : activeItem.body_fr || '').length)}</span>
+                </div>
+              )}
             </div>
-            <button type="button" className="add-row-btn" onClick={() => setPromptItems(prev => [...prev, makeItem()])}>
-              {t('addPromptItem', lang)}
-            </button>
-          </div>
+          </>}
 
-          {/* Category */}
-          <div className="field-row">
-            <label>{t('category', lang)}</label>
-            <select value={category} onChange={e => setCategory(e.target.value)}>
-              <option value="">— {t('noCategory', lang)} —</option>
-              {(catalog.categories || []).map(cat => <option key={cat} value={cat}>{cat}</option>)}
-            </select>
-          </div>
+          {/* ── DETAILS TAB ─────────────────────────────────────── */}
+          {activeTab === 'details' && <>
 
-          {/* Status */}
-          <div className="field-row">
-            <label>Status</label>
-            <div className="card-status-btns">
-              {(canPublish ? ['', 'draft', 'published'] : ['draft']).map(s => (
-                <button
-                  key={s}
-                  type="button"
-                  className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`}
-                  onClick={() => setStatus(s)}
-                  disabled={!canPublish && s !== 'draft'}
-                >
-                  {s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'}
-                </button>
-              ))}
+            {/* Category + Flow */}
+            <div className="field-row-2col">
+              <div className="field-col">
+                <label>{t('category', lang)}</label>
+                <select value={category} onChange={e => setCategory(e.target.value)}>
+                  <option value="">— {t('noCategory', lang)} —</option>
+                  {(catalog.categories || []).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+              </div>
+              <div className="field-col">
+                <label>{t('storyFlow', lang)}</label>
+                <select value={storyFlow} onChange={e => setStoryFlow(e.target.value)}>
+                  <option value="">{t('selectFlowNone', lang)}</option>
+                  {catalog.storyFlows.map(f => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </div>
             </div>
-          </div>
 
-          {/* Story Flow + Favorite */}
-          <div className="field-row-2col">
-            <div className="field-col">
-              <label>{t('storyFlow', lang)}</label>
-              <select value={storyFlow} onChange={e => setStoryFlow(e.target.value)}>
-                <option value="">{t('selectFlowNone', lang)}</option>
-                {catalog.storyFlows.map(f => <option key={f} value={f}>{f}</option>)}
-              </select>
+            {/* Solutions */}
+            <div className="field-row">
+              <label>{t('solutionsLabel', lang)}</label>
+              <div className="checkbox-group">
+                {catalog.solutions.map(sol => (
+                  <label key={sol} className="checkbox-label">
+                    <input type="checkbox" checked={selectedSolutions.includes(sol)} onChange={() => toggleSolution(sol)} />
+                    <span>{sol}</span>
+                  </label>
+                ))}
+              </div>
             </div>
-            <div className="field-col">
-              <label>{t('favLabel', lang)}</label>
-              <label className="toggle-label">
-                <input type="checkbox" checked={isFavorite} onChange={e => setIsFavorite(e.target.checked)} />
-                <span> {t('markFav', lang)}</span>
-              </label>
-            </div>
-          </div>
 
-          {/* Solutions */}
-          <div className="field-row">
-            <label>{t('solutionsLabel', lang)}</label>
-            <div className="checkbox-group">
-              {catalog.solutions.map(sol => (
-                <label key={sol} className="checkbox-label">
-                  <input type="checkbox" checked={selectedSolutions.includes(sol)} onChange={() => toggleSolution(sol)} />
-                  <span>{sol}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Tags */}
-          <div className="field-row" style={{ position: 'relative' }}>
-            <label>{t('tagsLabel', lang)} <span className="hint">({t('tagHint', lang)})</span></label>
-            <div className="tag-input-wrap">
-              {tags.map(tag => (
-                <span key={tag} className="tag-chip">
-                  #{tag}
-                  <button className="tag-remove" onClick={() => setTags(prev => prev.filter(t => t !== tag))}>×</button>
-                </span>
-              ))}
-              <input
-                type="text"
-                value={tagInput}
-                onChange={e => setTagInput(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Escape') { setTagInput(''); return; }
-                  handleTagKey(e);
-                }}
-                placeholder={tags.length === 0 ? t('tagPlaceholder', lang) : ''}
-              />
-            </div>
-            {tagInput.trim() && (() => {
-              const allTags = [...new Set([...(catalog.tags || []), ...prompts.flatMap(p => p.tags || [])])].sort();
-              const q = tagInput.trim().replace(/^#/, '').toLowerCase();
-              const suggestions = allTags.filter(t => t.toLowerCase().includes(q) && !tags.includes(t));
-              return suggestions.length > 0 ? (
-                <div className="tag-suggestions">
-                  {suggestions.map(s => (
-                    <button key={s} type="button" className="tag-suggestion-item" onMouseDown={e => { e.preventDefault(); setTags(prev => [...prev, s]); setTagInput(''); }}>#{s}</button>
+            {/* Status + Favorite */}
+            <div className="field-row-2col">
+              <div className="field-col">
+                <label>Status</label>
+                <div className="card-status-btns">
+                  {(canPublish ? ['', 'draft', 'published'] : ['draft']).map(s => (
+                    <button key={s} type="button"
+                      className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`}
+                      onClick={() => setStatus(s)} disabled={!canPublish && s !== 'draft'}>
+                      {s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'}
+                    </button>
                   ))}
                 </div>
-              ) : null;
-            })()}
-          </div>
-
-          {/* Attachments */}
-          <div className="field-row">
-            <label>{t('systems', lang)} <span className="hint">({t('systemsHint', lang)})</span></label>
-            {(catalog.systems || []).length > 0 ? (
-              <div className="catalog-picker">
-                {catalog.systems.map(sys => {
-                  const selected = systems.some(s => s.id === sys.id);
-                  return (
-                    <button
-                      key={sys.id}
-                      type="button"
-                      className={`catalog-chip${selected ? ' selected' : ''}`}
-                      onClick={() => {
-                        if (selected) {
-                          setSystems(prev => prev.filter(s => s.id !== sys.id));
-                        } else {
-                          setSystems(prev => [...prev, sys]);
-                        }
-                      }}
-                    >
-                      {selected ? '· ' : ''}{sys.name || sys.url}
-                      {sys.endpoints?.length > 0 && <span style={{ opacity: 0.6, marginLeft: 4, fontSize: 10 }}>cred</span>}
-                    </button>
-                  );
-                })}
               </div>
-            ) : (
-              <p className="field-hint-text">{t('noSystemsYet', lang)}</p>
-            )}
-          </div>
-
-          {/* Demo Links */}
-          <div className="field-row">
-            <label>{t('demoLinksLabel', lang)}</label>
-            {demoLinks.map((link, idx) => (
-              <div key={link.id} className="demo-link-row">
-                <input
-                  type="text"
-                  value={link.desc || ''}
-                  onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, desc: e.target.value } : l))}
-                  placeholder={t('demoLinkDescPlaceholder', lang)}
-                  className="demo-link-desc"
-                />
-                <input
-                  type="url"
-                  value={link.url}
-                  onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, url: e.target.value } : l))}
-                  placeholder={t('demoLinkUrlPlaceholder', lang)}
-                  className="demo-link-url"
-                />
-                <button
-                  type="button"
-                  className="attach-remove-btn"
-                  onClick={() => setDemoLinks(prev => prev.filter((_, i) => i !== idx))}
-                >×</button>
+              <div className="field-col">
+                <label>{t('favLabel', lang)}</label>
+                <label className="toggle-label">
+                  <input type="checkbox" checked={isFavorite} onChange={e => setIsFavorite(e.target.checked)} />
+                  <span> {t('markFav', lang)}</span>
+                </label>
               </div>
-            ))}
-            <button
-              type="button"
-              className="add-row-btn"
-              onClick={() => setDemoLinks(prev => [...prev, { id: crypto.randomUUID(), url: '', desc: '' }])}
-            >{t('addDemoLink', lang)}</button>
-          </div>
-
-          {/* Attachments */}
-          <div className="field-row">
-            <label>{t('attachments', lang)} <span className="hint">({t('attHint', lang)})</span></label>
-            <div
-              ref={dropRef}
-              className="attach-drop-zone"
-              onDragOver={e => { e.preventDefault(); dropRef.current?.classList.add('drag-over'); }}
-              onDragLeave={() => dropRef.current?.classList.remove('drag-over')}
-              onDrop={handleDrop}
-            >
-              <span className="attach-drop-hint">
-                {t('dropHere', lang)}{' '}
-                <button type="button" className="attach-browse-link" onClick={() => fileInputRef.current?.click()}>{t('browse', lang)}</button>
-              </span>
-              <input type="file" ref={fileInputRef} multiple style={{ display:'none' }} onChange={e => addFiles(e.target.files)} />
             </div>
-            <div className="attach-list">
-              {existingAtts.filter(a => !pendingDeletes.includes(a.id)).map(a => (
-                <div key={a.id} className="attach-row">
-                  <span className="attach-icon">{fileIcon(a.type)}</span>
-                  <button className="attach-name-btn" onClick={() => downloadExisting(a)}>{a.name}</button>
-                  <span className="attach-size">{fmtSize(a.size)}</span>
-                  <button className="attach-remove-btn" onClick={() => setPendingDeletes(prev => [...prev, a.id])}>×</button>
+
+            {/* Demo Links */}
+            <div className="field-row">
+              <label>{t('demoLinksLabel', lang)}</label>
+              {demoLinks.map((link, idx) => (
+                <div key={link.id} className="demo-link-row">
+                  <input type="text" value={link.desc || ''} onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, desc: e.target.value } : l))}
+                    placeholder={t('demoLinkDescPlaceholder', lang)} className="demo-link-desc" />
+                  <input type="url" value={link.url} onChange={e => setDemoLinks(prev => prev.map((l, i) => i === idx ? { ...l, url: e.target.value } : l))}
+                    placeholder={t('demoLinkUrlPlaceholder', lang)} className="demo-link-url" />
+                  <button type="button" className="attach-remove-btn" onClick={() => setDemoLinks(prev => prev.filter((_, i) => i !== idx))}>×</button>
                 </div>
               ))}
-              {pendingFiles.map(f => (
-                <div key={f._tempId} className="attach-row pending">
-                  <span className="attach-icon">{fileIcon(f.type)}</span>
-                  <span className="attach-name">{f.name}</span>
-                  <span className="attach-size">{fmtSize(f.size)}</span>
-                  <button className="attach-remove-btn" onClick={() => setPendingFiles(prev => prev.filter(x => x._tempId !== f._tempId))}>×</button>
-                </div>
-              ))}
+              <button type="button" className="add-row-btn"
+                onClick={() => setDemoLinks(prev => [...prev, { id: crypto.randomUUID(), url: '', desc: '' }])}>
+                {t('addDemoLink', lang)}
+              </button>
             </div>
-          </div>
+
+            {/* Systems */}
+            <div className="field-row">
+              <label>{t('systems', lang)}</label>
+              {(catalog.systems || []).length > 0 ? (
+                <div className="catalog-picker">
+                  {catalog.systems.map(sys => {
+                    const selected = systems.some(s => s.id === sys.id);
+                    return (
+                      <button key={sys.id} type="button" className={`catalog-chip${selected ? ' selected' : ''}`}
+                        onClick={() => selected ? setSystems(prev => prev.filter(s => s.id !== sys.id)) : setSystems(prev => [...prev, sys])}>
+                        {selected ? '· ' : ''}{sys.name || sys.url}
+                        {sys.endpoints?.length > 0 && <span style={{ opacity: 0.6, marginLeft: 4, fontSize: 10 }}>cred</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="field-hint-text">{t('noSystemsYet', lang)}</p>
+              )}
+            </div>
+
+            {/* Tags */}
+            <div className="field-row" style={{ position: 'relative' }}>
+              <label>{t('tagsLabel', lang)} <span className="hint">({t('tagHint', lang)})</span></label>
+              <div className="tag-input-wrap">
+                {tags.map(tag => (
+                  <span key={tag} className="tag-chip">
+                    #{tag}
+                    <button className="tag-remove" onClick={() => setTags(prev => prev.filter(t => t !== tag))}>×</button>
+                  </span>
+                ))}
+                <input type="text" value={tagInput} onChange={e => setTagInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Escape') { setTagInput(''); return; } handleTagKey(e); }}
+                  placeholder={tags.length === 0 ? t('tagPlaceholder', lang) : ''} />
+              </div>
+              {tagInput.trim() && (() => {
+                const allTags = [...new Set([...(catalog.tags || []), ...prompts.flatMap(p => p.tags || [])])].sort();
+                const q = tagInput.trim().replace(/^#/, '').toLowerCase();
+                const suggestions = allTags.filter(t => t.toLowerCase().includes(q) && !tags.includes(t));
+                return suggestions.length > 0 ? (
+                  <div className="tag-suggestions">
+                    {suggestions.map(s => (
+                      <button key={s} type="button" className="tag-suggestion-item"
+                        onMouseDown={e => { e.preventDefault(); setTags(prev => [...prev, s]); setTagInput(''); }}>#{s}</button>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
+            </div>
+
+            {/* Attachments */}
+            <div className="field-row">
+              <label>{t('attachments', lang)} <span className="hint">({t('attHint', lang)})</span></label>
+              <div ref={dropRef} className="attach-drop-zone"
+                onDragOver={e => { e.preventDefault(); dropRef.current?.classList.add('drag-over'); }}
+                onDragLeave={() => dropRef.current?.classList.remove('drag-over')}
+                onDrop={handleDrop}>
+                <span className="attach-drop-hint">
+                  {t('dropHere', lang)}{' '}
+                  <button type="button" className="attach-browse-link" onClick={() => fileInputRef.current?.click()}>{t('browse', lang)}</button>
+                </span>
+                <input type="file" ref={fileInputRef} multiple style={{ display:'none' }} onChange={e => addFiles(e.target.files)} />
+              </div>
+              <div className="attach-list">
+                {existingAtts.filter(a => !pendingDeletes.includes(a.id)).map(a => (
+                  <div key={a.id} className="attach-row">
+                    <button className="attach-name-btn" onClick={() => downloadExisting(a)}>{a.name}</button>
+                    <span className="attach-size">{fmtSize(a.size)}</span>
+                    <button className="attach-remove-btn" onClick={() => setPendingDeletes(prev => [...prev, a.id])}>×</button>
+                  </div>
+                ))}
+                {pendingFiles.map(f => (
+                  <div key={f._tempId} className="attach-row pending">
+                    <span className="attach-name">{f.name}</span>
+                    <span className="attach-size">{fmtSize(f.size)}</span>
+                    <button className="attach-remove-btn" onClick={() => setPendingFiles(prev => prev.filter(x => x._tempId !== f._tempId))}>×</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>}
         </div>
 
         <div id="modal-footer">
           <button className="action-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>{t('cancel', lang)}</button>
-          <button className="action-btn primary" onClick={handleSave} disabled={saving || promptItems.some(i => !i.label.trim())}>{saving ? t('savingLabel', lang) : t('save', lang)}</button>
+          <button className="action-btn primary" onClick={handleSave} disabled={saving}>{saving ? t('savingLabel', lang) : t('save', lang)}</button>
         </div>
       </div>
     </div>

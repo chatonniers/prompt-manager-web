@@ -88,8 +88,8 @@ function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen, publishRequ
                 </td>
                 <td className="pt-td" style={{ textAlign: 'center' }}>
                   {p.isPrivate
-                    ? <span title="Private — only visible to owner" style={{ color: '#D97706', fontSize: 13 }}>🔒</span>
-                    : <span title="Shared — visible to editors/admins" style={{ color: '#059669', fontSize: 13 }}>🌐</span>}
+                    ? <span title="Private — only visible to owner" style={{ color: '#D97706', fontWeight: 700, fontSize: 11 }}>Private</span>
+                    : <span title="Shared — visible to editors/admins" style={{ color: '#059669', fontWeight: 700, fontSize: 11 }}>Shared</span>}
                 </td>
                 <td className="pt-td" style={{ textAlign: 'center' }}>
                   {reqInfo && (
