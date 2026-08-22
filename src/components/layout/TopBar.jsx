@@ -130,7 +130,7 @@ function LogoMark() {
   );
 }
 
-export default function TopBar({ onHelp, onSignOut, profile, isAdmin }) {
+export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburger }) {
   const { state, dispatch } = useApp();
   const { isAdmin: canAdmin, isEditor, profile: authProfile } = useAuth();
   const canPublish = canAdmin || isEditor;
@@ -248,6 +248,13 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin }) {
       <header id="top-bar">
         {/* Left — logo + prompt count */}
         <div id="top-bar-left">
+          <button className="tb-hamburger" onClick={onHamburger} aria-label="Open navigation">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <line x1="2" y1="4.5" x2="16" y2="4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+              <line x1="2" y1="9" x2="16" y2="9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+              <line x1="2" y1="13.5" x2="16" y2="13.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+            </svg>
+          </button>
           <div id="app-title" onClick={() => dispatch({ type: 'SET_VIEW', payload: { view: 'all', filter: { storyFlow: null, solution: null, category: null } } })}>
             <LogoMark />
             <div className="app-wordmark">

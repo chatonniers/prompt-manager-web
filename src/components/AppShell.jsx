@@ -12,6 +12,7 @@ export default function AppShell() {
   useStorage();
   const { state } = useApp();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   if (!state.initialized) {
     return <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', color:'var(--pm-text3)' }}>Loading…</div>;
@@ -19,9 +20,21 @@ export default function AppShell() {
 
   return (
     <div id="app">
-      <TopBar sidebarCollapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed(v => !v)} />
+      <TopBar
+        sidebarCollapsed={sidebarCollapsed}
+        onToggleSidebar={() => setSidebarCollapsed(v => !v)}
+        onHamburger={() => setMobileNavOpen(true)}
+      />
       <div id="main-layout">
-        <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(v => !v)} />
+        {mobileNavOpen && (
+          <div className="sidebar-backdrop" onClick={() => setMobileNavOpen(false)} />
+        )}
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(v => !v)}
+          mobileNavOpen={mobileNavOpen}
+          onMobileNavClose={() => setMobileNavOpen(false)}
+        />
         <MainContent />
       </div>
       {state.isModalOpen && <PromptModal />}

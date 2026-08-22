@@ -1062,3 +1062,20 @@
 }
 .modal-lang-btn:hover { background: var(--pm-border); color: var(--pm-text2); }
 .modal-lang-btn.active { background: var(--pm-accent); border-color: var(--pm-accent); color: #fff; }
+
+/* ── Mobile breakpoint (≤767px) ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  #modal {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+    max-height: calc(100vh - 40px);
+    border-radius: 12px;
+  }
+  .import-modal-box,
+  .confirm-modal-box {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+  }
+  /* Two-col field row → single col on phones */
+  .field-row-2col { grid-template-columns: 1fr; }
+}

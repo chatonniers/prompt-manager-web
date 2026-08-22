@@ -1310,3 +1310,39 @@
 }
 
 /* Table light mode overrides handled by existing pill/surface vars */
+
+/* ── Tablet breakpoint (≤1023px) ─────────────────────────────────────── */
+@media (max-width: 1023px) {
+  #prompt-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  .category-flat-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+}
+
+/* ── Mobile breakpoint (≤767px) ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Single-column card grid */
+  #prompt-grid { grid-template-columns: 1fr; gap: 12px; }
+
+  /* Favorites: smaller fixed-width cards, still horizontally scrollable */
+  .favs-row-item { flex: 0 0 280px; width: 280px; }
+
+  /* Flow columns: narrower */
+  .flow-column { flex: 0 0 280px; width: 280px; }
+
+  /* Category flat grid: single column */
+  .category-flat-grid { grid-template-columns: 1fr; }
+
+  /* Always show checkboxes — no hover on touch */
+  .card-checkbox {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Table edit button: always visible */
+  .pt-edit-btn { opacity: 1; }
+
+  /* Row preview popup: full width */
+  .pt-row-preview {
+    width: calc(100vw - 32px);
+    max-width: calc(100vw - 32px);
+  }
+}

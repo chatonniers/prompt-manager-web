@@ -1063,3 +1063,82 @@
 [data-theme="light"] .tb-bell-prompt-body { background: rgba(79,70,229,0.04); border-color: rgba(79,70,229,0.15); }
 [data-theme="light"] .tb-bell-prompt-item-label { color: rgba(79,70,229,0.7); }
 [data-theme="light"] .tb-bell-prompt-item-body { color: rgba(10,15,30,0.7); }
+
+/* ── Hamburger (mobile only) ──────────────────────────────────────────── */
+.tb-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.75);
+  padding: 6px 8px;
+  border-radius: 7px;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-right: 4px;
+  transition: background 0.12s;
+}
+.tb-hamburger:hover { background: rgba(255,255,255,0.12); }
+
+/* ── Mobile breakpoint (≤767px) ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Top bar */
+  #top-bar { padding: 0 12px; gap: 8px; }
+  .tb-hamburger { display: flex; }
+  .tb-stat-pill { display: none; }
+  .app-wordmark { display: none; }
+
+  /* Workspace toggle: shrink horizontal padding */
+  .workspace-seg-btn { padding: 0 8px; }
+
+  /* Bell panel: full width on mobile */
+  .tb-bell-panel { width: calc(100vw - 24px); right: -8px; }
+
+  /* Sidebar backdrop */
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 199;
+    background: rgba(0,0,0,0.55);
+  }
+
+  /* Sidebar: slides in as overlay */
+  #sidebar,
+  #sidebar.sidebar-collapsed {
+    position: fixed;
+    top: 64px;
+    left: 0;
+    bottom: 0;
+    z-index: 200;
+    width: 260px !important;
+    min-width: 260px;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease, width 0.2s ease;
+  }
+  #sidebar.sidebar-mobile-open,
+  #sidebar.sidebar-collapsed.sidebar-mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Hide resize handle */
+  #sidebar-resizer { display: none; }
+
+  /* Bulk action bar: prevent overflow */
+  .bulk-action-bar {
+    max-width: calc(100vw - 32px);
+    flex-wrap: wrap;
+    bottom: 16px;
+  }
+
+  /* Category tabs nav buttons: always visible (no hover) */
+  .category-tabs-nav:not(:disabled) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* ── Tablet breakpoint (768px–1023px) ────────────────────────────────── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .tb-stat-pill { display: none; }
+}

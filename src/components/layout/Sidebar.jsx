@@ -9,7 +9,7 @@ const IconChevronRight = () => <svg width="10" height="10" viewBox="0 0 10 10" f
 const IconChevronLeft  = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M7.5 2.5l-4 3.5 4 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;
 const IconChevronRightLg = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4.5 2.5l4 3.5-4 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;
 
-export default function Sidebar({ collapsed, onToggle }) {
+export default function Sidebar({ collapsed, onToggle, mobileNavOpen, onMobileNavClose }) {
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
   const { prompts, catalog, currentView, currentFilter } = state;
@@ -27,6 +27,7 @@ export default function Sidebar({ collapsed, onToggle }) {
 
   function setView(view, filter) {
     dispatch({ type: 'SET_VIEW', payload: { view, filter: filter ?? { storyFlow: null, solution: null, category: null } } });
+    onMobileNavClose?.();
   }
 
   function isActive(view, filterVal) {
@@ -39,7 +40,7 @@ export default function Sidebar({ collapsed, onToggle }) {
 
   if (collapsed) {
     return (
-      <nav id="sidebar" className="sidebar-collapsed" ref={sidebarRef}>
+      <nav id="sidebar" className={`sidebar-collapsed${mobileNavOpen ? ' sidebar-mobile-open' : ''}`} ref={sidebarRef}>
         <button className="sidebar-toggle-btn" onClick={onToggle} title="Expand sidebar">
           <IconChevronRightLg />
         </button>
@@ -49,7 +50,7 @@ export default function Sidebar({ collapsed, onToggle }) {
 
   return (
     <>
-      <nav id="sidebar" ref={sidebarRef}>
+      <nav id="sidebar" className={mobileNavOpen ? 'sidebar-mobile-open' : ''} ref={sidebarRef}>
         <button className={`nav-item${isActive('all') ? ' active' : ''}`} onClick={() => setView('all')}>
           <span style={{ flex: 1 }}>{t('allPrompts', lang)}</span>
           <span className="nav-badge">{prompts.length}</span>
