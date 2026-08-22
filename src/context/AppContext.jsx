@@ -20,10 +20,10 @@ const initialState = {
   initialized: false,
   selectedIds: new Set(),
   draggingId: null,
-  workspace: localStorage.getItem('pm-workspace') || 'library',
+  workspace: (() => { const v = localStorage.getItem('pm-workspace'); return v === 'mine' || v === 'library' ? v : 'library'; })(),
   publishRequests: [],
   zoom: (() => { const v = parseFloat(localStorage.getItem('pm-zoom')); return v >= 0.5 && v <= 2 ? v : 1; })(),
-  displayMode: localStorage.getItem('pm-display') || 'cards',
+  displayMode: (() => { const v = localStorage.getItem('pm-display'); return v === 'table' || v === 'cards' ? v : 'cards'; })(),
 };
 
 function reducer(state, action) {
@@ -86,12 +86,16 @@ function reducer(state, action) {
     }
     case 'SET_DRAGGING':
       return { ...state, draggingId: action.payload ?? null };
-    case 'SET_DISPLAY_MODE':
-      localStorage.setItem('pm-display', action.payload);
-      return { ...state, displayMode: action.payload };
-    case 'SET_WORKSPACE':
-      localStorage.setItem('pm-workspace', action.payload);
-      return { ...state, workspace: action.payload };
+    case 'SET_DISPLAY_MODE': {
+      const mode = action.payload === 'table' ? 'table' : 'cards';
+      localStorage.setItem('pm-display', mode);
+      return { ...state, displayMode: mode };
+    }
+    case 'SET_WORKSPACE': {
+      const ws = action.payload === 'mine' ? 'mine' : 'library';
+      localStorage.setItem('pm-workspace', ws);
+      return { ...state, workspace: ws };
+    }
     case 'SET_PUBLISH_REQUESTS':
       return { ...state, publishRequests: action.payload };
     default:

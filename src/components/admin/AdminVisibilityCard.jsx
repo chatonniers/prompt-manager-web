@@ -21,6 +21,46 @@ const KPI_APPLICABLE = {
   viewer_mine:    ['draft', 'pending', 'approved', 'rejected'],
 };
 
+const HELP_CARD_VISIBILITY = [
+  { term: 'Allowed statuses', desc: 'Which prompt statuses (published / draft) are visible to this role in this workspace. Prompts with a status not checked are hidden entirely.' },
+  { term: 'Include private drafts', desc: 'When checked, prompts marked Private are shown alongside public ones. When unchecked, only prompts with isPrivate = false pass through. Applies to both Library and Mine workspaces.' },
+  { term: 'Library workspace', desc: 'The shared catalogue visible to all users. Typically admins/editors see both published and draft; viewers see published only.' },
+  { term: 'Mine workspace', desc: 'Each user sees only prompts they own. The "Include private drafts" toggle controls whether their own private drafts appear here.' },
+];
+
+const HELP_KPI_PILLS = [
+  { term: 'KPI pills', desc: 'The count badges shown in the header bar (e.g. "12 published", "3 draft"). Uncheck a pill to hide it for that role.' },
+  { term: 'Users', desc: 'Total number of registered users. Only meaningful for admins — greyed out for other roles.' },
+  { term: 'Published / Draft', desc: 'Count of prompts in each status that are visible to the role given the Card Visibility rules above.' },
+  { term: 'Pending / Approved / Rejected', desc: 'Count of publish requests in each review state. Viewers see these for their own requests; admins/editors see all.' },
+  { term: 'Greyed-out checkboxes', desc: 'A KPI is not applicable to that role (e.g. "users" for viewers). These cannot be enabled.' },
+];
+
+function HelpPopover({ items }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className="vr-help-wrap">
+      <button
+        className="vr-help-btn"
+        onClick={() => setOpen(o => !o)}
+        title="Show help"
+        aria-expanded={open}
+      >?</button>
+      {open && (
+        <div className="vr-help-popover">
+          <button className="vr-help-close" onClick={() => setOpen(false)}>✕</button>
+          {items.map(({ term, desc }) => (
+            <div key={term} className="vr-help-item">
+              <span className="vr-help-term">{term}</span>
+              <span className="vr-help-desc">{desc}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </span>
+  );
+}
+
 function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
 
 export default function AdminVisibilityCard() {
@@ -29,7 +69,6 @@ export default function AdminVisibilityCard() {
   const [kr, setKr] = useState(() => deepClone(state.catalog?.kpiRules || {}));
   const [saved, setSaved] = useState(false);
 
-  // Sync when catalog loads asynchronously after mount
   useEffect(() => {
     if (state.catalog?.visibilityRules) setVr(deepClone(state.catalog.visibilityRules));
     if (state.catalog?.kpiRules) setKr(deepClone(state.catalog.kpiRules));
@@ -87,9 +126,12 @@ export default function AdminVisibilityCard() {
       </div>
 
       {/* ── Card Visibility ────────────────────────────────── */}
-      <div className="vr-section-title">Card Visibility — by role &amp; workspace</div>
+      <div className="vr-section-title">
+        Card Visibility — by role &amp; workspace
+        <HelpPopover items={HELP_CARD_VISIBILITY} />
+      </div>
       <table className="vr-table">
-        <thead>
+        <thead className="vr-thead">
           <tr>
             <th className="vr-th">Role / Workspace</th>
             <th className="vr-th">Allowed statuses</th>
@@ -101,7 +143,7 @@ export default function AdminVisibilityCard() {
             WORKSPACES.map(ws => {
               const rule = vr[role]?.[ws] ?? { statuses: [], includePrivate: false };
               return (
-                <tr key={`${role}-${ws}`}>
+                <tr key={`${role}-${ws}`} className="vr-tr">
                   <td className="vr-td">
                     <span style={{ textTransform: 'capitalize' }}>{role}</span>
                     <span style={{ color: 'var(--pm-text3)', fontWeight: 400, marginLeft: 4 }}>/ {ws}</span>
@@ -138,9 +180,12 @@ export default function AdminVisibilityCard() {
       </table>
 
       {/* ── KPI Pills ─────────────────────────────────────── */}
-      <div className="vr-section-title">KPI Pills — by role</div>
+      <div className="vr-section-title">
+        KPI Pills — by role
+        <HelpPopover items={HELP_KPI_PILLS} />
+      </div>
       <table className="vr-table">
-        <thead>
+        <thead className="vr-thead">
           <tr>
             <th className="vr-th">Role</th>
             {ALL_KPIS.map(k => <th key={k} className="vr-th" style={{ textAlign: 'center' }}>{k}</th>)}
@@ -151,7 +196,7 @@ export default function AdminVisibilityCard() {
             const applicable = KPI_APPLICABLE[row.key];
             const enabled = kr[row.key] ?? [];
             return (
-              <tr key={row.key}>
+              <tr key={row.key} className="vr-tr">
                 <td className="vr-td">{row.label}</td>
                 {ALL_KPIS.map(kpi => {
                   const isApplicable = applicable.includes(kpi);

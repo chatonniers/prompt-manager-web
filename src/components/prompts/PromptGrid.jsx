@@ -128,9 +128,9 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
         </td>
 
         {/* Title + copy tabs */}
-        <td ref={titleSpanRef} className="pt-td pt-td-title-cell">
+        <td ref={titleSpanRef} className="pt-td pt-td-title-cell" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
           <div className="pt-title-row">
-            <span className="pt-title-text" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>{p.title}</span>
+            <span className="pt-title-text">{p.title}</span>
           </div>
           {/* Prompt item tabs */}
           <div className="pt-item-tabs">
@@ -264,8 +264,8 @@ function applyViewFilter(prompts, view, filter, workspace, userId, canPublish, v
   if (wsRules) {
     prompts = prompts.filter(p => {
       if (!wsRules.statuses.includes(p.status)) return false;
-      if (workspace === 'mine') return p.ownerId === userId;
       if (!wsRules.includePrivate && p.isPrivate) return false;
+      if (workspace === 'mine') return p.ownerId === userId;
       return true;
     });
   } else {

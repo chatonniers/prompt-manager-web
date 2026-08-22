@@ -5,10 +5,6 @@ import { StorageAPI } from '../../lib/storage.js';
 import { AttachmentsDB } from '../../lib/attachments.js';
 import { t } from '../../lib/i18n.js';
 
-function fileIcon(type) {
-  return null;
-}
-
 function fmtSize(bytes) {
   if (bytes < 1024) return bytes + ' B';
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
@@ -268,7 +264,10 @@ export default function PromptModal() {
       personas,
       tags,
       systems,
-      demoLinks: demoLinks.filter(l => l.url.trim()),
+      demoLinks: demoLinks.filter(l => {
+        const u = l.url.trim();
+        return u && /^https?:\/\//i.test(u);
+      }),
       notes: notes.trim(),
       status: status || null,
       isFavorite,

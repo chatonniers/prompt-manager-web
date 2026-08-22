@@ -9,8 +9,6 @@ import { getFlowColor } from '../../lib/flowColors.js';
 import { extractVars } from '../../lib/substitution.js';
 import SubstituteModal from '../shared/SubstituteModal.jsx';
 
-function fileIcon() { return null; }
-
 function fmtSize(bytes) {
   if (bytes < 1024) return bytes + ' B';
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';

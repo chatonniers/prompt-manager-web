@@ -148,7 +148,7 @@ export function AuthProvider({ children }) {
     clearInterval(pollRef.current);
     pollRef.current = setInterval(async () => {
       if (!userIdRef.current) return;
-      await checkBlocked(userId);
+      await checkBlocked(userIdRef.current);
     }, 15000);
   }
 

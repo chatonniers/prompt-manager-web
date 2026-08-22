@@ -33,18 +33,24 @@ export function useStorage() {
 
       // Real-time subscriptions
       const promptsCh = StorageAPI.subscribeToPrompts(async () => {
-        const fresh = await StorageAPI.getAllPrompts();
-        dispatch({ type: 'SET_PROMPTS', payload: fresh });
+        try {
+          const fresh = await StorageAPI.getAllPrompts();
+          dispatch({ type: 'SET_PROMPTS', payload: fresh });
+        } catch { /* retain stale prompts on network error */ }
       });
 
       const catalogCh = StorageAPI.subscribeToCatalog(async () => {
-        const fresh = await StorageAPI.getCatalog();
-        dispatch({ type: 'SET_CATALOG', payload: fresh });
+        try {
+          const fresh = await StorageAPI.getCatalog();
+          dispatch({ type: 'SET_CATALOG', payload: fresh });
+        } catch { /* retain stale catalog on network error */ }
       });
 
       const requestsCh = StorageAPI.subscribeToPublishRequests(async () => {
-        const fresh = await StorageAPI.getPublishRequests().catch(() => []);
-        dispatch({ type: 'SET_PUBLISH_REQUESTS', payload: fresh });
+        try {
+          const fresh = await StorageAPI.getPublishRequests().catch(() => []);
+          dispatch({ type: 'SET_PUBLISH_REQUESTS', payload: fresh });
+        } catch { /* retain stale requests on network error */ }
       });
 
       channelsRef.current = [promptsCh, catalogCh, requestsCh];

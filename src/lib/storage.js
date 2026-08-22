@@ -77,7 +77,7 @@ function dbToPrompt(row) {
 }
 
 function promptToDb(p, userId) {
-  return {
+  const row = {
     id:            p.id,
     owner_id:      p.ownerId || userId,
     title:         p.title,
@@ -97,6 +97,11 @@ function promptToDb(p, userId) {
     systems:       p.systems    || [],
     attachments:   p.attachments|| [],
   };
+  // Preserve timestamps and usage on import (only set if provided)
+  if (p.usageCount != null)  row.usage_count  = p.usageCount;
+  if (p.lastUsedAt != null)  row.last_used_at = p.lastUsedAt;
+  if (p.createdAt  != null)  row.created_at   = p.createdAt;
+  return row;
 }
 
 function dbToCatalog(row) {
@@ -253,17 +258,33 @@ export const StorageAPI = {
     const userId = await getCurrentUserId();
 
     if (mode === 'replace') {
+      // Delete all existing prompts and favorites
       const { error } = await supabase.from('prompts').delete().neq('id', 'none');
       if (error) throw error;
       invalidateFavCache();
+
+      // Insert prompts preserving timestamps/usage
       const rows = data.prompts.map(p => promptToDb(p, userId));
       const { error: e2 } = await supabase.from('prompts').insert(rows);
       if (e2) throw e2;
+
+      // Restore favorites for current user
+      const favIds = data.prompts.filter(p => p.isFavorite).map(p => p.id);
+      if (favIds.length > 0 && userId) {
+        await supabase.from('favorites').upsert(favIds.map(id => ({ user_id: userId, prompt_id: id })));
+        invalidateFavCache();
+      }
+
+      // Restore catalog (including visibilityRules, kpiRules, systems)
       if (data.catalog) await this.saveCatalog(data.catalog);
+
+      // Restore settings
+      if (data.settings) await this.saveSettings(data.settings);
+
       return { imported: data.prompts.length, skipped: 0 };
     }
 
-    // merge
+    // merge mode
     const existing = await this.getAllPrompts();
     const existingIds = new Set(existing.map(p => p.id));
     const toAdd = data.prompts.filter(p => !existingIds.has(p.id));
@@ -271,18 +292,41 @@ export const StorageAPI = {
       const rows = toAdd.map(p => promptToDb(p, userId));
       const { error } = await supabase.from('prompts').insert(rows);
       if (error) throw error;
+
+      // Restore favorites for newly added prompts
+      const favIds = toAdd.filter(p => p.isFavorite).map(p => p.id);
+      if (favIds.length > 0 && userId) {
+        await supabase.from('favorites').upsert(favIds.map(id => ({ user_id: userId, prompt_id: id })));
+        invalidateFavCache();
+      }
     }
+
     if (data.catalog) {
       const cur = await this.getCatalog();
       await this.saveCatalog({
-        solutions:  [...new Set([...cur.solutions,  ...(data.catalog.solutions  || [])])],
-        storyFlows: [...new Set([...cur.storyFlows, ...(data.catalog.storyFlows || [])])],
-        personas:   [...new Set([...cur.personas,   ...(data.catalog.personas   || [])])],
-        categories: [...new Set([...cur.categories, ...(data.catalog.categories || [])])],
-        tags:       [...new Set([...cur.tags,        ...(data.catalog.tags       || [])])],
-        systems: cur.systems,
+        solutions:       [...new Set([...cur.solutions,  ...(data.catalog.solutions  || [])])],
+        storyFlows:      [...new Set([...cur.storyFlows, ...(data.catalog.storyFlows || [])])],
+        personas:        [...new Set([...cur.personas,   ...(data.catalog.personas   || [])])],
+        categories:      [...new Set([...cur.categories, ...(data.catalog.categories || [])])],
+        tags:            [...new Set([...cur.tags,       ...(data.catalog.tags       || [])])],
+        // Merge systems by id, preferring existing
+        systems:         [
+          ...cur.systems,
+          ...(data.catalog.systems || []).filter(s => !cur.systems.some(cs => cs.id === s.id)),
+        ],
+        // Preserve current visibilityRules/kpiRules — don't overwrite from import
+        visibilityRules: cur.visibilityRules,
+        kpiRules:        cur.kpiRules,
       });
     }
+
+    // Merge settings (only missing keys, don't overwrite existing preferences)
+    if (data.settings) {
+      const cur = await this.getSettings();
+      const merged = { ...data.settings, ...cur }; // cur wins on conflict
+      await this.saveSettings(merged);
+    }
+
     return { imported: toAdd.length, skipped: data.prompts.length - toAdd.length };
   },
 
