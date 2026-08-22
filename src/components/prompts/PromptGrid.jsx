@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -41,27 +41,21 @@ const REQ_ICONS = {
 };
 
 function RowPreview({ p, anchor, lang }) {
-  const ref = useRef(null);
-  const [pos, setPos] = useState(null);
+  if (!anchor) return null;
 
-  useLayoutEffect(() => {
-    if (!anchor || !ref.current) return;
-    const rect = anchor.getBoundingClientRect();
-    const pw = ref.current.offsetWidth || 380;
-    const ph = ref.current.offsetHeight || 100;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    let top = rect.bottom + 6;
-    if (top + ph > vh - 8) top = rect.top - ph - 6;
-    let left = rect.left;
-    if (left + pw > vw - 8) left = vw - pw - 8;
-    setPos({ top: Math.max(8, top), left: Math.max(8, left) });
-  }, []); // run once after mount — anchor is a stable DOM node
+  const rect = anchor.getBoundingClientRect();
+  const pw = 380;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  let left = rect.left;
+  if (left + pw > vw - 8) left = vw - pw - 8;
+  const top = rect.bottom + 6;
 
   const items = p.promptItems?.length ? p.promptItems : [{ id: p.id, label: '', body: p.body || '', body_fr: p.body_fr || '' }];
 
   return createPortal(
-    <div ref={ref} className="pt-row-preview" style={{ top: pos?.top ?? -9999, left: pos?.left ?? -9999, opacity: pos ? 1 : 0 }}>
+    <div className="pt-row-preview" style={{ top, left }}>
       <div className="pt-rp-title">{p.title}</div>
       {p.notes && <div className="pt-rp-notes">{p.notes}</div>}
       {items.map((item, idx) => {
