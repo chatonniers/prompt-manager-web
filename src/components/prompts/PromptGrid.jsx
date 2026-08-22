@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -42,13 +42,13 @@ const REQ_ICONS = {
 
 function RowPreview({ p, anchor, lang }) {
   const ref = useRef(null);
-  const [pos, setPos] = useState(null); // null = not yet measured
+  const [pos, setPos] = useState(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!anchor || !ref.current) return;
     const rect = anchor.getBoundingClientRect();
-    const pw = ref.current.offsetWidth;
-    const ph = ref.current.offsetHeight;
+    const pw = ref.current.offsetWidth || 380;
+    const ph = ref.current.offsetHeight || 100;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     let top = rect.bottom + 6;
@@ -56,7 +56,7 @@ function RowPreview({ p, anchor, lang }) {
     let left = rect.left;
     if (left + pw > vw - 8) left = vw - pw - 8;
     setPos({ top: Math.max(8, top), left: Math.max(8, left) });
-  }); // no deps — re-run every render so it measures after paint
+  }, []); // run once after mount — anchor is a stable DOM node
 
   const items = p.promptItems?.length ? p.promptItems : [{ id: p.id, label: '', body: p.body || '', body_fr: p.body_fr || '' }];
 
@@ -134,9 +134,9 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
         </td>
 
         {/* Title + copy tabs */}
-        <td ref={titleSpanRef} className="pt-td pt-td-title-cell">
+        <td className="pt-td pt-td-title-cell">
           <div className="pt-title-row">
-            <span className="pt-title-text" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>{p.title}</span>
+            <span ref={titleSpanRef} className="pt-title-text" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>{p.title}</span>
           </div>
           {/* Prompt item tabs */}
           <div className="pt-item-tabs">
