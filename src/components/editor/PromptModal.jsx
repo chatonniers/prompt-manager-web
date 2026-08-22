@@ -38,6 +38,7 @@ export default function PromptModal() {
   const [storyFlow, setStoryFlow] = useState('');
   const [category, setCategory] = useState('');
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(true);
   const [selectedSolutions, setSelectedSolutions] = useState([]);
   const [personas, setPersonas] = useState([]);
   const [tags, setTags] = useState([]);
@@ -98,6 +99,7 @@ export default function PromptModal() {
       }
       setNotes(existing.notes || '');
       setStatus(existing.status || 'draft');
+      setIsPrivate(existing.isPrivate ?? true);
       setDemoLinks(Array.isArray(existing.demoLinks) ? existing.demoLinks.map(l => ({ ...l })) : []);
       AttachmentsDB.getForPrompt(existing.id).then(atts => setExistingAtts(atts));
     } else {
@@ -114,6 +116,7 @@ export default function PromptModal() {
       setDemoLinks([]);
       setNotes('');
       setStatus('draft');
+      setIsPrivate(true);
       setExistingAtts([]);
       setPendingFiles([]);
     }
@@ -242,6 +245,7 @@ export default function PromptModal() {
       notes: notes.trim(),
       status: status || null,
       isFavorite,
+      isPrivate,
       usageCount: existing?.usageCount || 0,
       lastUsedAt: existing?.lastUsedAt || null,
       attachments: attachmentsMeta,
@@ -421,6 +425,26 @@ export default function PromptModal() {
                 </label>
               </div>
             </div>
+
+            {/* Visibility */}
+            {canEdit && (
+              <div className="field-row">
+                <label>{t('visibilityLabel', lang) || 'Visibility'}</label>
+                <div className="card-privacy-btns">
+                  <button type="button"
+                    className={`card-privacy-btn${isPrivate !== false ? ' active private' : ''}`}
+                    onClick={() => setIsPrivate(true)}>
+                    {t('visibilityPrivate', lang)}
+                  </button>
+                  <button type="button"
+                    className={`card-privacy-btn${isPrivate === false ? ' active shared' : ''}`}
+                    onClick={() => setIsPrivate(false)}
+                    disabled={!canPublish}>
+                    {t('visibilityPublic', lang)}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Demo Links */}
             <div className="field-row">
