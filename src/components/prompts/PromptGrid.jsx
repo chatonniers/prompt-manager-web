@@ -41,29 +41,27 @@ const REQ_ICONS = {
 };
 
 function RowPreview({ p, anchor, lang }) {
-  const [pos, setPos] = useState({ top: 0, left: 0 });
   const ref = useRef(null);
+  const [pos, setPos] = useState(null); // null = not yet measured
 
   useEffect(() => {
     if (!anchor || !ref.current) return;
     const rect = anchor.getBoundingClientRect();
-    const pw = ref.current.offsetWidth || 380;
-    const ph = ref.current.offsetHeight || 200;
+    const pw = ref.current.offsetWidth;
+    const ph = ref.current.offsetHeight;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    // position below the title text
     let top = rect.bottom + 6;
     if (top + ph > vh - 8) top = rect.top - ph - 6;
-    // align left with the title, but don't overflow right edge
     let left = rect.left;
     if (left + pw > vw - 8) left = vw - pw - 8;
     setPos({ top: Math.max(8, top), left: Math.max(8, left) });
-  }, [anchor]);
+  }); // no deps — re-run every render so it measures after paint
 
   const items = p.promptItems?.length ? p.promptItems : [{ id: p.id, label: '', body: p.body || '', body_fr: p.body_fr || '' }];
 
   return createPortal(
-    <div ref={ref} className="pt-row-preview" style={{ top: pos.top, left: pos.left }}>
+    <div ref={ref} className="pt-row-preview" style={{ top: pos?.top ?? -9999, left: pos?.left ?? -9999, opacity: pos ? 1 : 0 }}>
       <div className="pt-rp-title">{p.title}</div>
       {p.notes && <div className="pt-rp-notes">{p.notes}</div>}
       {items.map((item, idx) => {
@@ -87,7 +85,7 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
   const [hovered, setHovered] = useState(false);
   const hoverTimerRef = useRef(null);
   const rowRef = useRef(null);
-  const titleCellRef = useRef(null);
+  const titleSpanRef = useRef(null);
 
   function handleMouseEnter() {
     hoverTimerRef.current = setTimeout(() => setHovered(true), 500);
@@ -136,7 +134,7 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
         </td>
 
         {/* Title + copy tabs */}
-        <td ref={titleCellRef} className="pt-td pt-td-title-cell">
+        <td ref={titleSpanRef} className="pt-td pt-td-title-cell">
           <div className="pt-title-row">
             <span className="pt-title-text" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>{p.title}</span>
           </div>
@@ -194,7 +192,7 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
           onClose={() => setSubstItem(null)}
         />
       )}
-      {hovered && !substItem && <RowPreview p={p} anchor={titleCellRef.current} lang={lang} />}
+      {hovered && !substItem && <RowPreview p={p} anchor={titleSpanRef.current} lang={lang} />}
     </>
   );
 }
