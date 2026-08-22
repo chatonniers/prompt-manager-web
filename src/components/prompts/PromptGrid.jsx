@@ -51,10 +51,11 @@ function RowPreview({ p, anchor, lang }) {
     const ph = ref.current.offsetHeight || 200;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    let left = rect.right + 12;
-    if (left + pw > vw - 8) left = rect.left - pw - 12;
-    let top = rect.top;
-    if (top + ph > vh - 8) top = vh - ph - 8;
+    // prefer below the row
+    let top = rect.bottom + 6;
+    if (top + ph > vh - 8) top = rect.top - ph - 6;
+    // align to right edge of screen with margin
+    let left = vw - pw - 24;
     setPos({ top: Math.max(8, top), left: Math.max(8, left) });
   }, [anchor]);
 
@@ -83,7 +84,16 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
   const [copiedIdx, setCopiedIdx] = useState(null);
   const [substItem, setSubstItem] = useState(null);
   const [hovered, setHovered] = useState(false);
+  const hoverTimerRef = useRef(null);
   const rowRef = useRef(null);
+
+  function handleMouseEnter() {
+    hoverTimerRef.current = setTimeout(() => setHovered(true), 500);
+  }
+  function handleMouseLeave() {
+    clearTimeout(hoverTimerRef.current);
+    setHovered(false);
+  }
 
   const items = p.promptItems?.length ? p.promptItems : [{ id: p.id, label: '', body: p.body || '', body_fr: p.body_fr || '' }];
   const flowColor = p.storyFlow ? getFlowColor(p.storyFlow) : null;
@@ -117,8 +127,8 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
       <tr
         ref={rowRef}
         className={`pt-row${selectedIds?.has(p.id) ? ' pt-row-selected' : ''}`}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         <td className="pt-td pt-td-check">
           <input type="checkbox" checked={!!selectedIds?.has(p.id)} onChange={() => onToggleSelect(p.id)} />
