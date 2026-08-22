@@ -217,6 +217,34 @@
   flex-shrink: 0;
   background: var(--pm-bg);
 }
+/* Push delete to the left */
+#modal-footer .action-btn-danger { margin-right: auto; }
+
+.action-btn-danger {
+  background: none;
+  border: 1px solid #DC2626;
+  color: #DC2626;
+  border-radius: var(--pm-radius);
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.action-btn-danger:hover { background: rgba(220,38,38,0.1); }
+
+.action-btn-request {
+  background: none;
+  border: 1px solid var(--pm-accent);
+  color: var(--pm-accent);
+  border-radius: var(--pm-radius);
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.action-btn-request:hover { background: var(--pm-accent-bg); }
 
 /* ── Body language tabs ───────────────────────────────────────────────── */
 .body-tabs { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }

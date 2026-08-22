@@ -30,6 +30,11 @@ export default function PromptModal() {
   const isOwner = !existing || existing.ownerId === profile?.id;
   const canEdit = canPublish || isOwner;
 
+  // Publish request state (same logic as PromptCard)
+  const myRequest = existing ? state.publishRequests?.find(r => r.prompt_id === existing.id) : null;
+  const isApprovedRequest = myRequest?.status === 'approved';
+  const isPendingRequest = myRequest?.status === 'pending';
+
   const [activeTab, setActiveTab] = useState('content');
   const [title, setTitle] = useState('');
   const [promptItems, setPromptItems] = useState([makeItem()]);
@@ -198,6 +203,28 @@ export default function PromptModal() {
     const a = document.createElement('a');
     a.href = url; a.download = att.name; a.click();
     URL.revokeObjectURL(url);
+  }
+
+  function handleDelete() {
+    dispatch({ type: 'CLOSE_MODAL' });
+    dispatch({ type: 'OPEN_CONFIRM', payload: existing.id });
+  }
+
+  async function handlePublishRequest() {
+    if (!existing) return;
+    try {
+      if (isPendingRequest) {
+        await StorageAPI.deletePublishRequest(existing.id);
+      } else {
+        await StorageAPI.createPublishRequest(existing.id);
+      }
+      const reqs = await StorageAPI.getPublishRequests();
+      dispatch({ type: 'SET_PUBLISH_REQUESTS', payload: reqs });
+      dispatch({ type: 'SHOW_TOAST', payload: isPendingRequest ? 'Request cancelled' : t('publishRequestSent', lang) });
+      dispatch({ type: 'CLOSE_MODAL' });
+    } catch (err) {
+      dispatch({ type: 'SHOW_TOAST', payload: `Error: ${err.message}` });
+    }
   }
 
   async function handleSave() {
@@ -548,6 +575,18 @@ export default function PromptModal() {
 
         <div id="modal-footer">
           <button className="action-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>{canEdit ? t('cancel', lang) : 'Close'}</button>
+          {/* Delete: canPublish OR viewer's own private draft */}
+          {!isNew && (canPublish || (isOwner && existing?.isPrivate !== false && existing?.status === 'draft')) && (
+            <button className="action-btn action-btn-danger" onClick={handleDelete}>
+              {t('delete', lang) || 'Delete'}
+            </button>
+          )}
+          {/* Publish request: viewer, own draft, public visibility, not yet approved */}
+          {!isNew && !canPublish && isOwner && existing?.status === 'draft' && isPrivate === false && !isApprovedRequest && (
+            <button className="action-btn action-btn-request" onClick={handlePublishRequest}>
+              {isPendingRequest ? 'Cancel request' : t('requestPublish', lang) || 'Request publish'}
+            </button>
+          )}
           {canEdit && <button className="action-btn primary" onClick={handleSave} disabled={saving}>{saving ? t('savingLabel', lang) : t('save', lang)}</button>}
         </div>
       </div>
