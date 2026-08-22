@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { detectSAPContext } from '../../lib/url-detector.js';
 import { encodeShareUrl } from '../../lib/share.js';
@@ -9,8 +10,9 @@ import AdminCategoriesCard from './AdminCategoriesCard.jsx';
 import AdminSystemsCard from './AdminSystemsCard.jsx';
 import AdminTagsCard from './AdminTagsCard.jsx';
 import ImportModeModal from '../shared/ImportModeModal.jsx';
+import UserManagement from './UserManagement.jsx';
 
-const SECTIONS = [
+const BASE_SECTIONS = [
   { id: 'general',       labelKey: 'settingsTitle' },
   { id: 'categories',    labelKey: 'categoriesAdmin' },
   { id: 'flows',         labelKey: 'flowsAdmin' },
@@ -21,12 +23,19 @@ const SECTIONS = [
   { id: 'tags',          labelKey: 'tagsAdmin' },
 ];
 
+const ADMIN_SECTIONS = [
+  { id: 'users', labelKey: null, label: 'Users' },
+];
+
 export default function SettingsView() {
   const { state, dispatch } = useApp();
+  const { isAdmin } = useAuth();
   const lang = state.settings?.lang || 'en';
   const [activeSection, setActiveSection] = useState('general');
   const [autoFilter, setAutoFilter] = useState(state.settings?.autoFilterEnabled ?? true);
   const [sapUrl, setSapUrl] = useState('');
+
+  const SECTIONS = isAdmin ? [...BASE_SECTIONS, ...ADMIN_SECTIONS] : BASE_SECTIONS;
 
   // Import/Export state
   const fileRef = useRef(null);
@@ -121,7 +130,7 @@ export default function SettingsView() {
               className={`settings-nav-item${activeSection === sec.id ? ' active' : ''}`}
               onClick={() => setActiveSection(sec.id)}
             >
-              {t(sec.labelKey, lang)}
+              {sec.labelKey ? t(sec.labelKey, lang) : sec.label}
             </button>
           ))}
         </nav>
@@ -230,6 +239,8 @@ export default function SettingsView() {
               isArray={false}
             />
           )}
+
+          {activeSection === 'users' && <UserManagement />}
 
         </div>
       </div>

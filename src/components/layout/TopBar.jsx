@@ -17,7 +17,7 @@ function LogoMark() {
   );
 }
 
-export default function TopBar({ onHelp }) {
+export default function TopBar({ onHelp, onSignOut, profile, isAdmin }) {
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
@@ -115,7 +115,7 @@ export default function TopBar({ onHelp }) {
           </div>
         )}
 
-        {/* Right — lang, fullscreen, settings */}
+        {/* Right — lang, fullscreen, user, settings */}
         <div id="top-bar-right">
           <button className="tb-btn tb-btn-lang" onClick={handleLangToggle} title="Switch language">
             {lang === 'en' ? 'FR' : 'EN'}
@@ -136,6 +136,17 @@ export default function TopBar({ onHelp }) {
               }
             </svg>
           </button>
+          <div className="tb-divider" />
+          {profile && (
+            <div className="tb-user-pill">
+              <span className="tb-user-avatar">{(profile.display_name || profile.email || '?')[0].toUpperCase()}</span>
+              <span className="tb-user-name">{profile.display_name || profile.email?.split('@')[0]}</span>
+              {profile.role && <span className={`tb-user-role role-${profile.role}`}>{profile.role}</span>}
+              <button className="tb-user-signout" onClick={onSignOut} title="Sign out">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3M10 11l3-3-3-3M13 8H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+            </div>
+          )}
           <div className="tb-divider" />
           <button
             className={`tb-btn tb-btn-icon${state.currentView === 'settings' ? ' tb-btn-active' : ''}`}

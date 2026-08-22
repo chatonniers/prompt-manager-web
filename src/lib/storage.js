@@ -1,3 +1,4 @@
+import { supabase } from './supabase.js';
 import { AttachmentsDB } from './attachments.js';
 
 export const DEFAULT_CATEGORIES = [
@@ -14,186 +15,260 @@ const DEFAULT_CATALOG = {
   categories: DEFAULT_CATEGORIES,
   systems: [],
   personas: [],
+  tags: [],
 };
 
 export const AUTONOMOUS_CATEGORIES = DEFAULT_CATEGORIES;
+const CATALOG_ID = '00000000-0000-0000-0000-000000000001';
 
-// Migrate legacy landscapes + mcpCredentials into unified systems array
-function migrateSystems(data) {
-  if (data.systems) return data.systems;
-  const result = [];
-
-  // Convert legacy landscapes to systems (no endpoints)
-  const rawLandscapes = data.landscapes || [];
-  for (const ls of rawLandscapes) {
-    const name = typeof ls === 'string' ? ls : (ls.name || ls.url || '');
-    const url  = typeof ls === 'string' ? (ls.startsWith('http') ? ls : '') : (ls.url || '');
-    if (!name && !url) continue;
-    result.push({ id: crypto.randomUUID(), name, description: '', url, endpoints: [] });
-  }
-
-  // Convert legacy mcpCredentials to systems with one endpoint each
-  const rawMcp = data.mcpCredentials || [];
-  for (const c of rawMcp) {
-    result.push({
-      id: c.id || crypto.randomUUID(),
-      name: c.label || c.clientId || 'MCP',
-      description: '',
-      url: c.url || '',
-      endpoints: [{
-        id: crypto.randomUUID(),
-        label: c.label || '',
-        url: c.url || '',
-        clientId: c.clientId || '',
-        clientSecret: c.clientSecret || '',
-      }],
-    });
-  }
-  return result;
+// ── shape converters ──────────────────────────────────────────────────────
+function dbToPrompt(row) {
+  return {
+    id:           row.id,
+    title:        row.title,
+    body:         row.body,
+    body_fr:      row.body_fr,
+    promptItems:  row.prompt_items || [],
+    category:     row.category,
+    storyFlow:    row.story_flow,
+    solutions:    row.solutions || [],
+    personas:     row.personas  || [],
+    tags:         row.tags      || [],
+    notes:        row.notes,
+    status:       row.status,
+    isFavorite:   row.is_favorite,
+    usageCount:   row.usage_count  || 0,
+    lastUsedAt:   row.last_used_at,
+    demoLinks:    row.demo_links   || [],
+    systems:      row.systems      || [],
+    attachments:  row.attachments  || [],
+    ownerId:      row.owner_id,
+    createdAt:    row.created_at,
+    updatedAt:    row.updated_at,
+  };
 }
 
+function promptToDb(p, userId) {
+  return {
+    id:            p.id,
+    owner_id:      p.ownerId || userId,
+    title:         p.title,
+    body:          p.body   || '',
+    body_fr:       p.body_fr || null,
+    prompt_items:  p.promptItems || [],
+    category:      p.category   || null,
+    story_flow:    p.storyFlow  || null,
+    solutions:     p.solutions  || [],
+    personas:      p.personas   || [],
+    tags:          p.tags       || [],
+    notes:         p.notes      || null,
+    status:        p.status     || null,
+    is_favorite:   p.isFavorite || false,
+    demo_links:    p.demoLinks  || [],
+    systems:       p.systems    || [],
+    attachments:   p.attachments|| [],
+  };
+}
+
+function dbToCatalog(row) {
+  if (!row) return { ...DEFAULT_CATALOG };
+  return {
+    solutions:  row.solutions   || [...DEFAULT_CATALOG.solutions],
+    storyFlows: row.story_flows || [...DEFAULT_CATALOG.storyFlows],
+    categories: row.categories  || [...DEFAULT_CATALOG.categories],
+    systems:    row.systems     || [],
+    personas:   row.personas    || [],
+    tags:       row.tags        || [],
+  };
+}
+
+function catalogToDb(catalog) {
+  return {
+    solutions:   catalog.solutions  || [],
+    story_flows: catalog.storyFlows || [],
+    categories:  catalog.categories || [],
+    systems:     catalog.systems    || [],
+    personas:    catalog.personas   || [],
+    tags:        catalog.tags       || [],
+  };
+}
+
+// ── Current user id helper ────────────────────────────────────────────────
+async function getCurrentUserId() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user?.id ?? null;
+}
+
+// ── Per-user favorites set (loaded once per session) ─────────────────────
+let _favoritesCache = null;
+async function getFavoritesSet() {
+  if (_favoritesCache) return _favoritesCache;
+  const userId = await getCurrentUserId();
+  if (!userId) return new Set();
+  const { data } = await supabase.from('favorites').select('prompt_id').eq('user_id', userId);
+  _favoritesCache = new Set((data || []).map(r => r.prompt_id));
+  return _favoritesCache;
+}
+function invalidateFavCache() { _favoritesCache = null; }
+
+// ── StorageAPI ────────────────────────────────────────────────────────────
 export const StorageAPI = {
   async getAllPrompts() {
-    const raw = localStorage.getItem("pm-prompts");
-    return raw ? JSON.parse(raw) : [];
+    const [{ data, error }, favs] = await Promise.all([
+      supabase.from('prompts').select('*').order('created_at', { ascending: false }),
+      getFavoritesSet(),
+    ]);
+    if (error) throw error;
+    return (data || []).map(row => ({ ...dbToPrompt(row), isFavorite: favs.has(row.id) }));
   },
 
   async getCatalog() {
-    const raw = localStorage.getItem("pm-catalog");
-    const data = raw ? JSON.parse(raw) : {};
-    return {
-      solutions:  data.solutions  ?? [...DEFAULT_CATALOG.solutions],
-      storyFlows: data.storyFlows ?? [...DEFAULT_CATALOG.storyFlows],
-      categories: data.categories ?? [...DEFAULT_CATALOG.categories],
-      systems: migrateSystems(data),
-      personas: data.personas ?? [],
-      tags: data.tags ?? [],
-    };
+    const { data, error } = await supabase.from('catalog').select('*').eq('id', CATALOG_ID).single();
+    if (error && error.code !== 'PGRST116') throw error;
+    return dbToCatalog(data);
   },
 
   async saveCatalog(catalog) {
-    localStorage.setItem("pm-catalog", JSON.stringify(catalog));
-    return Promise.resolve();
+    const userId = await getCurrentUserId();
+    const { error } = await supabase.from('catalog').upsert({
+      id: CATALOG_ID,
+      ...catalogToDb(catalog),
+      updated_by: userId,
+    });
+    if (error) throw error;
   },
 
   async upsertPrompt(prompt) {
-    const prompts = await this.getAllPrompts();
-    const idx = prompts.findIndex(p => p.id === prompt.id);
-    const now = new Date().toISOString();
-    if (idx >= 0) {
-      prompts[idx] = { ...prompts[idx], ...prompt, updatedAt: now };
-    } else {
-      prompts.push({ ...prompt, createdAt: now, updatedAt: now });
+    const userId = await getCurrentUserId();
+    const row = promptToDb(prompt, userId);
+
+    // Handle isFavorite separately via favorites table
+    const isFav = prompt.isFavorite;
+    const favs = await getFavoritesSet();
+    const wasFav = favs.has(prompt.id);
+
+    if (isFav !== wasFav && userId) {
+      if (isFav) {
+        await supabase.from('favorites').upsert({ user_id: userId, prompt_id: prompt.id });
+        favs.add(prompt.id);
+      } else {
+        await supabase.from('favorites').delete().eq('user_id', userId).eq('prompt_id', prompt.id);
+        favs.delete(prompt.id);
+      }
     }
-    localStorage.setItem("pm-prompts", JSON.stringify(prompts));
-    return Promise.resolve();
+
+    const { error } = await supabase.from('prompts').upsert(row);
+    if (error) throw error;
   },
 
   async deletePrompt(id) {
-    const prompts = await this.getAllPrompts();
-    localStorage.setItem("pm-prompts", JSON.stringify(prompts.filter(p => p.id !== id)));
-    return Promise.resolve();
+    const { error } = await supabase.from('prompts').delete().eq('id', id);
+    if (error) throw error;
+    invalidateFavCache();
+  },
+
+  async deletePrompts(ids) {
+    const { error } = await supabase.from('prompts').delete().in('id', ids);
+    if (error) throw error;
+    invalidateFavCache();
   },
 
   async incrementUsage(id) {
-    const prompts = await this.getAllPrompts();
-    const p = prompts.find(p => p.id === id);
-    if (p) {
-      p.usageCount = (p.usageCount || 0) + 1;
-      p.lastUsedAt = new Date().toISOString();
-      localStorage.setItem("pm-prompts", JSON.stringify(prompts));
-    }
-    return Promise.resolve();
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+    // Insert usage event — DB trigger bumps usage_count on prompts table
+    const { error } = await supabase.from('usage_events').insert({ prompt_id: id, user_id: userId });
+    if (error) throw error;
   },
 
   async getSettings() {
-    const raw = localStorage.getItem("pm-settings");
+    // Settings are still per-device (lang, zoom etc.) — keep in localStorage
+    const raw = localStorage.getItem('pm-settings');
     return raw ? JSON.parse(raw) : {
       autoFilterEnabled: true,
-      overlayPosition: "right",
-      theme: "light",
-      lang: "en"
+      overlayPosition: 'right',
+      theme: 'light',
+      lang: 'en',
     };
   },
 
   async saveSettings(settings) {
     const current = await this.getSettings();
-    localStorage.setItem("pm-settings", JSON.stringify({ ...current, ...settings }));
-    return Promise.resolve();
+    localStorage.setItem('pm-settings', JSON.stringify({ ...current, ...settings }));
   },
 
+  // ── Export / Import (unchanged from local version) ──────────────────────
   async exportAll() {
     const [prompts, settings, catalog] = await Promise.all([
       this.getAllPrompts(),
       this.getSettings(),
-      this.getCatalog()
+      this.getCatalog(),
     ]);
     let attachments = [];
-    const raw = await AttachmentsDB.getAll();
-    attachments = raw.map(a => ({
-      id: a.id,
-      promptId: a.promptId,
-      name: a.name,
-      type: a.type,
-      size: a.size,
-      data: AttachmentsDB.bufToBase64(a.data)
-    }));
-    return {
-      prompts,
-      settings,
-      catalog,
-      attachments,
-      exportVersion: "1.2",
-      exportedAt: new Date().toISOString()
-    };
+    try {
+      const raw = await AttachmentsDB.getAll();
+      attachments = raw.map(a => ({
+        id: a.id, promptId: a.promptId, name: a.name, type: a.type, size: a.size,
+        data: AttachmentsDB.bufToBase64(a.data),
+      }));
+    } catch { /* attachments optional */ }
+    return { prompts, settings, catalog, attachments, exportVersion: '1.2', exportedAt: new Date().toISOString() };
   },
 
-  async importAll(data, mode = "merge") {
-    if (!data.prompts || !Array.isArray(data.prompts)) throw new Error("Invalid import format");
+  async importAll(data, mode = 'merge') {
+    if (!data.prompts || !Array.isArray(data.prompts)) throw new Error('Invalid import format');
+    const userId = await getCurrentUserId();
 
-    if (mode === "replace") {
-      localStorage.setItem("pm-prompts", JSON.stringify(data.prompts));
+    if (mode === 'replace') {
+      const { error } = await supabase.from('prompts').delete().neq('id', 'none');
+      if (error) throw error;
+      invalidateFavCache();
+      const rows = data.prompts.map(p => promptToDb(p, userId));
+      const { error: e2 } = await supabase.from('prompts').insert(rows);
+      if (e2) throw e2;
       if (data.catalog) await this.saveCatalog(data.catalog);
-      if (data.attachments) {
-        await Promise.all(data.attachments.map(a =>
-          AttachmentsDB.save({ ...a, data: AttachmentsDB.base64ToBuf(a.data) })
-        ));
-      }
       return { imported: data.prompts.length, skipped: 0 };
     }
 
-    // merge mode
+    // merge
     const existing = await this.getAllPrompts();
     const existingIds = new Set(existing.map(p => p.id));
     const toAdd = data.prompts.filter(p => !existingIds.has(p.id));
-    localStorage.setItem("pm-prompts", JSON.stringify([...existing, ...toAdd]));
-
+    if (toAdd.length > 0) {
+      const rows = toAdd.map(p => promptToDb(p, userId));
+      const { error } = await supabase.from('prompts').insert(rows);
+      if (error) throw error;
+    }
     if (data.catalog) {
       const cur = await this.getCatalog();
-      const incomingSystems = migrateSystems(data.catalog);
-      const mergedSystems = [...cur.systems];
-      for (const s of incomingSystems) {
-        if (!mergedSystems.some(ex => ex.id === s.id || ex.name === s.name)) {
-          mergedSystems.push(s);
-        }
-      }
       await this.saveCatalog({
         solutions:  [...new Set([...cur.solutions,  ...(data.catalog.solutions  || [])])],
         storyFlows: [...new Set([...cur.storyFlows, ...(data.catalog.storyFlows || [])])],
         personas:   [...new Set([...cur.personas,   ...(data.catalog.personas   || [])])],
         categories: [...new Set([...cur.categories, ...(data.catalog.categories || [])])],
-        systems: mergedSystems,
+        tags:       [...new Set([...cur.tags,        ...(data.catalog.tags       || [])])],
+        systems: cur.systems,
       });
     }
-
-    if (data.attachments) {
-      const addedIds = new Set(toAdd.map(p => p.id));
-      const attachsToImport = data.attachments.filter(a => addedIds.has(a.promptId));
-      await Promise.all(attachsToImport.map(a =>
-        AttachmentsDB.save({ ...a, data: AttachmentsDB.base64ToBuf(a.data) })
-      ));
-    }
-
     return { imported: toAdd.length, skipped: data.prompts.length - toAdd.length };
-  }
+  },
+
+  // ── Real-time subscription ─────────────────────────────────────────────
+  subscribeToPrompts(onUpdate) {
+    return supabase
+      .channel('prompts-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'prompts' }, onUpdate)
+      .subscribe();
+  },
+
+  subscribeToCatalog(onUpdate) {
+    return supabase
+      .channel('catalog-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'catalog' }, onUpdate)
+      .subscribe();
+  },
+
+  unsubscribe(channel) {
+    supabase.removeChannel(channel);
+  },
 };

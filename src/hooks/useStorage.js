@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { StorageAPI } from '../lib/storage.js';
 import { getDefaultPrompts } from '../lib/defaults.js';
 import { useApp } from '../context/AppContext.jsx';
 
 export function useStorage() {
   const { dispatch } = useApp();
+  const channelsRef = useRef([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -16,17 +17,38 @@ export function useStorage() {
         StorageAPI.getSettings(),
       ]);
       if (cancelled) return;
+
+      // Seed defaults only if this user has no prompts yet
       if (prompts.length === 0) {
         const defaults = getDefaultPrompts();
         await Promise.all(defaults.map(p => StorageAPI.upsertPrompt(p)));
-        prompts = defaults;
+        prompts = await StorageAPI.getAllPrompts();
       }
+
       if (!cancelled) {
         dispatch({ type: 'LOAD_INITIAL', payload: { prompts, catalog, settings } });
       }
+
+      // Real-time subscriptions
+      const promptsCh = StorageAPI.subscribeToPrompts(async () => {
+        const fresh = await StorageAPI.getAllPrompts();
+        dispatch({ type: 'SET_PROMPTS', payload: fresh });
+      });
+
+      const catalogCh = StorageAPI.subscribeToCatalog(async () => {
+        const fresh = await StorageAPI.getCatalog();
+        dispatch({ type: 'SET_CATALOG', payload: fresh });
+      });
+
+      channelsRef.current = [promptsCh, catalogCh];
     }
+
     init();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      channelsRef.current.forEach(ch => StorageAPI.unsubscribe(ch));
+      channelsRef.current = [];
+    };
   }, [dispatch]); // eslint-disable-line react-hooks/exhaustive-deps
 }
