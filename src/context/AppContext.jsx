@@ -15,6 +15,7 @@ const initialState = {
   editingPromptId: undefined,
   isConfirmOpen: false,
   pendingDeleteId: null,
+  pendingDeleteIds: new Set(),
   toastMsg: null,
   toastUndo: null,   // { label, onUndo } — if set, Toast shows an Undo button
   initialized: false,
@@ -32,8 +33,25 @@ function reducer(state, action) {
       if (state.initialized) return state;
       return { ...state, ...action.payload, initialized: true };
     // Accept both .payload and legacy field names for SET_PROMPTS
-    case 'SET_PROMPTS':
-      return { ...state, prompts: action.payload ?? action.prompts };
+    case 'SET_PROMPTS': {
+      const incoming = action.payload ?? action.prompts;
+      const filtered = state.pendingDeleteIds.size
+        ? incoming.filter(p => !state.pendingDeleteIds.has(p.id))
+        : incoming;
+      return { ...state, prompts: filtered };
+    }
+    case 'MARK_DELETING': {
+      const next = new Set(state.pendingDeleteIds);
+      const ids = Array.isArray(action.payload) ? action.payload : [action.payload];
+      ids.forEach(id => next.add(id));
+      return { ...state, pendingDeleteIds: next };
+    }
+    case 'UNMARK_DELETING': {
+      const next = new Set(state.pendingDeleteIds);
+      const ids = Array.isArray(action.payload) ? action.payload : [action.payload];
+      ids.forEach(id => next.delete(id));
+      return { ...state, pendingDeleteIds: next };
+    }
     case 'SET_CATALOG':
       return { ...state, catalog: action.payload ?? action.catalog };
     case 'SET_SETTINGS':

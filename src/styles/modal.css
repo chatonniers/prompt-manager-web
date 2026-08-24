@@ -1062,3 +1062,127 @@
 }
 .modal-lang-btn:hover { background: var(--pm-border); color: var(--pm-text2); }
 .modal-lang-btn.active { background: var(--pm-accent); border-color: var(--pm-accent); color: #fff; }
+
+/* ── Joule Skill Modal ─────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,22,41,0.5);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.joule-skill-modal {
+  background: var(--pm-surface);
+  border-radius: 14px;
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  box-shadow: var(--pm-shadow-lg);
+  border: 1.5px solid var(--pm-border);
+  overflow: hidden;
+}
+
+.jsm-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--pm-border);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--pm-text);
+}
+
+.jsm-header .modal-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--pm-text3);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: inherit;
+  transition: color 0.1s, background 0.1s;
+}
+.jsm-header .modal-close:hover { background: var(--pm-border); color: var(--pm-text2); }
+
+.jsm-body {
+  padding: 18px 20px;
+  font-size: 13.5px;
+  color: var(--pm-text2);
+  line-height: 1.6;
+}
+.jsm-body p { margin: 0 0 10px; }
+.jsm-body p:last-child { margin-bottom: 0; }
+
+.jsm-step { display: flex; align-items: center; gap: 8px; color: var(--pm-text2); }
+.jsm-step-icon { font-size: 16px; }
+
+.jsm-warn { color: var(--pm-danger); font-weight: 600; }
+
+.jsm-code {
+  background: var(--pm-bg2);
+  border: 1px solid var(--pm-border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--pm-text);
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 6px 0 10px;
+}
+.jsm-error { color: var(--pm-danger); }
+
+.jsm-hint { font-size: 12px; color: var(--pm-text3); }
+.jsm-hint a { color: var(--pm-accent); text-decoration: none; }
+.jsm-hint a:hover { text-decoration: underline; }
+.jsm-hint code { font-family: monospace; font-size: 11px; background: var(--pm-bg2); padding: 1px 4px; border-radius: 3px; color: var(--pm-text2); }
+
+.jsm-no-agent { }
+
+.jsm-section-label {
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--pm-text3);
+  margin: 14px 0 4px !important;
+}
+
+.jsm-prereq-list {
+  margin: 0 0 0 18px;
+  padding: 0;
+  font-size: 13px;
+  color: var(--pm-text2);
+  line-height: 2;
+}
+.jsm-prereq-list li { margin-bottom: 2px; }
+.jsm-prereq-list a { color: var(--pm-accent); text-decoration: none; }
+.jsm-prereq-list a:hover { text-decoration: underline; }
+.jsm-prereq-list code { font-family: monospace; font-size: 12px; background: var(--pm-bg2); padding: 1px 4px; border-radius: 3px; }
+
+.jsm-done { text-align: center; }
+.jsm-done-icon { margin: 4px 0 12px; }
+.jsm-paste-hint {
+  background: rgba(99,102,241,0.08);
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin: 12px 0;
+  color: var(--pm-text);
+}
+.jsm-paste-hint strong { color: var(--pm-accent); }
+
+.jsm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}

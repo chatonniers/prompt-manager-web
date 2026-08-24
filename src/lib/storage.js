@@ -346,12 +346,16 @@ export const StorageAPI = {
 
   async createPublishRequest(promptId) {
     const { data: { user } } = await supabase.auth.getUser();
+    // Delete any existing non-pending request (rejected/approved) before re-inserting
+    await supabase
+      .from('publish_requests')
+      .delete()
+      .eq('prompt_id', promptId)
+      .eq('requester_id', user.id)
+      .neq('status', 'pending');
     const { error } = await supabase
       .from('publish_requests')
-      .upsert(
-        { prompt_id: promptId, requester_id: user.id, status: 'pending' },
-        { onConflict: 'prompt_id,requester_id' }
-      );
+      .insert({ prompt_id: promptId, requester_id: user.id, status: 'pending' });
     if (error) throw error;
   },
 

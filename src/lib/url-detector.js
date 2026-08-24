@@ -22,7 +22,7 @@ const SAP_URL_RULES = [
   },
   {
     solution: "S/4HANA",
-    patterns: [/s4hana\.cloud\.sap/i, /my\d+\.s4hana\.cloud\.sap/i, /\/sap\/s4\/hana/i, /\.s4hana\./i],
+    patterns: [/s4hana\.cloud\.sap/i, /my\d+\.s4hana\.cloud\.sap/i, /my\d+\.s4hana\.ondemand\.com/i, /\/sap\/s4\/hana/i, /\.s4hana\./i],
     suggestedFlows: ["Procure-to-Pay", "Order-to-Cash", "Record-to-Report", "Hire-to-Retire"]
   },
   {

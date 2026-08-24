@@ -33,6 +33,7 @@ function UserRow({ u, isSelf, selected, onToggleSelect, onSave, onBlock, onDelet
   const [role, setRole] = useState(u.role);
   const [name, setName] = useState(u.display_name || '');
   const [domains, setDomains] = useState(u.domain_expertise || []);
+  const [jouleEnabled, setJouleEnabled] = useState(!!u.joule_integration);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [blocking, setBlocking] = useState(false);
@@ -43,17 +44,19 @@ function UserRow({ u, isSelf, selected, onToggleSelect, onSave, onBlock, onDelet
   const origDomains = u.domain_expertise || [];
   const dirty = role !== u.role
     || name !== (u.display_name || '')
-    || JSON.stringify([...domains].sort()) !== JSON.stringify([...origDomains].sort());
+    || JSON.stringify([...domains].sort()) !== JSON.stringify([...origDomains].sort())
+    || jouleEnabled !== !!u.joule_integration;
 
   useEffect(() => {
     setRole(u.role);
     setName(u.display_name || '');
     setDomains(u.domain_expertise || []);
-  }, [u.role, u.display_name, u.domain_expertise]);
+    setJouleEnabled(!!u.joule_integration);
+  }, [u.role, u.display_name, u.domain_expertise, u.joule_integration]);
 
   async function handleSave() {
     setSaving(true);
-    await onSave(u.id, role, name, domains);
+    await onSave(u.id, role, name, domains, jouleEnabled);
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -122,6 +125,16 @@ function UserRow({ u, isSelf, selected, onToggleSelect, onSave, onBlock, onDelet
             {isBlocked && <option value="blocked">blocked</option>}
           </select>
         )}
+      </td>
+      <td style={{ textAlign: 'center' }}>
+        <input
+          type="checkbox"
+          checked={jouleEnabled}
+          onChange={e => !isSelf && setJouleEnabled(e.target.checked)}
+          disabled={isBlocked || isSelf}
+          title={jouleEnabled ? 'Joule Desktop integration enabled for this user' : 'Joule Desktop integration disabled'}
+          style={{ cursor: isSelf ? 'default' : 'pointer', accentColor: '#7C3AED', width: 14, height: 14 }}
+        />
       </td>
       <td className="user-date">{new Date(u.created_at).toLocaleDateString()}</td>
       <td>
@@ -224,14 +237,15 @@ export default function UserManagement() {
     else setSelected(new Set(others));
   }
 
-  async function saveUser(userId, role, displayName, domainExpertise) {
+  async function saveUser(userId, role, displayName, domainExpertise, jouleIntegration) {
     const { error } = await supabase.from('profiles').update({
       role,
       display_name: displayName || null,
       domain_expertise: domainExpertise?.length ? domainExpertise : null,
+      joule_integration: !!jouleIntegration,
     }).eq('id', userId);
     if (error) { console.error(error); return; }
-    setUsers(u => u.map(p => p.id === userId ? { ...p, role, display_name: displayName || null, domain_expertise: domainExpertise } : p));
+    setUsers(u => u.map(p => p.id === userId ? { ...p, role, display_name: displayName || null, domain_expertise: domainExpertise, joule_integration: !!jouleIntegration } : p));
     if (userId === myProfile?.id) await refreshProfile();
   }
 
@@ -376,6 +390,7 @@ export default function UserManagement() {
             <th>Name</th>
             <th>Domain expertise</th>
             <th>Role</th>
+            <th title="Joule Desktop integration" style={{ textAlign: 'center' }}>Joule</th>
             <th>Joined</th>
             <th>Actions</th>
           </tr>

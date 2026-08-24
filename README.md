@@ -2,7 +2,7 @@
 
 **Live app → https://chatonniers.github.io/prompt-manager-web/**
 
-A standalone web application for SAP Solution Advisors to store, organise, and instantly copy demo prompts during live customer demos. Ported from the [SAP Demo Prompt Manager](https://github.com/chatonniers/prompt-manager) Edge extension — same features, no installation required.
+A web application for SAP Solution Advisors to store, organise, and instantly copy demo prompts during live customer demos. Backed by **Supabase** (PostgreSQL + Auth + Realtime) with role-based access control.
 
 > Built by Sylvain Chatonnier — SAP Solution Advisor, Supply Chain
 
@@ -19,49 +19,40 @@ A standalone web application for SAP Solution Advisors to store, organise, and i
 | **Story Flow & Solution tags** | Organise by SAP solution and end-to-end story flow |
 | **Autonomous Suite categories** | Group cards by Finance, Supply Chain, Spend, HCM, CX |
 | **Systems & MCP credentials** | Attach landscape URLs and MCP endpoints (Client ID, Client Secret) to any card |
+| **Card mode / Table mode** | Toggle between card grid and compact table view |
 | **Favorites** | Star prompts; favorites appear first in the list |
-| **Full-text search** | Searches card title, prompt labels, prompt bodies, tags, solutions, notes |
+| **Full-text search** | Searches title, prompt labels, bodies, tags, solutions, notes |
 | **Smart sort** | Favorites → solution match → story-flow match → A–Z or relevance score |
-| **Bulk select** | Checkbox on each card to select multiple — bulk Export, Move category, Move flow, Delete |
-| **SAP URL detection** | Paste any SAP URL in Settings to auto-filter prompts by detected solution |
-| **File attachments** | Attach files / ZIPs to prompts — stored locally in IndexedDB |
-| **Import / Export JSON** | JSON export compatible with the Edge extension; import with Merge or Replace mode |
-| **Share URL** | 🔗 button encodes your entire library as a gzip+base64 URL for instant sharing |
+| **Bulk select** | Checkbox on each card/row — bulk Export, Move category, Move flow, Delete |
+| **File attachments** | Attach files to prompts — stored in Supabase Storage |
+| **Import / Export JSON** | JSON export/import with Merge or Replace mode |
 | **Admin catalog** | Manage Solutions, Story Flows, Categories, Systems with drag-to-reorder |
-| **Zoom controls** | − / % / + buttons in the toolbar to scale the card grid (0.5× – 2×), persisted |
+| **Visibility Rules** | Admin-configurable matrix: which statuses each role sees per workspace, which KPI pills appear |
+| **Zoom controls** | − / % / + buttons to scale the card grid (0.5× – 2×), persisted |
 | **Keyboard navigation** | Enter to flip a card to edit; Escape to flip back |
-| **Save feedback flash** | Green ring animation on a card after saving inline edits |
 | **Resizable sidebar** | Drag the sidebar edge to resize; persisted across sessions |
-| **Fullscreen mode** | Fullscreen toggle button in the top bar |
-| **100% local** | All data lives in your browser — `localStorage` + `IndexedDB`, no server |
+| **Fullscreen mode** | Fullscreen toggle in the top bar |
+| **Real-time sync** | Changes propagate instantly across open sessions via Supabase Realtime |
 
 ---
 
-## Import / Export compatibility
+## Role-based access
 
-Export files are fully interchangeable with the **SAP Demo Prompt Manager Edge extension**. JSON schema:
+| Role | Capabilities |
+|---|---|
+| **admin** | Full access — manage users, catalog, visibility rules, approve/reject publish requests |
+| **editor** | Create and publish prompts, approve publish requests |
+| **viewer** | Create private drafts, submit publish requests for admin/editor review |
+| **blocked** | Read-only, cannot log in to the app |
 
-```json
-{
-  "prompts": [...],
-  "catalog": { "solutions": [], "storyFlows": [], "categories": [], "systems": [] },
-  "settings": {},
-  "attachments": [{ "id", "promptId", "name", "type", "size", "data" }],
-  "exportVersion": "1.1",
-  "exportedAt": "ISO-8601"
-}
-```
-
-Import supports two modes: **Merge** (keep existing, add new) or **Replace** (erase all, import fresh) with a confirmation step.
+**Publish request workflow:** a viewer sets a draft to "Public" then submits a publish request. An admin or editor reviews and approves/rejects it. All enforced at the database level via Supabase RLS policies.
 
 ---
 
 ## Tech stack
 
-- **React 18 + Vite 5** — no UI library, custom CSS (indigo palette)
-- **localStorage** — prompts, catalog, settings, zoom level
-- **IndexedDB** — binary file attachments
-- **CompressionStream (gzip)** — share URL encoding
+- **React 18 + Vite** — no UI library, custom CSS (indigo palette)
+- **Supabase** — PostgreSQL database, Row Level Security, Auth (email/password), Realtime subscriptions, Storage
 - **gh-pages** — deployed to GitHub Pages
 
 ---
@@ -75,12 +66,29 @@ npm install
 npm run dev        # http://localhost:5173/prompt-manager-web/
 ```
 
+Create a `.env.local` with your Supabase credentials:
+
+```
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```
+
+Run `supabase/schema.sql` in your Supabase SQL Editor to set up tables and RLS policies.
+
 ## Deploy
 
 ```bash
 npm run build
 npx gh-pages -d dist
 ```
+
+---
+
+## Database schema
+
+See [`supabase/schema.sql`](supabase/schema.sql) for the full schema including tables, RLS policies, triggers, and realtime configuration.
+
+Key tables: `profiles`, `prompts`, `catalog`, `favorites`, `publish_requests`, `usage_events`, `sessions`.
 
 ---
 

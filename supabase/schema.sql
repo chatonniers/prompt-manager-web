@@ -151,7 +151,7 @@ create policy "prompts: insert"
     )
   );
 
--- UPDATE: owner or admin can update; viewers cannot publish or make public
+-- UPDATE: owner or admin can update; viewers cannot publish but can toggle is_private
 create policy "prompts: update"
   on public.prompts for update
   using (
@@ -167,7 +167,8 @@ create policy "prompts: update"
     or exists (
       select 1 from public.profiles p where p.id = auth.uid() and p.role = 'editor'
     )
-    or (status = 'draft' and is_private = true and owner_id = auth.uid())
+    -- viewers/owners: can save own drafts (any is_private value) but cannot publish
+    or (status = 'draft' and owner_id = auth.uid())
   );
 
 -- DELETE: owner deletes own; admin deletes any

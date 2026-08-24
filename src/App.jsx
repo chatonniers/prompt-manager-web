@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AppProvider, useApp } from './context/AppContext.jsx'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import { useStorage } from './hooks/useStorage.js'
+import { JouleAgent } from './lib/jouleAgent.js'
 import TopBar from './components/layout/TopBar.jsx'
 import Sidebar from './components/layout/Sidebar.jsx'
 import MainContent from './components/layout/MainContent.jsx'
@@ -31,6 +32,12 @@ function AppInner() {
   const [helpOpen, setHelpOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
   const zoom = state.zoom ?? 1
+
+  useEffect(() => {
+    const handler = () => JouleAgent.shutdown();
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, []);
 
   if (!state.initialized) {
     return (

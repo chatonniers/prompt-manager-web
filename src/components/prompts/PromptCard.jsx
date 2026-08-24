@@ -8,6 +8,15 @@ import { t } from '../../lib/i18n.js';
 import { getFlowColor } from '../../lib/flowColors.js';
 import { extractVars } from '../../lib/substitution.js';
 import SubstituteModal from '../shared/SubstituteModal.jsx';
+import JouleDiamond from '../shared/JouleDiamond.jsx';
+import JouleSkillModal from '../shared/JouleSkillModal.jsx';
+
+function fileIcon(mime = '') {
+  if (mime.startsWith('image/')) return '🖼';
+  if (mime === 'application/pdf') return '📄';
+  if (mime.includes('zip') || mime.includes('compressed')) return '🗜';
+  return '📎';
+}
 
 function fmtSize(bytes) {
   if (bytes < 1024) return bytes + ' B';
@@ -125,8 +134,17 @@ function SystemChip({ sys, lang, onCopied }) {
 }
 
 function getSystems(p) {
-  if (p.systems?.length) return p.systems;
   const result = [];
+  if (p.systems?.length) {
+    const seen = new Set();
+    for (const s of p.systems) {
+      const key = s.id || s.name || s.url;
+      if (key && seen.has(key)) continue;
+      seen.add(key);
+      result.push(s);
+    }
+    return result;
+  }
   for (const ls of (p.landscapes || [])) {
     const name = typeof ls === 'string' ? ls : (ls.name || ls.url || '');
     const url  = typeof ls === 'string' ? (ls.startsWith('http') ? ls : '') : (ls.url || '');
@@ -186,7 +204,13 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    AttachmentsDB.getForPrompt(p.id).then(setAttachments);
+    AttachmentsDB.getForPrompt(p.id).then(atts => {
+      const meta = p.attachments || [];
+      setAttachments(atts.map(a => {
+        const m = meta.find(x => x.id === a.id);
+        return m?.isJouleSkill ? { ...a, isJouleSkill: true } : a;
+      }));
+    });
   }, [p.id]);
 
   async function downloadAtt(att) {
@@ -236,13 +260,13 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
       for (const f of pendingFiles) {
         const attId = crypto.randomUUID();
         await AttachmentsDB.save({ id: attId, promptId: p.id, name: f.name, type: f.type, size: f.size, data: f.data });
-        savedNewAtts.push({ id: attId, name: f.name, type: f.type, size: f.size });
+        savedNewAtts.push({ id: attId, name: f.name, type: f.type, size: f.size, isJouleSkill: f.isJouleSkill || false });
       }
       for (const attId of pendingDeletes) {
         await AttachmentsDB.delete(attId);
       }
       const attachmentsMeta = [
-        ...attachments.filter(a => !pendingDeletes.includes(a.id)).map(a => ({ id: a.id, name: a.name, type: a.type, size: a.size })),
+        ...attachments.filter(a => !pendingDeletes.includes(a.id)).map(a => ({ id: a.id, name: a.name, type: a.type, size: a.size, isJouleSkill: a.isJouleSkill || false })),
         ...savedNewAtts,
       ];
 
@@ -318,20 +342,25 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
 
           <div className="card-edit-field">
             <label className="card-edit-label">{t('personasLabel', lang)}</label>
-            {(catalog.personas || []).length > 0 ? (
-              <div className="card-edit-systems">
-                {catalog.personas.map(persona => {
-                  const selected = personas.includes(persona);
-                  return (
-                    <button key={persona} type="button" className={`card-edit-sys-chip${selected ? ' selected' : ''}`} onClick={() => setPersonas(prev => selected ? prev.filter(x => x !== persona) : [...prev, persona])}>
-                      {selected ? '· ' : ''}{persona}
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="card-edit-hint">{t('noPersonasYet', lang)}</p>
-            )}
+            <div className="card-edit-systems">
+              {(catalog.personas || []).map(persona => {
+                const selected = personas.includes(persona);
+                return (
+                  <button key={persona} type="button" className={`card-edit-sys-chip${selected ? ' selected' : ''}`} onClick={() => setPersonas(prev => selected ? prev.filter(x => x !== persona) : [...prev, persona])}>
+                    {selected ? '· ' : ''}{persona}
+                  </button>
+                );
+              })}
+              {personas.filter(p => !(catalog.personas || []).includes(p)).map(persona => (
+                <span key={persona} className="card-edit-sys-chip selected orphan-sys" style={{ opacity: 0.6 }}>
+                  · {persona}
+                  <button type="button" className="card-edit-tag-del" onClick={() => setPersonas(prev => prev.filter(x => x !== persona))} title="Remove">×</button>
+                </span>
+              ))}
+              {(catalog.personas || []).length === 0 && personas.length === 0 && (
+                <p className="card-edit-hint">{t('noPersonasYet', lang)}</p>
+              )}
+            </div>
           </div>
 
           <div className="card-edit-field">
@@ -428,22 +457,30 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
             <button type="button" className="card-edit-att-add" onClick={() => setDemoLinks(prev => [...prev, { id: crypto.randomUUID(), url: '', desc: '' }])}>{t('addDemoLink', lang)}</button>
           </div>
 
-          {(catalog.systems || []).length > 0 && (
-            <div className="card-edit-field">
-              <label className="card-edit-label">{t('landscapeCard', lang)}</label>
-              <div className="card-edit-systems">
-                {catalog.systems.map(sys => {
-                  const selected = systems.some(s => s.id === sys.id);
-                  return (
-                    <button key={sys.id} type="button" className={`card-edit-sys-chip${selected ? ' selected' : ''}`} onClick={() => setSystems(prev => selected ? prev.filter(s => s.id !== sys.id) : [...prev, sys])}>
-                      {selected ? '· ' : ''}{sys.name || sys.url}
-                      {sys.endpoints?.length > 0 && <span style={{ opacity: 0.6, marginLeft: 3, fontSize: 10 }}>cred</span>}
-                    </button>
-                  );
-                })}
-              </div>
+          <div className="card-edit-field">
+            <label className="card-edit-label">{t('landscapeCard', lang)}</label>
+            <div className="card-edit-systems">
+              {(catalog.systems || []).map(sys => {
+                const selected = systems.some(s => s.id === sys.id);
+                return (
+                  <button key={sys.id} type="button" className={`card-edit-sys-chip${selected ? ' selected' : ''}`} onClick={() => setSystems(prev => selected ? prev.filter(s => s.id !== sys.id) : [...prev, sys])}>
+                    {selected ? '· ' : ''}{sys.name || sys.url}
+                    {sys.endpoints?.length > 0 && <span style={{ opacity: 0.6, marginLeft: 3, fontSize: 10 }}>cred</span>}
+                  </button>
+                );
+              })}
+              {/* Orphaned systems — on the card but not in catalog */}
+              {systems.filter(s => !(catalog.systems || []).some(cs => cs.id === s.id)).map(sys => (
+                <span key={sys.id} className="card-edit-sys-chip selected orphan-sys" style={{ opacity: 0.6 }}>
+                  · {sys.name || sys.url}
+                  <button type="button" className="card-edit-tag-del" onClick={() => setSystems(prev => prev.filter(s => s.id !== sys.id))} title="Remove">×</button>
+                </span>
+              ))}
+              {(catalog.systems || []).length === 0 && systems.length === 0 && (
+                <span style={{ fontSize: 12, color: 'var(--pm-text3)', fontStyle: 'italic' }}>No systems configured in settings</span>
+              )}
             </div>
-          )}
+          </div>
 
           <div className="card-edit-field" style={{ position: 'relative' }}>
             <label className="card-edit-label">{t('tagsLabel', lang)}</label>
@@ -494,6 +531,12 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
                   <span>{fileIcon(att.type)}</span>
                   <button className="card-edit-att-name-btn" onClick={() => downloadAtt(att)} title="Download">{att.name}</button>
                   <span className="card-edit-att-size">{fmtSize(att.size)}</span>
+                  <button
+                    type="button"
+                    className={`card-edit-att-joule${att.isJouleSkill ? ' active' : ''}`}
+                    title={att.isJouleSkill ? 'Unmark as Joule Skill' : 'Mark as Joule Skill'}
+                    onClick={() => setAttachments(prev => prev.map(a => a.id === att.id ? { ...a, isJouleSkill: !a.isJouleSkill } : a))}
+                  ><JouleDiamond size={13} /></button>
                   <button className="card-edit-att-del" onClick={() => setPendingDeletes(prev => [...prev, att.id])} title="Remove">×</button>
                 </div>
               ))}
@@ -502,10 +545,16 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
                   <span>{fileIcon(f.type)}</span>
                   <span className="card-edit-att-name">{f.name}</span>
                   <span className="card-edit-att-size">{fmtSize(f.size)}</span>
+                  <button
+                    type="button"
+                    className={`card-edit-att-joule${f.isJouleSkill ? ' active' : ''}`}
+                    title={f.isJouleSkill ? 'Unmark as Joule Skill' : 'Mark as Joule Skill'}
+                    onClick={() => setPendingFiles(prev => prev.map(x => x._tempId === f._tempId ? { ...x, isJouleSkill: !x.isJouleSkill } : x))}
+                  ><JouleDiamond size={13} /></button>
                   <button className="card-edit-att-del" onClick={() => setPendingFiles(prev => prev.filter(x => x._tempId !== f._tempId))} title="Remove">×</button>
                 </div>
               ))}
-              <button type="button" className="card-edit-att-add" onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}>+ {t('addFileBtn', lang)}</button>
+              <button type="button" className="card-edit-att-add" onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}>{t('addFileBtn', lang)}</button>
               <input type="file" ref={fileInputRef} multiple style={{ display: 'none' }} onChange={e => addFiles(e.target.files)} />
             </div>
           </div>
@@ -599,12 +648,12 @@ function PromptItemRow({ item, idx, label, body, isCopied, lang, onCopy }) {
 export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
   const { state, dispatch } = useApp();
   const { isAdmin, isEditor, profile } = useAuth();
-  const canEdit = isAdmin || isEditor || p.ownerId === profile?.id;
+  const workspace = state.workspace ?? 'library';
+  const canEdit = isAdmin || isEditor || (workspace === 'mine' && p.ownerId === profile?.id);
   const canPublish = isAdmin || isEditor;
   const lang = state.settings?.lang || 'en';
   const catalog = state.catalog;
   const isDragging = state.draggingId === p.id;
-  const workspace = state.workspace ?? 'library';
 
   // Publish request state for this card
   const myRequest = state.publishRequests?.find(r => r.prompt_id === p.id);
@@ -620,6 +669,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
   // Per-item copy state: itemId → 'copied' | null
   const [copiedItemId, setCopiedItemId] = useState(null);
   const [ctaCopied, setCtaCopied] = useState(false);
+  const [jouleModal, setJouleModal] = useState(null); // { skillName, skillContent }
 
   const promptItems = p.promptItems?.length
     ? p.promptItems
@@ -654,6 +704,21 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
     } else {
       setCopiedItemId(item.id);
       setTimeout(() => setCopiedItemId(null), 1500);
+    }
+    // If Joule integration is enabled and this prompt has a Joule skill attachment
+    const jouleAtt = (p.attachments || []).find(a => a.isJouleSkill);
+    if (jouleAtt && profile?.joule_integration) {
+      const allAtts = await AttachmentsDB.getForPrompt(p.id);
+      const file = allAtts.find(a => a.id === jouleAtt.id);
+      if (file?.data) {
+        const decoder = new TextDecoder('utf-8');
+        const content = file.data instanceof ArrayBuffer
+          ? decoder.decode(file.data)
+          : decoder.decode(await file.data.arrayBuffer());
+        const nameMatch = content.match(/^---[\s\S]*?^name:\s*(.+)/m);
+        const skillName = nameMatch ? nameMatch[1].trim() : jouleAtt.name.replace(/\.md$/i, '').replace(/[^a-z0-9-]/g, '-').toLowerCase();
+        setJouleModal({ skillName, skillContent: content });
+      }
     }
   }
 
@@ -702,6 +767,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
     : null;
 
   const attachCount = p.attachments?.length || 0;
+  const hasJouleSkill = (p.attachments || []).some(a => a.isJouleSkill);
 
   return (
     <div className={`prompt-card-flip-wrapper${flipped ? ' flipped' : ''}${flashSaved ? ' card--flash-saved' : ''}`}>
@@ -809,6 +875,14 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
           </div>
         )}
 
+        {/* Joule Skill badge */}
+        {hasJouleSkill && (
+          <div className="card-joule-badge">
+            <JouleDiamond size={18} />
+            <span>Joule Skill</span>
+          </div>
+        )}
+
         {/* Systems */}
         {systems.length > 0 && (
           <div className="card-systems-list">
@@ -872,6 +946,13 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
           lang={lang}
           onCopy={text => doCopy(text, substItem.item, true)}
           onClose={() => setSubstItem(null)}
+        />
+      )}
+      {jouleModal && (
+        <JouleSkillModal
+          skillName={jouleModal.skillName}
+          skillContent={jouleModal.skillContent}
+          onClose={() => setJouleModal(null)}
         />
       )}
     </div>

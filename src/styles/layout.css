@@ -210,6 +210,42 @@
   color: #fff !important;
 }
 
+/* BETA badge */
+.tb-beta-badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #A78BFA;
+  background: rgba(109,40,217,0.18);
+  border: 1px solid rgba(167,139,250,0.35);
+  border-radius: 5px;
+  padding: 2px 7px;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* Joule toggle — dim when off, vivid purple gem when on */
+.tb-joule-toggle { opacity: 0.35; transition: opacity 0.15s; }
+.tb-joule-toggle:hover { opacity: 0.7 !important; }
+.tb-joule-toggle.active { opacity: 1 !important; background: rgba(109,40,217,0.2) !important; border-color: rgba(109,40,217,0.5) !important; }
+
+.tb-joule-wrap { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+
+.tb-joule-dot {
+  position: absolute;
+  bottom: -3px;
+  right: -4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid var(--pm-surface);
+}
+.tb-joule-dot--ok   { background: #22C55E; }
+.tb-joule-dot--warn { background: #F59E0B; }
+.tb-joule-dot--off  { background: #EF4444; }
+
 .tb-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.12); flex-shrink: 0; }
 
 /* ── Layout ───────────────────────────────────────────────────────────── */
@@ -373,10 +409,10 @@
   align-items: center;
   background: var(--pm-bg);
   border: 1.5px solid var(--pm-border);
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
   flex-shrink: 0;
-  height: 28px;
+  height: 36px;
 }
 
 /* Sliding background indicator */
@@ -385,7 +421,7 @@
   position: absolute;
   top: 0; bottom: 0;
   width: 50%;
-  border-radius: 6px;
+  border-radius: 8px;
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s;
   z-index: 0;
 }
@@ -406,9 +442,9 @@
   position: relative;
   z-index: 1;
   flex: 1;
-  padding: 0 12px;
+  padding: 0 18px;
   height: 100%;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   font-family: inherit;
   letter-spacing: 0.2px;

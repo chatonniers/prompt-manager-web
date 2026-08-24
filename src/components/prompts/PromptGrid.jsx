@@ -3,12 +3,15 @@ import { createPortal } from 'react-dom';
 import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
+import { AttachmentsDB } from '../../lib/attachments.js';
 import { filterAndRank } from '../../lib/search.js';
 import { t } from '../../lib/i18n.js';
 import { getFlowColor } from '../../lib/flowColors.js';
 import { extractVars } from '../../lib/substitution.js';
 import SubstituteModal from '../shared/SubstituteModal.jsx';
+import JouleSkillModal from '../shared/JouleSkillModal.jsx';
 import PromptCard from './PromptCard.jsx';
+import JouleDiamond from '../shared/JouleDiamond.jsx';
 import EmptyState from './EmptyState.jsx';
 import BulkActionBar from './BulkActionBar.jsx';
 
@@ -70,10 +73,13 @@ function RowPreview({ p, mouseX, mouseY, lang }) {
   );
 }
 
-function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequests, canEdit, lang, dispatch }) {
+function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequests, canEdit, canPublish, profile, workspace, lang, dispatch }) {
+  const { state } = useApp();
+  const { profile: authProfile } = useAuth();
   const [activeItem, setActiveItem] = useState(0);
   const [copiedIdx, setCopiedIdx] = useState(null);
   const [substItem, setSubstItem] = useState(null);
+  const [jouleModal, setJouleModal] = useState(null);
   const [hovered, setHovered] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const hoverTimerRef = useRef(null);
@@ -94,6 +100,15 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
   const req = (publishRequests || []).find(r => r.prompt_id === p.id);
   const reqInfo = req ? REQ_ICONS[req.status] : null;
 
+  const isOwner = p.ownerId === profile?.id;
+  const rowCanEdit = canPublish || (workspace === 'mine' && isOwner);
+
+  // Publish request button: same logic as PromptCard
+  const isPendingRequest = req?.status === 'pending';
+  const isApprovedRequest = req?.status === 'approved';
+  const showRequestBtn = workspace === 'mine' && !canPublish && isOwner
+    && p.status === 'draft' && p.isPrivate === false && !isApprovedRequest;
+
   async function doCopy(text, item, idx) {
     await copyText(text);
     await StorageAPI.incrementUsage(p.id);
@@ -102,6 +117,21 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
     dispatch({ type: 'SHOW_TOAST', payload: t('copied', lang) });
     setCopiedIdx(idx);
     setTimeout(() => setCopiedIdx(null), 1500);
+    // If Joule integration is enabled and this prompt has a Joule skill attachment
+    const jouleAtt = (p.attachments || []).find(a => a.isJouleSkill);
+    if (jouleAtt && authProfile?.joule_integration) {
+      const allAtts = await AttachmentsDB.getForPrompt(p.id);
+      const file = allAtts.find(a => a.id === jouleAtt.id);
+      if (file?.data) {
+        const decoder = new TextDecoder('utf-8');
+        const content = file.data instanceof ArrayBuffer
+          ? decoder.decode(file.data)
+          : decoder.decode(await file.data.arrayBuffer());
+        const nameMatch = content.match(/^---[\s\S]*?^name:\s*(.+)/m);
+        const skillName = nameMatch ? nameMatch[1].trim() : jouleAtt.name.replace(/\.md$/i, '').replace(/[^a-z0-9-]/g, '-').toLowerCase();
+        setJouleModal({ skillName, skillContent: content });
+      }
+    }
   }
 
   async function handleCopy(idx) {
@@ -116,12 +146,31 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
     await doCopy(body, item, idx);
   }
 
+  async function handleToggleFav(e) {
+    e.stopPropagation();
+    const updated = { ...p, isFavorite: !p.isFavorite };
+    await StorageAPI.upsertPrompt(updated);
+    const fresh = await StorageAPI.getAllPrompts();
+    dispatch({ type: 'SET_PROMPTS', payload: fresh });
+  }
+
+  async function handlePublishRequest(e) {
+    e.stopPropagation();
+    if (isPendingRequest) {
+      await StorageAPI.deletePublishRequest(p.id);
+    } else {
+      await StorageAPI.createPublishRequest(p.id);
+    }
+    const fresh = await StorageAPI.getPublishRequests().catch(() => []);
+    dispatch({ type: 'SET_PUBLISH_REQUESTS', payload: fresh });
+  }
+
   return (
     <>
       <tr
         ref={rowRef}
-        className={`pt-row${selectedIds?.has(p.id) ? ' pt-row-selected' : ''}${canEdit ? ' pt-row-clickable' : ''}`}
-        onClick={() => canEdit && onOpen(p.id)}
+        className={`pt-row${selectedIds?.has(p.id) ? ' pt-row-selected' : ''}${rowCanEdit ? ' pt-row-clickable' : ''}`}
+        onClick={() => rowCanEdit && onOpen(p.id)}
       >
         <td className="pt-td pt-td-check" onClick={e => e.stopPropagation()}>
           <input type="checkbox" checked={!!selectedIds?.has(p.id)} onChange={() => onToggleSelect(p.id)} />
@@ -131,6 +180,16 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
         <td ref={titleSpanRef} className="pt-td pt-td-title-cell" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
           <div className="pt-title-row">
             <span className="pt-title-text">{p.title}</span>
+            {(p.attachments || []).some(a => a.isJouleSkill) && (
+              <span className="pt-joule-badge" title="Joule Skill"><JouleDiamond size={12} /></span>
+            )}
+            <button
+              className={`pt-fav-btn${p.isFavorite ? ' active' : ''}`}
+              onClick={handleToggleFav}
+              title={p.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              {p.isFavorite ? '★' : '☆'}
+            </button>
           </div>
           {/* Prompt item tabs */}
           <div className="pt-item-tabs">
@@ -160,6 +219,15 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
         </td>
         <td className="pt-td" style={{ textAlign: 'center' }}>
           {reqInfo && <span style={{ color: reqInfo.color, fontWeight: 700, fontSize: 11 }}>{reqInfo.label}</span>}
+          {showRequestBtn && (
+            <button
+              className="card-request-btn"
+              style={{ fontSize: 10, padding: '2px 8px' }}
+              onClick={handlePublishRequest}
+            >
+              {isPendingRequest ? 'Cancel' : t('requestPublish', lang)}
+            </button>
+          )}
         </td>
         <td className="pt-td pt-td-dim">{p.category || '—'}</td>
         <td className="pt-td">
@@ -186,12 +254,19 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
           onClose={() => setSubstItem(null)}
         />
       )}
+      {jouleModal && (
+        <JouleSkillModal
+          skillName={jouleModal.skillName}
+          skillContent={jouleModal.skillContent}
+          onClose={() => setJouleModal(null)}
+        />
+      )}
       {hovered && !substItem && <RowPreview p={p} mouseX={mousePos.x} mouseY={mousePos.y} lang={lang} />}
     </>
   );
 }
 
-function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen, publishRequests, canEdit, lang, dispatch }) {
+function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen, publishRequests, canEdit, canPublish, profile, workspace, lang, dispatch }) {
   const [sort, setSort] = useState({ col: 'title', dir: 1 });
 
   function toggleSort(col) {
@@ -247,6 +322,9 @@ function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen, publishRequ
               onOpen={onOpen}
               publishRequests={publishRequests}
               canEdit={canEdit}
+              canPublish={canPublish}
+              profile={profile}
+              workspace={workspace}
               lang={lang}
               dispatch={dispatch}
             />
@@ -359,6 +437,15 @@ function FavoritesRow({ favs, lang, selectedIds, onToggleSelect, onDrop, onHeigh
   const scrollRef = useRef(null);
   const blockRef = useRef(null);
   const [hovered, setHovered] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('pm-favs-collapsed') === 'true');
+
+  function toggleCollapse() {
+    setCollapsed(v => {
+      const next = !v;
+      localStorage.setItem('pm-favs-collapsed', next);
+      return next;
+    });
+  }
 
   useEffect(() => {
     if (!blockRef.current || !onHeightChange) return;
@@ -368,7 +455,7 @@ function FavoritesRow({ favs, lang, selectedIds, onToggleSelect, onDrop, onHeigh
     const ro = new ResizeObserver(report);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [onHeightChange]);
+  }, [onHeightChange, collapsed]);
 
   function scroll(dir) {
     const el = scrollRef.current;
@@ -378,10 +465,11 @@ function FavoritesRow({ favs, lang, selectedIds, onToggleSelect, onDrop, onHeigh
 
   return (
     <DropZone className="favs-block" onDrop={id => onDrop(id, { isFavorite: true })} blockRef={blockRef}>
-      <div className="grid-section-label">
+      <div className="grid-section-label favs-section-label" style={{ cursor: 'pointer', userSelect: 'none' }} onClick={toggleCollapse}>
+        <span className="favs-collapse-chevron" style={{ marginRight: 5, fontSize: 10, opacity: 0.6, transition: 'transform 0.15s', display: 'inline-block', transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>▼</span>
         {t('favorites', lang)}<span className="section-count">{favs.length}</span>
       </div>
-      {favs.length > 0 ? (
+      {!collapsed && (favs.length > 0 ? (
         <div
           className="favs-row-wrap"
           onMouseEnter={() => setHovered(true)}
@@ -407,7 +495,7 @@ function FavoritesRow({ favs, lang, selectedIds, onToggleSelect, onDrop, onHeigh
         </div>
       ) : (
         <p style={{ fontSize: 12, color: 'var(--pm-text3)', padding: '8px 2px', fontStyle: 'italic' }}>No favorites yet — drag a card here or click ★</p>
-      )}
+      ))}
     </DropZone>
   );
 }
@@ -509,7 +597,6 @@ export default function PromptGrid() {
 
   if (ranked.length === 0) return <EmptyState />;
 
-  // Viewers cannot edit in library mode
   const canEdit = canPublish || workspace === 'mine';
 
   if (displayMode === 'table') {
@@ -523,6 +610,9 @@ export default function PromptGrid() {
           onOpen={id => dispatch({ type: 'OPEN_EDIT', payload: id })}
           publishRequests={publishRequests}
           canEdit={canEdit}
+          canPublish={canPublish}
+          profile={profile}
+          workspace={workspace}
           lang={lang}
           dispatch={dispatch}
         />
