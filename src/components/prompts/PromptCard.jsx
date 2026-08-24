@@ -684,6 +684,10 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
     // If Joule integration is enabled and this prompt has a Joule skill attachment
     const jouleAtt = (p.attachments || []).find(a => a.isJouleSkill);
     if (jouleAtt && profile?.joule_integration && profile?.joule_connected) {
+      if (p.status !== 'published') {
+        dispatch({ type: 'SHOW_TOAST', payload: 'Joule Desktop integration is only available for published prompts. Prompt copied.' });
+        return;
+      }
       const allAtts = await AttachmentsDB.getForPrompt(p.id);
       const file = allAtts.find(a => a.id === jouleAtt.id);
       let content = null;
@@ -693,7 +697,6 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
           ? decoder.decode(file.data)
           : decoder.decode(await file.data.arrayBuffer());
       } else if (jouleAtt.skill_url) {
-        // No local copy — fetch from Supabase Storage
         try {
           const res = await fetch(jouleAtt.skill_url);
           content = await res.text();

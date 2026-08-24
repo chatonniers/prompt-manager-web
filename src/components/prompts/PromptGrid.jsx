@@ -120,6 +120,10 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
     // If Joule integration is enabled and this prompt has a Joule skill attachment
     const jouleAtt = (p.attachments || []).find(a => a.isJouleSkill);
     if (jouleAtt && authProfile?.joule_integration && authProfile?.joule_connected) {
+      if (p.status !== 'published') {
+        dispatch({ type: 'SHOW_TOAST', payload: 'Joule Desktop integration is only available for published prompts. Prompt copied.' });
+        return;
+      }
       const allAtts = await AttachmentsDB.getForPrompt(p.id);
       const file = allAtts.find(a => a.id === jouleAtt.id);
       let content = null;
