@@ -715,8 +715,10 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
         const content = file.data instanceof ArrayBuffer
           ? decoder.decode(file.data)
           : decoder.decode(await file.data.arrayBuffer());
-        const nameMatch = content.match(/^---[\s\S]*?^name:\s*(.+)/m);
-        const skillName = nameMatch ? nameMatch[1].trim() : jouleAtt.name.replace(/\.md$/i, '').replace(/[^a-z0-9-]/g, '-').toLowerCase();
+        const nameMatch = content.match(/(?:^|\n)name:\s*([^\n\r]+)/);
+        const skillName = nameMatch
+          ? nameMatch[1].trim()
+          : jouleAtt.name.replace(/\.[^.]+$/g, '').replace(/[^a-z0-9-]/gi, '-').toLowerCase();
         setJouleModal({ skillName, skillContent: content });
       }
     }
