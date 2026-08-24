@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import JSZip from 'jszip';
 import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
@@ -130,15 +131,29 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
       const allAtts = await AttachmentsDB.getForPrompt(p.id);
       const file = allAtts.find(a => a.id === jouleAtt.id);
       let content = null;
+      const isZip = jouleAtt.name?.toLowerCase().endsWith('.zip') || jouleAtt.type?.includes('zip');
+
+      async function extractSkillContent(buf) {
+        if (isZip) {
+          const zip = await JSZip.loadAsync(buf);
+          const skillFile = zip.file('SKILL.md') || zip.file(/SKILL\.md$/i)[0];
+          if (skillFile) return skillFile.async('string');
+          return null;
+        }
+        return new TextDecoder('utf-8').decode(buf instanceof ArrayBuffer ? buf : await buf.arrayBuffer());
+      }
+
       if (file?.data) {
-        const decoder = new TextDecoder('utf-8');
-        content = file.data instanceof ArrayBuffer
-          ? decoder.decode(file.data)
-          : decoder.decode(await file.data.arrayBuffer());
+        const buf = file.data instanceof ArrayBuffer ? file.data : await file.data.arrayBuffer();
+        content = await extractSkillContent(buf);
       } else if (jouleAtt.skill_url) {
         try {
           const res = await fetch(jouleAtt.skill_url);
-          content = await res.text();
+          if (isZip) {
+            content = await extractSkillContent(await res.arrayBuffer());
+          } else {
+            content = await res.text();
+          }
         } catch (e) { console.error('Skill fetch failed:', e); }
       }
       if (content) {
