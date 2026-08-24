@@ -10,6 +10,8 @@ import JouleDiamond from '../shared/JouleDiamond.jsx';
 
 const STEP = 0.1;
 
+const MCP_URL = 'https://promptdeck-mcp.cfapps.eu10.hana.ondemand.com/mcp';
+
 function DisplayMenu({ theme, lang, zoom, zoomPct, isFullscreen, displayMode, onTheme, onLang, onZoom, onFullscreen, onHelp, onDisplayMode, jouleIntegration, onLaunchJoule }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -119,6 +121,24 @@ function DisplayMenu({ theme, lang, zoom, zoomPct, isFullscreen, displayMode, on
                 </svg>
                 Launch Joule Desktop
               </button>
+              <div className="tb-display-divider" />
+              <div className="tb-display-mcp-block">
+                <div className="tb-display-mcp-title">
+                  <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M5 8h6M8 5v6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                  PromptDeck MCP
+                </div>
+                <div className="tb-display-mcp-desc">Add to Joule Desktop → Connectors</div>
+                <div className="tb-display-mcp-url" title={MCP_URL}>
+                  <code>{MCP_URL}</code>
+                  <button
+                    className="tb-display-mcp-copy"
+                    title="Copy MCP URL"
+                    onClick={() => { navigator.clipboard.writeText(MCP_URL); }}
+                  >
+                    <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><rect x="5" y="1" width="10" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.4"/><path d="M3 4H2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                  </button>
+                </div>
+              </div>
             </>
           )}
         </div>
