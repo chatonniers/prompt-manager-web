@@ -24,6 +24,8 @@ const PORT = 27384;
 const ALLOWED_ORIGIN = 'https://chatonniers.github.io';
 const ALLOWED_ORIGIN_LOCAL = 'http://localhost:5173';
 
+const pendingSkills = new Map(); // token → { name, content, expires }
+
 // ── Joule exe detection ──────────────────────────────────────────────────────
 
 function findJouleExe() {
@@ -283,17 +285,30 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && url.pathname === '/skills/install') {
       const { name, content } = await readBody(req);
       if (!name || !content) return send(res, 400, { error: 'name and content required' });
-      const existing = findSkill(name);
-      const id = existing ? existing.id : installSkill(name, content);
-      const alreadyInstalled = !!existing;
-      // Always restart Joule so it picks up current skills
-      if (isJouleRunning()) {
-        try {
-          execSync(`taskkill /IM "Joule Desktop.exe" /F`, { timeout: 5000 });
-          await sleep(1500);
-        } catch { /* ignore */ }
+
+      // Store skill content temporarily so Joule can fetch it via deep link
+      const skillToken = uuidv4();
+      pendingSkills.set(skillToken, { name, content, expires: Date.now() + 60000 });
+
+      // Fire joule://install-skill?url=...&name=... deep link — Joule registers it properly
+      const skillUrl = `http://localhost:${PORT}/skills/serve/${skillToken}`;
+      const deepLink = `joule://install-skill?url=${encodeURIComponent(skillUrl)}&name=${encodeURIComponent(name)}`;
+      execSync(`start "" "${deepLink}"`, { shell: true, timeout: 5000 });
+
+      return send(res, 200, { ok: true, alreadyInstalled: false });
+    }
+
+    // Serve pending skill content for Joule's deep link fetch
+    if (req.method === 'GET' && url.pathname.startsWith('/skills/serve/')) {
+      const token = url.pathname.split('/').pop();
+      const pending = pendingSkills.get(token);
+      if (!pending || Date.now() > pending.expires) {
+        res.writeHead(404); res.end('Not found'); return;
       }
-      return send(res, 200, { ok: true, id, alreadyInstalled });
+      pendingSkills.delete(token);
+      const body = pending.content;
+      res.writeHead(200, { 'Content-Type': 'text/markdown', 'Content-Length': Buffer.byteLength(body) });
+      res.end(body); return;
     }
 
     if (req.method === 'POST' && url.pathname === '/shutdown') {
