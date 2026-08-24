@@ -349,7 +349,8 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
     setJouleConnected(newVal);
     if (!newVal) {
       setJouleStatus(null);
-      JouleAgent.shutdown();
+      // Only shut down if agent is actually reachable
+      JouleAgent.isRunning().then(running => { if (running) JouleAgent.shutdown(); }).catch(() => {});
     } else {
       // Check agent is reachable; if not, open setup guide
       try {
