@@ -490,8 +490,15 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
             title={t('settings', lang)}
           >
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ verticalAlign: 'middle' }}>
-              <path d="M6.5 1h3l.5 1.5a5 5 0 0 1 1.2.7l1.5-.5 1.5 2.6-1.2 1.1a5 5 0 0 1 0 1.4l1.2 1.1-1.5 2.6-1.5-.5a5 5 0 0 1-1.2.7L9.5 15h-3l-.5-1.5A5 5 0 0 1 4.8 12.8l-1.5.5L1.8 10.7l1.2-1.1a5 5 0 0 1 0-1.4L1.8 7.1l1.5-2.6 1.5.5A5 5 0 0 1 6 3.5L6.5 1z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
-              <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.3"/>
+              <line x1="1" y1="4" x2="10" y2="4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+              <line x1="13" y1="4" x2="15" y2="4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+              <circle cx="11.5" cy="4" r="1.5" stroke="currentColor" strokeWidth="1.4"/>
+              <line x1="1" y1="8" x2="4" y2="8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+              <line x1="7" y1="8" x2="15" y2="8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+              <circle cx="5.5" cy="8" r="1.5" stroke="currentColor" strokeWidth="1.4"/>
+              <line x1="1" y1="12" x2="10" y2="12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+              <line x1="13" y1="12" x2="15" y2="12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+              <circle cx="11.5" cy="12" r="1.5" stroke="currentColor" strokeWidth="1.4"/>
             </svg>
           </button>
           )}

@@ -241,10 +241,6 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
           {(p.solutions || []).slice(0, 3).map(s => <span key={s} className="pill">{s}</span>)}
           {(p.solutions || []).length > 3 && <span className="pt-more">+{p.solutions.length - 3}</span>}
         </td>
-        <td className="pt-td pt-td-pills">
-          {(p.tags || []).slice(0, 3).map(tag => <span key={tag} className="pill tag">#{tag}</span>)}
-          {(p.tags || []).length > 3 && <span className="pt-more">+{p.tags.length - 3}</span>}
-        </td>
         <td className="pt-td pt-td-num">{p.usageCount > 0 ? p.usageCount : '—'}</td>
         <td className="pt-td pt-td-dim">{relTime(p.updatedAt)}</td>
       </tr>
@@ -310,7 +306,6 @@ function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen, publishRequ
             <Th col="category" label="Category" />
             <Th col="flow" label="Flow" />
             <th className="pt-th">Solutions</th>
-            <th className="pt-th">Tags</th>
             <Th col="used" label="Used" />
             <Th col="updated" label="Updated" />
           </tr>
@@ -509,6 +504,10 @@ export default function PromptGrid() {
 
   const publishRequests = state.publishRequests || [];
   let pool = applyViewFilter(prompts, currentView, currentFilter, workspace, profile?.id, canPublish, visibilityRules, role);
+  // Hide archived prompts from normal views unless explicitly filtering for them
+  if (statusFilter !== 'archived') {
+    pool = pool.filter(p => p.status !== 'archived');
+  }
   if (statusFilter) {
     const REQ_STATUSES = new Set(['pending', 'approved', 'rejected']);
     if (REQ_STATUSES.has(statusFilter)) {

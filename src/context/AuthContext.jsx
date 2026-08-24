@@ -4,12 +4,15 @@ import { supabase } from '../lib/supabase.js';
 const AuthContext = createContext(null);
 const IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 hours
 const IDLE_EVENTS = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll', 'click'];
+const APP_BROADCAST_CHANNEL = 'app-broadcast';
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(undefined);
   const [profile, setProfile] = useState(null);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
+  const [refreshBanner, setRefreshBanner] = useState(false);
   const profileChannelRef = useRef(null);
+  const appBroadcastRef = useRef(null);
   const pollRef = useRef(null);
   const userIdRef = useRef(null);
   const sessionRowRef = useRef(null);
@@ -64,9 +67,16 @@ export function AuthProvider({ children }) {
     const handleUnload = () => endSession();
     window.addEventListener('beforeunload', handleUnload);
 
+    // Subscribe to global app broadcast (refresh notifications)
+    appBroadcastRef.current = supabase
+      .channel(APP_BROADCAST_CHANNEL)
+      .on('broadcast', { event: 'refresh' }, () => setRefreshBanner(true))
+      .subscribe();
+
     return () => {
       subscription.unsubscribe();
       profileChannelRef.current?.unsubscribe();
+      appBroadcastRef.current?.unsubscribe();
       clearInterval(pollRef.current);
       stopIdleWatcher();
       window.removeEventListener('beforeunload', handleUnload);
@@ -186,12 +196,20 @@ export function AuthProvider({ children }) {
     if (userIdRef.current) await loadProfile(userIdRef.current);
   }
 
+  async function broadcastRefresh() {
+    await appBroadcastRef.current?.send({
+      type: 'broadcast',
+      event: 'refresh',
+      payload: {},
+    });
+  }
+
   const isAdmin = profile?.role === 'admin';
   const isEditor = profile?.role === 'editor' || isAdmin;
   const loading = session === undefined;
 
   return (
-    <AuthContext.Provider value={{ session, profile, isAdmin, isEditor, loading, isPasswordRecovery, signIn, signUp, signOut, updatePassword, refreshProfile }}>
+    <AuthContext.Provider value={{ session, profile, isAdmin, isEditor, loading, isPasswordRecovery, refreshBanner, setRefreshBanner, signIn, signUp, signOut, updatePassword, refreshProfile, broadcastRefresh }}>
       {children}
     </AuthContext.Provider>
   );

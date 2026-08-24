@@ -74,6 +74,14 @@ export default function BulkActionBar({ visibleIds }) {
     dispatch({ type: 'SHOW_TOAST', payload: `Moved ${count} prompt${count !== 1 ? 's' : ''} to ${flow || 'No flow'}` });
   }
 
+  async function archiveSelected() {
+    const selected = prompts.filter(p => selectedIds.has(p.id));
+    await Promise.all(selected.map(p => StorageAPI.upsertPrompt({ ...p, status: 'archived' })));
+    dispatch({ type: 'SET_PROMPTS', payload: await StorageAPI.getAllPrompts() });
+    dispatch({ type: 'CLEAR_SELECT' });
+    dispatch({ type: 'SHOW_TOAST', payload: `${count} prompt${count !== 1 ? 's' : ''} archived` });
+  }
+
   async function deleteSelected() {
     const ids = [...selectedIds];
     const remaining = prompts.filter(p => !ids.includes(p.id));
@@ -113,6 +121,9 @@ export default function BulkActionBar({ visibleIds }) {
         onSelect={v => moveToFlow(v === '__none__' ? '' : v)}
       />
       <div className="bulk-divider" />
+      {isAdmin && (
+        <button className="bulk-action-btn bulk-action-archive" onClick={archiveSelected}>Archive</button>
+      )}
       {canEdit && (confirmDelete ? (
         <>
           <span style={{ fontSize: 11, fontWeight: 600, color: '#fca5a5' }}>

@@ -43,8 +43,6 @@ export default function PromptModal() {
   const [isPrivate, setIsPrivate] = useState(true);
   const [selectedSolutions, setSelectedSolutions] = useState([]);
   const [personas, setPersonas] = useState([]);
-  const [tags, setTags] = useState([]);
-  const [tagInput, setTagInput] = useState('');
   const [systems, setSystems] = useState([]);
   const [demoLinks, setDemoLinks] = useState([]);
   const [notes, setNotes] = useState('');
@@ -72,7 +70,6 @@ export default function PromptModal() {
       setIsFavorite(existing.isFavorite || false);
       setSelectedSolutions(existing.solutions || []);
       setPersonas(existing.personas || []);
-      setTags(existing.tags || []);
       const savedSystems = existing.systems || [];
       if (savedSystems.length) {
         setSystems(savedSystems);
@@ -143,17 +140,6 @@ export default function PromptModal() {
     setSelectedSolutions(prev =>
       prev.includes(sol) ? prev.filter(s => s !== sol) : [...prev, sol]
     );
-  }
-
-  function handleTagKey(e) {
-    if (e.key === 'Enter' && tagInput.trim()) {
-      e.preventDefault();
-      const v = tagInput.trim().replace(/^#/, '');
-      if (v && !tags.includes(v)) setTags(prev => [...prev, v]);
-      setTagInput('');
-    } else if (e.key === 'Backspace' && !tagInput && tags.length > 0) {
-      setTags(prev => prev.slice(0, -1));
-    }
   }
 
   function updateItem(id, field, value) {
@@ -290,7 +276,6 @@ export default function PromptModal() {
       storyFlow,
       solutions: selectedSolutions,
       personas,
-      tags,
       systems,
       demoLinks: demoLinks.filter(l => {
         const u = l.url.trim();
@@ -462,7 +447,7 @@ export default function PromptModal() {
               <div className="field-col">
                 <label>Status</label>
                 <div className="card-status-btns">
-                  {(canPublish ? ['', 'draft', 'published'] : ['draft']).map(s => (
+                  {(canPublish ? ['', 'draft', 'published', 'archived'] : ['draft']).map(s => (
                     <button key={s} type="button"
                       className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`}
                       onClick={() => setStatus(s)} disabled={!canPublish && s !== 'draft'}>
@@ -536,35 +521,6 @@ export default function PromptModal() {
               ) : (
                 <p className="field-hint-text">{t('noSystemsYet', lang)}</p>
               )}
-            </div>
-
-            {/* Tags */}
-            <div className="field-row" style={{ position: 'relative' }}>
-              <label>{t('tagsLabel', lang)} <span className="hint">({t('tagHint', lang)})</span></label>
-              <div className="tag-input-wrap">
-                {tags.map(tag => (
-                  <span key={tag} className="tag-chip">
-                    #{tag}
-                    <button className="tag-remove" onClick={() => setTags(prev => prev.filter(t => t !== tag))}>×</button>
-                  </span>
-                ))}
-                <input type="text" value={tagInput} onChange={e => setTagInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Escape') { setTagInput(''); return; } handleTagKey(e); }}
-                  placeholder={tags.length === 0 ? t('tagPlaceholder', lang) : ''} />
-              </div>
-              {tagInput.trim() && (() => {
-                const allTags = [...new Set([...(catalog.tags || []), ...prompts.flatMap(p => p.tags || [])])].sort();
-                const q = tagInput.trim().replace(/^#/, '').toLowerCase();
-                const suggestions = allTags.filter(t => t.toLowerCase().includes(q) && !tags.includes(t));
-                return suggestions.length > 0 ? (
-                  <div className="tag-suggestions">
-                    {suggestions.map(s => (
-                      <button key={s} type="button" className="tag-suggestion-item"
-                        onMouseDown={e => { e.preventDefault(); setTags(prev => [...prev, s]); setTagInput(''); }}>#{s}</button>
-                    ))}
-                  </div>
-                ) : null;
-              })()}
             </div>
 
             {/* Attachments */}

@@ -4,7 +4,7 @@ import { StorageAPI } from '../../lib/storage.js';
 
 const ROLES = ['admin', 'editor', 'viewer'];
 const WORKSPACES = ['library', 'mine'];
-const ALL_STATUSES = ['published', 'draft'];
+const ALL_STATUSES = ['published', 'draft', 'archived'];
 const ALL_KPIS = ['users', 'published', 'draft', 'pending', 'approved', 'rejected'];
 
 const KPI_ROWS = [

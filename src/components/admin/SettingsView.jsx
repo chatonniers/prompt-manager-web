@@ -6,7 +6,6 @@ import { t } from '../../lib/i18n.js';
 import AdminCatalogCard from './AdminCatalogCard.jsx';
 import AdminCategoriesCard from './AdminCategoriesCard.jsx';
 import AdminSystemsCard from './AdminSystemsCard.jsx';
-import AdminTagsCard from './AdminTagsCard.jsx';
 import AdminVisibilityCard from './AdminVisibilityCard.jsx';
 import ImportModeModal from '../shared/ImportModeModal.jsx';
 import UserManagement from './UserManagement.jsx';
@@ -18,7 +17,6 @@ const FUNCTIONAL_SECTIONS = [
   { id: 'personas',   labelKey: 'personasAdmin' },
   { id: 'solutions',  labelKey: 'solutionsAdmin' },
   { id: 'systems',    labelKey: 'systemsAdmin' },
-  { id: 'tags',       labelKey: 'tagsAdmin' },
 ];
 
 const TECHNICAL_SECTIONS = [
@@ -27,20 +25,26 @@ const TECHNICAL_SECTIONS = [
 
 const ADMIN_TECHNICAL_SECTIONS = [
   { id: 'users',      labelKey: null, label: 'Users' },
-  { id: 'stats',      labelKey: null, label: 'Statistics' },
   { id: 'visibility', labelKey: null, label: 'Visibility Rules' },
+  { id: 'system',     labelKey: null, label: 'System' },
+];
+
+const STATS_SECTIONS = [
+  { id: 'stats', labelKey: null, label: 'Statistics' },
 ];
 
 export default function SettingsView() {
   const { state, dispatch } = useApp();
-  const { isAdmin } = useAuth();
+  const { isAdmin, broadcastRefresh } = useAuth();
   const lang = state.settings?.lang || 'en';
   const [activeSection, setActiveSection] = useState(state.settingsSection || 'categories');
+  const [broadcastSent, setBroadcastSent] = useState(false);
 
   const allSections = [
     ...FUNCTIONAL_SECTIONS,
     ...TECHNICAL_SECTIONS,
     ...(isAdmin ? ADMIN_TECHNICAL_SECTIONS : []),
+    ...(isAdmin ? STATS_SECTIONS : []),
   ];
 
   const fileRef = useRef(null);
@@ -111,13 +115,15 @@ export default function SettingsView() {
 
         {/* Left nav */}
         <nav className="settings-nav">
-          <NavSection sections={FUNCTIONAL_SECTIONS} />
+          <NavSection sections={FUNCTIONAL_SECTIONS} label="Functional Parameters" />
           <div className="settings-nav-divider" />
           <NavSection sections={TECHNICAL_SECTIONS} label="Data" />
           {isAdmin && (
             <>
               <div className="settings-nav-divider" />
               <NavSection sections={ADMIN_TECHNICAL_SECTIONS} label="Admin" />
+              <div className="settings-nav-divider" />
+              <NavSection sections={STATS_SECTIONS} label="Analytics" />
             </>
           )}
         </nav>
@@ -170,8 +176,6 @@ export default function SettingsView() {
 
           {activeSection === 'systems' && <AdminSystemsCard />}
 
-          {activeSection === 'tags' && <AdminTagsCard />}
-
           {activeSection === 'solutions' && (
             <AdminCatalogCard
               titleKey="solutionsAdmin"
@@ -197,6 +201,26 @@ export default function SettingsView() {
           {activeSection === 'users' && <UserManagement />}
           {activeSection === 'stats' && <AdminStatsView />}
           {activeSection === 'visibility' && <AdminVisibilityCard />}
+
+          {activeSection === 'system' && isAdmin && (
+            <div className="view-card">
+              <h2>System Actions</h2>
+              <p style={{ fontSize: 13, color: 'var(--pm-text2)', marginBottom: 16 }}>
+                Notify all connected users to refresh the app — use this after deploying new features or changes.
+              </p>
+              <button
+                className="action-btn"
+                onClick={async () => {
+                  await broadcastRefresh();
+                  setBroadcastSent(true);
+                  dispatch({ type: 'SHOW_TOAST', payload: 'Refresh notification sent to all users.' });
+                  setTimeout(() => setBroadcastSent(false), 4000);
+                }}
+              >
+                {broadcastSent ? '✓ Notification sent' : '🔔 Notify all users to refresh'}
+              </button>
+            </div>
+          )}
 
         </div>
       </div>

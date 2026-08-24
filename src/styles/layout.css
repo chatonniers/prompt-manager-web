@@ -1,3 +1,46 @@
+/* ── Refresh notification banner ─────────────────────────────────────── */
+.refresh-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(90deg, #1e1b4b 0%, #1a1040 100%);
+  border-bottom: 1px solid rgba(99,102,241,0.5);
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #C4B5FD;
+  position: sticky;
+  top: 0;
+  z-index: 101;
+}
+.refresh-banner span { flex: 1; }
+.refresh-banner-btn {
+  background: var(--pm-accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background 0.12s;
+}
+.refresh-banner-btn:hover { background: var(--pm-accent2); }
+.refresh-banner-dismiss {
+  background: none;
+  border: none;
+  color: rgba(196,181,253,0.5);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.12s, background 0.12s;
+  flex-shrink: 0;
+}
+.refresh-banner-dismiss:hover { color: #C4B5FD; background: rgba(99,102,241,0.15); }
+
 /* ── Top bar ──────────────────────────────────────────────────────────── */
 #top-bar {
   display: grid;
@@ -368,6 +411,8 @@
 .bulk-action-btn.bulk-action-del:hover { background: rgba(220,38,38,0.2); border-color: rgba(220,38,38,0.6); color: #fff; }
 .bulk-action-btn.bulk-action-del-confirm { background: var(--pm-danger); color: #fff; border-color: var(--pm-danger); }
 .bulk-action-btn.bulk-action-del-confirm:hover { background: #b91c1c; border-color: #b91c1c; }
+.bulk-action-btn.bulk-action-archive { color: #94A3B8; border-color: rgba(148,163,184,0.35); }
+.bulk-action-btn.bulk-action-archive:hover { background: rgba(148,163,184,0.15); border-color: #94A3B8; color: #E2E8F0; }
 
 .bulk-divider { width: 1px; height: 18px; background: rgba(255,255,255,0.15); flex-shrink: 0; }
 

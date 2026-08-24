@@ -1,342 +1,437 @@
 import { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
-import { t } from '../../lib/i18n.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 
-/* ── Inline SVG mockups ────────────────────────────────────────────────── */
+/* ── Translations ──────────────────────────────────────────────────────── */
+const TR = {
+  en: {
+    title: 'Help & Guide',
+    subtitle: 'Everything you need to run better demos',
+    tabs: {
+      basics:   'Basics',
+      prompts:  'Prompts',
+      library:  'Library',
+      workflow: 'Workflow',
+      admin:    'Admin & Settings',
+    },
+    basics: {
+      whatTitle: 'What is PromptDeck?',
+      whatBody: 'A shared library of demo prompts for SAP tools — Joule, IBP, S/4HANA, Ariba and more. Find the right prompt fast, copy it in one click, and run your demo.',
+      areasTitle: 'The main areas',
+      sidebarTitle: 'Left sidebar — navigation',
+      sidebarBody: 'Filter by Category, Story Flow, or Solution. Click any item to scope the view. The active filter is highlighted.',
+      gridTitle: 'Card grid — your prompts',
+      gridBody: 'Each card shows the prompt title, numbered steps, category/flow/solution pills, and status. Click a step row to copy it instantly.',
+      topbarTitle: 'Top bar — search & actions',
+      topbarBody: 'Search ranks results by relevance (title first, then body). New Prompt, workspace toggle, bell notifications, and settings are all here.',
+      workspacesTitle: 'Workspaces',
+      libraryTitle: 'Library',
+      libraryBody: 'All published prompts shared with the team. This is the default view.',
+      mineTitle: 'Mine',
+      mineBody: 'Your personal drafts — private by default, invisible to others until published. Background tint changes to green when in Mine.',
+      workspaceTip: 'Use the Library / Mine toggle in the top bar to switch. Create new prompts in Mine to draft privately before sharing.',
+      shortcutsTitle: 'Quick shortcuts',
+      sc1: 'Copy that prompt to clipboard',
+      sc2: 'Close any open modal or search',
+      sc3: 'Move to a different category, flow, or pin as favorite',
+      sc4: 'Toggle language for copy — cards with FR translation switch automatically',
+    },
+    prompts: {
+      createTitle: 'Creating a prompt',
+      newTitle: 'Click "+ New" in the top bar',
+      newBody: 'Fill in a title, then add one or more prompt steps (label + body text). Use the Details tab to set category, story flow, solutions, status, and attachments.',
+      multiTitle: 'Multi-step prompts',
+      multiBody: 'Add multiple steps with the + tab in the Content view. Each step gets its own label (e.g. "Step 1 — Analyze") and body. On the card they appear as numbered rows — click any row to copy that step alone.',
+      bilingualTitle: 'Bilingual (EN / FR)',
+      bilingualBody: 'Each step body has an EN and FR field. When FR is filled in and the language is set to FR, copying a step uses the FR text. The card shows a pill indicator when FR is available.',
+      copyTitle: 'Copying prompts',
+      oneClickTitle: 'One-click copy',
+      oneClickBody: 'Click any step row on the card front. The row flashes a checkmark on success and your clipboard is ready to paste into Joule or any SAP tool.',
+      placeholderTitle: 'Placeholders',
+      placeholderBody: 'If a prompt body contains [PLACEHOLDERS], a fill-in modal opens before copying so you can substitute values without editing the prompt.',
+      copyTip: 'Switch to FR in the top bar before copying to get the French version automatically if it\'s been filled in.',
+      organizeTitle: 'Editing & organizing',
+      editTitle: 'Edit a prompt',
+      editBody: 'Click the pencil icon on any card (or the card title area) to open the edit modal. All fields are available: content, details, attachments, visibility, and status.',
+      favTitle: 'Favorites',
+      favBody: 'Drag a card to the Favorites strip at the top of the grid to pin it. Favorites always appear first regardless of filters.',
+      dndTitle: 'Drag & drop',
+      dndBody: 'Drag any card onto a category tab to reassign its category, into a flow column to change its story flow, or up to the Favorites strip to pin it. An Undo bar appears for 5 seconds after each move.',
+      bulkTitle: 'Bulk actions',
+      bulkBody: 'Hover a card to reveal its checkbox. Select multiple cards — a bulk action bar appears with Export, Move category, Move flow, and Delete.',
+    },
+    library: {
+      findTitle: 'Finding prompts',
+      searchTitle: 'Search',
+      searchBody: 'The search bar ranks all prompts by relevance — title matches score highest, followed by body and solutions. Press Escape to clear.',
+      filterTitle: 'Sidebar filters',
+      filterBody: 'Click a Category, Story Flow, or Solution in the left sidebar to filter. The grid shows only matching prompts. Click again to clear.',
+      tabsTitle: 'Category tabs',
+      tabsBody: 'In the All Prompts view, categories appear as tabs above the grid. Cards inside each tab are grouped by story flow columns. Drag a card over a tab to switch categories mid-drag.',
+      viewTitle: 'Viewing modes',
+      cardsTableTitle: 'Cards vs Table',
+      cardsTableBody: 'Toggle between card grid and table view from the display menu (top bar). Table view is denser — useful for quick scanning of many prompts.',
+      zoomTitle: 'Zoom',
+      zoomBody: 'Use − / % / + in the display menu to scale cards from 50% to 200%. The zoom level is saved automatically.',
+      themeTitle: 'Dark / Light theme',
+      themeBody: 'Switch themes from the display menu. Your preference is saved across sessions.',
+      statusTitle: 'Status badges',
+      draftDesc: 'Work in progress, visible only to you (or editors/admins if Public)',
+      publishedDesc: 'Visible to everyone in the Library workspace',
+      archivedDesc: 'Retired prompt, hidden from normal views',
+    },
+    workflow: {
+      privacyTitle: 'Privacy & publish',
+      privateTitle: 'All drafts start Private',
+      privateBody: 'New prompts are private by default — only you can see them. Flip the visibility toggle on the card to make it Public (visible to editors and admins as a shared draft).',
+      requestTitle: 'Viewers: request to publish',
+      requestBody: 'Once your draft is Public, use the "↑ Request publish" button on the card. Editors and admins receive a bell notification and can review your prompt.',
+      approveTitle: 'Editors & Admins: approve or reject',
+      approveBody: 'Open the bell (top-right) to see pending publish requests with a prompt preview. Approve moves the card to the shared Library. Reject returns it to the author.',
+      workflowTip: 'If your request is approved and you later edit the prompt, it resets to Private draft. You can request publish again when ready.',
+      bellTitle: 'Bell notifications',
+      badgeTitle: 'What the badge means',
+      badgeBody: 'Editors / Admins: number of pending publish requests + unseen new user signups. Viewers: number of your requests that have been resolved (approved or rejected) since you last checked.',
+      realtimeTitle: 'Real-time updates',
+      realtimeBody: 'The badge and panel update live via Supabase Realtime — no page refresh needed. Notifications arrive within seconds of the event.',
+      rolesTitle: 'Roles',
+      viewerDesc: 'Browse Library, copy prompts, create private drafts, request publish',
+      editorDesc: 'Everything Viewer can do, plus publish directly, approve/reject requests, manage catalog',
+      adminDesc: 'Everything Editor can do, plus user management, visibility rules, statistics, system actions',
+    },
+    admin: {
+      settingsTitle: 'Settings (gear icon, top bar)',
+      usersTitle: 'Users',
+      usersBody: 'Manage all user accounts — set roles (Viewer, Editor, Admin), block users, kick active sessions. New signups appear as a badge on the bell icon.',
+      statsTitle: 'Statistics',
+      statsBody: 'Usage analytics — most copied prompts, active users, sessions over time.',
+      visibilityTitle: 'Visibility Rules',
+      visibilityBody: 'Control which prompts are visible to which roles. Fine-grained access beyond the basic Private / Public toggle.',
+      systemTitle: 'System — Notify users to refresh',
+      systemBody: 'After deploying updates, use Settings → Admin → System → "Notify all users to refresh" to broadcast a banner to every connected user prompting them to hard-refresh.',
+      catalogTitle: 'Catalog management',
+      catalogItemsTitle: 'Categories, Flows, Solutions, Tags, Personas, Systems',
+      catalogItemsBody: 'All shared catalog items are managed here. Changes apply immediately for all users. Drag rows to reorder. Systems support MCP endpoint credentials (secrets hidden by default).',
+      catalogTip: 'Renaming a category or flow updates all prompts that reference it automatically.',
+      importExportTitle: 'Import / Export',
+      exportTitle: 'Export',
+      exportBody: 'Downloads the full prompt library as a JSON file — useful for backup or migration.',
+      importTitle: 'Import',
+      importBody: 'Upload a JSON export file. Choose Merge (add new, skip duplicates) or Replace (overwrite everything). A confirmation modal shows the counts before committing.',
+      mcpTitle: 'MCP — AI assistant integration',
+      mcpConnectTitle: 'Connect Joule / Claude / any MCP client',
+      mcpConnectBody: 'PromptDeck exposes an MCP server. Copy the endpoint URL from the display menu (top bar → MCP section) and add it to your AI assistant\'s MCP config. The assistant can then search and retrieve prompts directly.',
+      mcpSkillTitle: 'Joule skill files',
+      mcpSkillBody: 'Prompts with a Joule skill attachment get the .skill file uploaded to Supabase Storage on save. The MCP server returns a public download URL so Joule Desktop can install the skill automatically.',
+    },
+  },
+  fr: {
+    title: 'Aide & Guide',
+    subtitle: 'Tout ce qu\'il faut pour réussir vos démos',
+    tabs: {
+      basics:   'Bases',
+      prompts:  'Prompts',
+      library:  'Bibliothèque',
+      workflow: 'Workflow',
+      admin:    'Admin & Paramètres',
+    },
+    basics: {
+      whatTitle: 'Qu\'est-ce que PromptDeck ?',
+      whatBody: 'Une bibliothèque partagée de prompts pour les outils SAP — Joule, IBP, S/4HANA, Ariba et plus. Trouvez le bon prompt rapidement, copiez-le en un clic et démarrez votre démo.',
+      areasTitle: 'Les zones principales',
+      sidebarTitle: 'Barre latérale — navigation',
+      sidebarBody: 'Filtrez par Catégorie, Story Flow ou Solution. Cliquez sur un élément pour affiner la vue. Le filtre actif est mis en évidence.',
+      gridTitle: 'Grille de cartes — vos prompts',
+      gridBody: 'Chaque carte affiche le titre du prompt, les étapes numérotées, les badges catégorie/flow/solution et le statut. Cliquez sur une ligne d\'étape pour la copier instantanément.',
+      topbarTitle: 'Barre supérieure — recherche & actions',
+      topbarBody: 'La recherche classe les résultats par pertinence (titre en premier, puis corps). Nouveau Prompt, bascule workspace, notifications et paramètres s\'y trouvent.',
+      workspacesTitle: 'Espaces de travail',
+      libraryTitle: 'Bibliothèque',
+      libraryBody: 'Tous les prompts publiés partagés avec l\'équipe. C\'est la vue par défaut.',
+      mineTitle: 'Mine',
+      mineBody: 'Vos brouillons personnels — privés par défaut, invisibles aux autres jusqu\'à publication. L\'arrière-plan devient vert dans l\'espace Mine.',
+      workspaceTip: 'Utilisez le bouton Bibliothèque / Mine dans la barre supérieure pour basculer. Créez de nouveaux prompts dans Mine pour brouiller en privé avant de partager.',
+      shortcutsTitle: 'Raccourcis rapides',
+      sc1: 'Copier ce prompt dans le presse-papiers',
+      sc2: 'Fermer toute fenêtre modale ou la recherche',
+      sc3: 'Déplacer vers une autre catégorie, flow ou épingler en favori',
+      sc4: 'Basculer la langue de copie — les cartes avec traduction FR basculent automatiquement',
+    },
+    prompts: {
+      createTitle: 'Créer un prompt',
+      newTitle: 'Cliquez sur "+ Nouveau" dans la barre supérieure',
+      newBody: 'Remplissez un titre, puis ajoutez une ou plusieurs étapes (libellé + texte). Utilisez l\'onglet Détails pour la catégorie, le flow, les solutions, le statut et les pièces jointes.',
+      multiTitle: 'Prompts multi-étapes',
+      multiBody: 'Ajoutez plusieurs étapes avec le bouton + dans la vue Contenu. Chaque étape a son propre libellé (ex. "Étape 1 — Analyser") et son corps. Sur la carte, elles apparaissent en lignes numérotées — cliquez sur une ligne pour copier cette étape seule.',
+      bilingualTitle: 'Bilingue (EN / FR)',
+      bilingualBody: 'Chaque étape a un champ EN et FR. Quand le FR est rempli et que la langue est FR, la copie utilise le texte FR. La carte affiche un badge indicateur quand le FR est disponible.',
+      copyTitle: 'Copier des prompts',
+      oneClickTitle: 'Copie en un clic',
+      oneClickBody: 'Cliquez sur n\'importe quelle ligne d\'étape sur la face avant de la carte. La ligne clignote avec une coche et le presse-papiers est prêt à coller dans Joule ou tout outil SAP.',
+      placeholderTitle: 'Espaces réservés',
+      placeholderBody: 'Si le corps d\'un prompt contient des [ESPACES_RÉSERVÉS], une fenêtre de saisie s\'ouvre avant la copie pour substituer les valeurs sans modifier le prompt.',
+      copyTip: 'Passez en FR dans la barre supérieure avant de copier pour obtenir automatiquement la version française si elle a été remplie.',
+      organizeTitle: 'Modifier & organiser',
+      editTitle: 'Modifier un prompt',
+      editBody: 'Cliquez sur l\'icône crayon d\'une carte (ou sur le titre) pour ouvrir la fenêtre de modification. Tous les champs sont disponibles : contenu, détails, pièces jointes, visibilité et statut.',
+      favTitle: 'Favoris',
+      favBody: 'Faites glisser une carte vers la bande Favoris en haut de la grille pour l\'épingler. Les favoris apparaissent toujours en premier, indépendamment des filtres.',
+      dndTitle: 'Glisser-déposer',
+      dndBody: 'Faites glisser une carte sur un onglet de catégorie pour la réassigner, dans une colonne de flow pour changer son story flow, ou vers la bande Favoris pour l\'épingler. Une barre d\'annulation apparaît pendant 5 secondes après chaque déplacement.',
+      bulkTitle: 'Actions groupées',
+      bulkBody: 'Survolez une carte pour révéler sa case à cocher. Sélectionnez plusieurs cartes — une barre d\'actions apparaît avec Exporter, Déplacer catégorie, Déplacer flow et Supprimer.',
+    },
+    library: {
+      findTitle: 'Trouver des prompts',
+      searchTitle: 'Recherche',
+      searchBody: 'La barre de recherche classe tous les prompts par pertinence — les correspondances de titre sont prioritaires, suivies du corps et des solutions. Appuyez sur Échap pour effacer.',
+      filterTitle: 'Filtres de la barre latérale',
+      filterBody: 'Cliquez sur une Catégorie, un Story Flow ou une Solution dans la barre latérale gauche pour filtrer. La grille n\'affiche que les prompts correspondants. Cliquez à nouveau pour effacer.',
+      tabsTitle: 'Onglets de catégories',
+      tabsBody: 'Dans la vue Tous les Prompts, les catégories apparaissent comme des onglets au-dessus de la grille. Les cartes dans chaque onglet sont regroupées par colonnes de flow. Faites glisser une carte sur un onglet pour changer de catégorie en cours de déplacement.',
+      viewTitle: 'Modes d\'affichage',
+      cardsTableTitle: 'Cartes vs Tableau',
+      cardsTableBody: 'Basculez entre grille de cartes et vue tableau depuis le menu d\'affichage (barre supérieure). Le tableau est plus dense — utile pour parcourir rapidement de nombreux prompts.',
+      zoomTitle: 'Zoom',
+      zoomBody: 'Utilisez − / % / + dans le menu d\'affichage pour mettre les cartes à l\'échelle de 50% à 200%. Le niveau de zoom est sauvegardé automatiquement.',
+      themeTitle: 'Thème sombre / clair',
+      themeBody: 'Changez de thème depuis le menu d\'affichage. Votre préférence est sauvegardée entre les sessions.',
+      statusTitle: 'Badges de statut',
+      draftDesc: 'Travail en cours, visible uniquement par vous (ou éditeurs/admins si Public)',
+      publishedDesc: 'Visible par tous dans l\'espace Bibliothèque',
+      archivedDesc: 'Prompt retiré, masqué des vues normales',
+    },
+    workflow: {
+      privacyTitle: 'Confidentialité & publication',
+      privateTitle: 'Tous les brouillons démarrent en Privé',
+      privateBody: 'Les nouveaux prompts sont privés par défaut — seul vous pouvez les voir. Activez le bouton de visibilité sur la carte pour le rendre Public (visible aux éditeurs et admins comme brouillon partagé).',
+      requestTitle: 'Viewers : demander la publication',
+      requestBody: 'Une fois votre brouillon Public, utilisez le bouton "↑ Demander la publication" sur la carte. Les éditeurs et admins reçoivent une notification et peuvent examiner votre prompt.',
+      approveTitle: 'Éditeurs & Admins : approuver ou rejeter',
+      approveBody: 'Ouvrez la cloche (en haut à droite) pour voir les demandes de publication en attente avec un aperçu du prompt. Approuver déplace la carte dans la Bibliothèque partagée. Rejeter la renvoie à l\'auteur.',
+      workflowTip: 'Si votre demande est approuvée et que vous modifiez ensuite le prompt, il repasse en brouillon Privé. Vous pouvez redemander la publication quand vous êtes prêt.',
+      bellTitle: 'Notifications cloche',
+      badgeTitle: 'Signification du badge',
+      badgeBody: 'Éditeurs / Admins : nombre de demandes de publication en attente + nouveaux utilisateurs non vus. Viewers : nombre de vos demandes résolues (approuvées ou rejetées) depuis votre dernière consultation.',
+      realtimeTitle: 'Mises à jour en temps réel',
+      realtimeBody: 'Le badge et le panneau se mettent à jour en direct via Supabase Realtime — aucun rechargement de page nécessaire. Les notifications arrivent en quelques secondes.',
+      rolesTitle: 'Rôles',
+      viewerDesc: 'Consulter la Bibliothèque, copier des prompts, créer des brouillons privés, demander la publication',
+      editorDesc: 'Tout ce que Viewer peut faire, plus publier directement, approuver/rejeter les demandes, gérer le catalogue',
+      adminDesc: 'Tout ce qu\'Éditeur peut faire, plus gestion des utilisateurs, règles de visibilité, statistiques, actions système',
+    },
+    admin: {
+      settingsTitle: 'Paramètres (icône curseurs, barre supérieure)',
+      usersTitle: 'Utilisateurs',
+      usersBody: 'Gérer tous les comptes — définir les rôles (Viewer, Éditeur, Admin), bloquer des utilisateurs, déconnecter des sessions actives. Les nouvelles inscriptions apparaissent comme badge sur la cloche.',
+      statsTitle: 'Statistiques',
+      statsBody: 'Analyses d\'utilisation — prompts les plus copiés, utilisateurs actifs, sessions au fil du temps.',
+      visibilityTitle: 'Règles de visibilité',
+      visibilityBody: 'Contrôlez quels prompts sont visibles pour quels rôles. Accès granulaire au-delà du simple bouton Privé / Public.',
+      systemTitle: 'Système — Notifier les utilisateurs de rafraîchir',
+      systemBody: 'Après le déploiement de mises à jour, utilisez Paramètres → Admin → Système → "Notifier tous les utilisateurs de rafraîchir" pour diffuser une bannière à tous les utilisateurs connectés.',
+      catalogTitle: 'Gestion du catalogue',
+      catalogItemsTitle: 'Catégories, Flows, Solutions, Tags, Personas, Systèmes',
+      catalogItemsBody: 'Tous les éléments du catalogue partagé sont gérés ici. Les modifications s\'appliquent immédiatement pour tous les utilisateurs. Faites glisser les lignes pour les réordonner. Les systèmes supportent les identifiants MCP (secrets masqués par défaut).',
+      catalogTip: 'Renommer une catégorie ou un flow met à jour automatiquement tous les prompts qui y font référence.',
+      importExportTitle: 'Import / Export',
+      exportTitle: 'Export',
+      exportBody: 'Télécharge la bibliothèque complète de prompts en fichier JSON — utile pour la sauvegarde ou la migration.',
+      importTitle: 'Import',
+      importBody: 'Importez un fichier JSON exporté. Choisissez Fusionner (ajouter les nouveaux, ignorer les doublons) ou Remplacer (tout écraser). Une fenêtre de confirmation affiche les comptes avant validation.',
+      mcpTitle: 'MCP — Intégration assistant IA',
+      mcpConnectTitle: 'Connecter Joule / Claude / tout client MCP',
+      mcpConnectBody: 'PromptDeck expose un serveur MCP. Copiez l\'URL du point de terminaison depuis le menu d\'affichage (barre supérieure → section MCP) et ajoutez-la à la config MCP de votre assistant IA. L\'assistant peut alors rechercher et récupérer des prompts directement.',
+      mcpSkillTitle: 'Fichiers de compétences Joule',
+      mcpSkillBody: 'Les prompts avec une pièce jointe de compétence Joule voient le fichier .skill envoyé dans Supabase Storage lors de l\'enregistrement. Le serveur MCP retourne une URL de téléchargement public pour que Joule Desktop installe la compétence automatiquement.',
+    },
+  },
+};
 
-function ScreenCard() {
+/* ── Sub-components ─────────────────────────────────────────────────────── */
+
+function Feature({ icon, title, children }) {
   return (
-    <svg viewBox="0 0 320 130" xmlns="http://www.w3.org/2000/svg" className="help-screen">
-      <rect width="320" height="130" rx="10" fill="#F0F2F8"/>
-      {/* Card */}
-      <rect x="12" y="10" width="140" height="108" rx="8" fill="white" stroke="#E2E6F0" strokeWidth="1"/>
-      <rect x="12" y="10" width="140" height="7" rx="8" fill="#6366F1"/>
-      <rect x="12" y="17" width="140" height="0" fill="#6366F1"/>
-      <text x="22" y="37" fontSize="9" fontWeight="700" fill="#1E293B">DM Rework Analyze</text>
-      <rect x="22" y="42" width="50" height="14" rx="6" fill="#EEF2FF"/>
-      <text x="27" y="52" fontSize="7" fill="#6366F1">Autonomous SCM</text>
-      {/* item rows */}
-      <rect x="16" y="60" width="132" height="18" rx="4" fill="#F8FAFF" stroke="#E2E6F0" strokeWidth="0.8"/>
-      <circle cx="27" cy="69" r="6" fill="#EEF2FF"/><text x="24" y="72" fontSize="7" fontWeight="700" fill="#6366F1">1</text>
-      <text x="37" y="72" fontSize="8" fill="#334155">Analyze my Rework</text>
-      <rect x="134" y="64" width="10" height="10" rx="3" fill="#EEF2FF"/>
-      <rect x="16" y="81" width="132" height="18" rx="4" fill="#F8FAFF" stroke="#E2E6F0" strokeWidth="0.8"/>
-      <circle cx="27" cy="90" r="6" fill="#EEF2FF"/><text x="24" y="93" fontSize="7" fontWeight="700" fill="#6366F1">2</text>
-      <text x="37" y="93" fontSize="8" fill="#334155">Analyze my Rework</text>
-      <rect x="134" y="85" width="10" height="10" rx="3" fill="#EEF2FF"/>
-      {/* tags */}
-      <rect x="16" y="103" width="18" height="10" rx="4" fill="#F1F5F9"/>
-      <text x="19" y="110" fontSize="6" fill="#64748B">DM</text>
-      <rect x="37" y="103" width="34" height="10" rx="4" fill="#F1F5F9"/>
-      <text x="40" y="110" fontSize="6" fill="#64748B">Joule Work</text>
-      {/* Second card */}
-      <rect x="166" y="10" width="140" height="108" rx="8" fill="white" stroke="#E2E6F0" strokeWidth="1"/>
-      <rect x="166" y="10" width="140" height="7" rx="8" fill="#0EA5E9"/>
-      <text x="176" y="37" fontSize="9" fontWeight="700" fill="#1E293B">DM Shift Readiness</text>
-      <rect x="176" y="42" width="50" height="14" rx="6" fill="#EEF2FF"/>
-      <text x="181" y="52" fontSize="7" fill="#6366F1">Autonomous SCM</text>
-      <rect x="176" y="60" width="60" height="12" rx="4" fill="#FEF3C7"/>
-      <text x="180" y="69" fontSize="7" fontWeight="600" fill="#92400E">Draft</text>
-      <rect x="170" y="76" width="132" height="18" rx="4" fill="#F8FAFF" stroke="#E2E6F0" strokeWidth="0.8"/>
-      <circle cx="181" cy="85" r="6" fill="#EEF2FF"/><text x="178" y="88" fontSize="7" fontWeight="700" fill="#6366F1">1</text>
-      <text x="191" y="88" fontSize="8" fill="#334155">Shift Readiness</text>
-      <rect x="288" y="80" width="10" height="10" rx="3" fill="#EEF2FF"/>
-    </svg>
+    <div className="hg-feature">
+      <div className="hg-feature-icon">{icon}</div>
+      <div>
+        <div className="hg-feature-title">{title}</div>
+        <div className="hg-feature-body">{children}</div>
+      </div>
+    </div>
   );
 }
 
-function ScreenCreate() {
+function Tip({ children }) {
+  return <div className="hg-tip">💡 {children}</div>;
+}
+
+function Section({ title, children }) {
   return (
-    <svg viewBox="0 0 320 150" xmlns="http://www.w3.org/2000/svg" className="help-screen">
-      <rect width="320" height="150" rx="10" fill="#F0F2F8"/>
-      <rect x="40" y="10" width="240" height="130" rx="10" fill="white" stroke="#E2E6F0" strokeWidth="1"/>
-      {/* modal header */}
-      <rect x="40" y="10" width="240" height="32" rx="10" fill="#1E1B4B"/>
-      <text x="56" y="30" fontSize="10" fontWeight="700" fill="white">+ New Prompt</text>
-      <circle cx="268" cy="26" r="8" fill="rgba(255,255,255,0.15)"/>
-      <text x="265" y="30" fontSize="9" fill="white">✕</text>
-      {/* fields */}
-      <text x="56" y="57" fontSize="8" fontWeight="600" fill="#64748B">TITLE *</text>
-      <rect x="56" y="61" width="208" height="16" rx="4" fill="#F8FAFF" stroke="#E2E6F0" strokeWidth="1"/>
-      <text x="62" y="72" fontSize="7" fill="#94A3B8">e.g. DM Rework Analyze</text>
-      <text x="56" y="90" fontSize="8" fontWeight="600" fill="#64748B">PROMPT LABEL *</text>
-      <rect x="56" y="94" width="208" height="16" rx="4" fill="#F8FAFF" stroke="#E2E6F0" strokeWidth="1"/>
-      <text x="62" y="105" fontSize="7" fill="#94A3B8">Step name shown on card</text>
-      <text x="56" y="123" fontSize="8" fontWeight="600" fill="#64748B">BODY</text>
-      <rect x="56" y="127" width="208" height="20" rx="4" fill="#F8FAFF" stroke="#6366F1" strokeWidth="1.2"/>
-      <text x="62" y="140" fontSize="7" fill="#94A3B8">The text that will be copied…</text>
-    </svg>
+    <div className="hg-section">
+      <div className="hg-section-title">{title}</div>
+      {children}
+    </div>
   );
 }
 
-function ScreenSidebar() {
+/* ── Tab content ────────────────────────────────────────────────────────── */
+
+function TabBasics({ tr }) {
+  const t = tr.basics;
   return (
-    <svg viewBox="0 0 320 130" xmlns="http://www.w3.org/2000/svg" className="help-screen">
-      <rect width="320" height="130" rx="10" fill="#F0F2F8"/>
-      {/* sidebar */}
-      <rect x="0" y="0" width="110" height="130" rx="10" fill="#0F1629"/>
-      <rect x="8" y="12" width="94" height="22" rx="6" fill="rgba(99,102,241,0.25)"/>
-      <text x="16" y="26" fontSize="8" fontWeight="600" fill="white">All Prompts</text>
-      <text x="90" y="26" fontSize="7" fill="rgba(255,255,255,0.5)">12</text>
-      <rect x="8" y="38" width="94" height="18" rx="5" fill="transparent"/>
-      <text x="16" y="50" fontSize="8" fill="rgba(255,255,255,0.6)">Most Used</text>
-      <text x="10" y="70" fontSize="7" fontWeight="700" fill="rgba(255,255,255,0.35)" letterSpacing="0.5">BY CATEGORY</text>
-      <text x="16" y="84" fontSize="8" fill="rgba(255,255,255,0.6)">Autonomous SCM</text>
-      <text x="16" y="97" fontSize="8" fill="rgba(255,255,255,0.6)">Autonomous Finance</text>
-      <text x="10" y="112" fontSize="7" fontWeight="700" fill="rgba(255,255,255,0.35)" letterSpacing="0.5">BY STORY FLOW</text>
-      {/* main area */}
-      <rect x="118" y="10" width="190" height="110" rx="8" fill="white" stroke="#E2E6F0" strokeWidth="1"/>
-      <text x="128" y="26" fontSize="8" fontWeight="700" fill="#6366F1">AUTONOMOUS SCM</text>
-      <rect x="128" y="31" width="170" height="1" fill="#E2E6F0"/>
-      <rect x="128" y="38" width="80" height="12" rx="4" fill="#ECFDF5" stroke="#059669" strokeWidth="0.8"/>
-      <text x="133" y="47" fontSize="7" fontWeight="600" fill="#059669">ORDER-TO-CASH</text>
-      <rect x="216" y="38" width="74" height="12" rx="4" fill="#EFF6FF" stroke="#3B82F6" strokeWidth="0.8"/>
-      <text x="221" y="47" fontSize="7" fontWeight="600" fill="#3B82F6">PLAN-TO-INVENTORY</text>
-      <rect x="128" y="54" width="76" height="52" rx="6" fill="#F8FAFF" stroke="#E2E6F0" strokeWidth="0.8"/>
-      <text x="134" y="66" fontSize="7" fontWeight="700" fill="#1E293B">DM SFC Hold</text>
-      <rect x="216" y="54" width="76" height="52" rx="6" fill="#F8FAFF" stroke="#E2E6F0" strokeWidth="0.8"/>
-      <text x="222" y="66" fontSize="7" fontWeight="700" fill="#1E293B">DM Rework</text>
-    </svg>
+    <>
+      <Section title={t.whatTitle}>
+        <p className="hg-intro">{t.whatBody}</p>
+      </Section>
+      <Section title={t.areasTitle}>
+        <Feature icon="🗂️" title={t.sidebarTitle}>{t.sidebarBody}</Feature>
+        <Feature icon="🃏" title={t.gridTitle}>{t.gridBody}</Feature>
+        <Feature icon="🔍" title={t.topbarTitle}>{t.topbarBody}</Feature>
+      </Section>
+      <Section title={t.workspacesTitle}>
+        <Feature icon="📚" title={t.libraryTitle}>{t.libraryBody}</Feature>
+        <Feature icon="👤" title={t.mineTitle}>{t.mineBody}</Feature>
+        <Tip>{t.workspaceTip}</Tip>
+      </Section>
+      <Section title={t.shortcutsTitle}>
+        <div className="hg-shortcuts">
+          <div className="hg-shortcut-row"><kbd>Click / Clic</kbd><span>{t.sc1}</span></div>
+          <div className="hg-shortcut-row"><kbd>Esc</kbd><span>{t.sc2}</span></div>
+          <div className="hg-shortcut-row"><kbd>Drag / Glisser</kbd><span>{t.sc3}</span></div>
+          <div className="hg-shortcut-row"><kbd>EN / FR</kbd><span>{t.sc4}</span></div>
+        </div>
+      </Section>
+    </>
   );
 }
 
-function ScreenDrag() {
+function TabPrompts({ tr }) {
+  const t = tr.prompts;
   return (
-    <svg viewBox="0 0 320 130" xmlns="http://www.w3.org/2000/svg" className="help-screen">
-      <rect width="320" height="130" rx="10" fill="#F0F2F8"/>
-      {/* Favorites zone highlighted */}
-      <rect x="10" y="8" width="300" height="38" rx="8" stroke="#6366F1" strokeWidth="2" strokeDasharray="5,3" fill="#EEF2FF"/>
-      <text x="20" y="22" fontSize="8" fontWeight="700" fill="#6366F1">FAVORITES</text>
-      <text x="20" y="36" fontSize="7" fill="#6366F1" fontStyle="italic">Drop here to pin as favorite</text>
-      {/* Dragged card (faded) */}
-      <rect x="10" y="54" width="130" height="68" rx="8" fill="white" stroke="#E2E6F0" strokeWidth="1" opacity="0.4"/>
-      <rect x="10" y="54" width="130" height="7" rx="8" fill="#6366F1" opacity="0.4"/>
-      <text x="20" y="74" fontSize="8" fontWeight="700" fill="#1E293B" opacity="0.4">Product Availability</text>
-      <text x="20" y="87" fontSize="7" fill="#64748B" opacity="0.4">↕ dragging…</text>
-      {/* Arrow */}
-      <path d="M75 50 L75 48" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" markerEnd="url(#arr)"/>
-      <defs><marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#6366F1"/></marker></defs>
-      <path d="M75 52 L75 48" stroke="#6366F1" strokeWidth="1.5" strokeLinecap="round"/>
-      <polygon points="71,48 79,48 75,43" fill="#6366F1"/>
-      {/* Category zone highlighted */}
-      <rect x="154" y="54" width="155" height="68" rx="8" stroke="#6366F1" strokeWidth="2" strokeDasharray="5,3" fill="#EEF2FF"/>
-      <text x="164" y="70" fontSize="8" fontWeight="700" fill="#6366F1">AUTONOMOUS FINANCE</text>
-      <text x="164" y="84" fontSize="7" fill="#6366F1" fontStyle="italic">Drop to move to this category</text>
-    </svg>
+    <>
+      <Section title={t.createTitle}>
+        <Feature icon="➕" title={t.newTitle}>{t.newBody}</Feature>
+        <Feature icon="🔢" title={t.multiTitle}>{t.multiBody}</Feature>
+        <Feature icon="🌐" title={t.bilingualTitle}>{t.bilingualBody}</Feature>
+      </Section>
+      <Section title={t.copyTitle}>
+        <Feature icon="📋" title={t.oneClickTitle}>{t.oneClickBody}</Feature>
+        <Feature icon="🔲" title={t.placeholderTitle}>{t.placeholderBody}</Feature>
+        <Tip>{t.copyTip}</Tip>
+      </Section>
+      <Section title={t.organizeTitle}>
+        <Feature icon="✏️" title={t.editTitle}>{t.editBody}</Feature>
+        <Feature icon="⭐" title={t.favTitle}>{t.favBody}</Feature>
+        <Feature icon="↕️" title={t.dndTitle}>{t.dndBody}</Feature>
+        <Feature icon="☑️" title={t.bulkTitle}>{t.bulkBody}</Feature>
+      </Section>
+    </>
   );
 }
 
-function ScreenStatus() {
+function TabLibrary({ tr }) {
+  const t = tr.library;
   return (
-    <svg viewBox="0 0 320 80" xmlns="http://www.w3.org/2000/svg" className="help-screen">
-      <rect width="320" height="80" rx="10" fill="#F0F2F8"/>
-      {/* three cards with different statuses */}
-      <rect x="10" y="10" width="90" height="60" rx="8" fill="white" stroke="#E2E6F0" strokeWidth="1"/>
-      <rect x="10" y="10" width="90" height="6" rx="8" fill="#6366F1"/>
-      <text x="18" y="30" fontSize="8" fontWeight="700" fill="#1E293B">SFC Hold Check</text>
-      <rect x="18" y="37" width="36" height="13" rx="5" fill="#FEF3C7"/>
-      <text x="23" y="47" fontSize="7" fontWeight="700" fill="#92400E">Draft</text>
-
-      <rect x="115" y="10" width="90" height="60" rx="8" fill="white" stroke="#E2E6F0" strokeWidth="1"/>
-      <rect x="115" y="10" width="90" height="6" rx="8" fill="#0EA5E9"/>
-      <text x="123" y="30" fontSize="8" fontWeight="700" fill="#1E293B">Rework Analyze</text>
-      <rect x="123" y="37" width="36" height="13" rx="5" fill="#DCFCE7"/>
-      <text x="126" y="47" fontSize="7" fontWeight="700" fill="#166534">Ready</text>
-
-      <rect x="220" y="10" width="90" height="60" rx="8" fill="white" stroke="#E2E6F0" strokeWidth="1"/>
-      <rect x="220" y="10" width="90" height="6" rx="8" fill="#10B981"/>
-      <text x="228" y="30" fontSize="8" fontWeight="700" fill="#1E293B">Shift Readiness</text>
-      <rect x="228" y="37" width="55" height="13" rx="5" fill="#D1FAE5"/>
-      <text x="232" y="47" fontSize="7" fontWeight="700" fill="#065F46">✓ Validated</text>
-    </svg>
+    <>
+      <Section title={t.findTitle}>
+        <Feature icon="🔍" title={t.searchTitle}>{t.searchBody}</Feature>
+        <Feature icon="🗂️" title={t.filterTitle}>{t.filterBody}</Feature>
+        <Feature icon="📑" title={t.tabsTitle}>{t.tabsBody}</Feature>
+      </Section>
+      <Section title={t.viewTitle}>
+        <Feature icon="🃏" title={t.cardsTableTitle}>{t.cardsTableBody}</Feature>
+        <Feature icon="🔎" title={t.zoomTitle}>{t.zoomBody}</Feature>
+        <Feature icon="🌗" title={t.themeTitle}>{t.themeBody}</Feature>
+      </Section>
+      <Section title={t.statusTitle}>
+        <div className="hg-status-grid">
+          <div className="hg-status-item"><span className="hg-badge hg-badge-draft">Draft</span><span>{t.draftDesc}</span></div>
+          <div className="hg-status-item"><span className="hg-badge hg-badge-published">Published</span><span>{t.publishedDesc}</span></div>
+          <div className="hg-status-item"><span className="hg-badge hg-badge-archived">Archived</span><span>{t.archivedDesc}</span></div>
+        </div>
+      </Section>
+    </>
   );
 }
 
-function ScreenSearch() {
+function TabWorkflow({ tr }) {
+  const t = tr.workflow;
   return (
-    <svg viewBox="0 0 320 80" xmlns="http://www.w3.org/2000/svg" className="help-screen">
-      <rect width="320" height="80" rx="10" fill="#F0F2F8"/>
-      {/* sticky toolbar */}
-      <rect x="0" y="0" width="320" height="32" rx="10" fill="#F0F2F8"/>
-      <rect x="10" y="6" width="180" height="20" rx="6" fill="white" stroke="#6366F1" strokeWidth="1.5"/>
-      <text x="19" y="20" fontSize="8" fill="#94A3B8">🔍  Search all prompts…</text>
-      <rect x="200" y="6" width="30" height="20" rx="5" fill="white" stroke="#E2E6F0" strokeWidth="1"/>
-      <text x="209" y="19" fontSize="9" fill="#334155">−</text>
-      <rect x="234" y="6" width="30" height="20" rx="5" fill="white" stroke="#E2E6F0" strokeWidth="1"/>
-      <text x="239" y="19" fontSize="7" fill="#334155">100%</text>
-      <rect x="268" y="6" width="30" height="20" rx="5" fill="#6366F1"/>
-      <text x="277" y="19" fontSize="9" fill="white">+</text>
-      {/* result cards below */}
-      <rect x="10" y="38" width="90" height="34" rx="6" fill="white" stroke="#6366F1" strokeWidth="1.5"/>
-      <text x="18" y="52" fontSize="8" fontWeight="700" fill="#1E293B">Rework Analyze</text>
-      <text x="18" y="63" fontSize="7" fill="#6366F1">↑ best match</text>
-      <rect x="110" y="38" width="90" height="34" rx="6" fill="white" stroke="#E2E6F0" strokeWidth="1"/>
-      <text x="118" y="52" fontSize="8" fontWeight="700" fill="#1E293B">SFC Hold Check</text>
-      <rect x="210" y="38" width="90" height="34" rx="6" fill="white" stroke="#E2E6F0" strokeWidth="1"/>
-      <text x="218" y="52" fontSize="8" fontWeight="700" fill="#1E293B">Shift Readiness</text>
-    </svg>
+    <>
+      <Section title={t.privacyTitle}>
+        <Feature icon="🔒" title={t.privateTitle}>{t.privateBody}</Feature>
+        <Feature icon="📤" title={t.requestTitle}>{t.requestBody}</Feature>
+        <Feature icon="✅" title={t.approveTitle}>{t.approveBody}</Feature>
+        <Tip>{t.workflowTip}</Tip>
+      </Section>
+      <Section title={t.bellTitle}>
+        <Feature icon="🔔" title={t.badgeTitle}>{t.badgeBody}</Feature>
+        <Feature icon="⚡" title={t.realtimeTitle}>{t.realtimeBody}</Feature>
+      </Section>
+      <Section title={t.rolesTitle}>
+        <div className="hg-roles">
+          <div className="hg-role-row"><span className="hg-role-badge hg-role-viewer">Viewer</span><span>{t.viewerDesc}</span></div>
+          <div className="hg-role-row"><span className="hg-role-badge hg-role-editor">Editor</span><span>{t.editorDesc}</span></div>
+          <div className="hg-role-row"><span className="hg-role-badge hg-role-admin">Admin</span><span>{t.adminDesc}</span></div>
+        </div>
+      </Section>
+    </>
   );
 }
 
-function ScreenSettings() {
+function TabAdmin({ tr }) {
+  const t = tr.admin;
   return (
-    <svg viewBox="0 0 320 130" xmlns="http://www.w3.org/2000/svg" className="help-screen">
-      <rect width="320" height="130" rx="10" fill="#F0F2F8"/>
-      <rect x="10" y="10" width="300" height="110" rx="8" fill="white" stroke="#E2E6F0" strokeWidth="1"/>
-      {/* left nav */}
-      <rect x="10" y="10" width="80" height="110" rx="8" fill="#F8FAFF"/>
-      <rect x="16" y="20" width="68" height="16" rx="5" fill="#6366F1"/>
-      <text x="22" y="31" fontSize="7" fontWeight="600" fill="white">General</text>
-      <text x="22" y="47" fontSize="7" fill="#64748B">Import / Export</text>
-      <text x="22" y="61" fontSize="7" fill="#64748B">Categories</text>
-      <text x="22" y="75" fontSize="7" fill="#64748B">Personas</text>
-      <text x="22" y="89" fontSize="7" fill="#64748B">Systems</text>
-      <text x="22" y="103" fontSize="7" fill="#64748B">Solutions</text>
-      {/* panel */}
-      <text x="102" y="28" fontSize="9" fontWeight="700" fill="#1E293B">General Settings</text>
-      <rect x="102" y="35" width="195" height="1" fill="#E2E6F0"/>
-      <rect x="102" y="44" width="120" height="14" rx="4" fill="#F8FAFF" stroke="#E2E6F0" strokeWidth="0.8"/>
-      <text x="108" y="54" fontSize="7" fill="#334155">☑ Auto-filter by SAP URL</text>
-      <rect x="102" y="63" width="195" height="16" rx="4" fill="#F8FAFF" stroke="#E2E6F0" strokeWidth="0.8"/>
-      <text x="108" y="74" fontSize="7" fill="#94A3B8">https://my12345.ibpcloud.sap.com/…</text>
-      <rect x="102" y="84" width="50" height="14" rx="4" fill="#6366F1"/>
-      <text x="113" y="94" fontSize="7" fontWeight="600" fill="white">Save</text>
-    </svg>
+    <>
+      <Section title={t.settingsTitle}>
+        <Feature icon="👥" title={t.usersTitle}>{t.usersBody}</Feature>
+        <Feature icon="📊" title={t.statsTitle}>{t.statsBody}</Feature>
+        <Feature icon="👁️" title={t.visibilityTitle}>{t.visibilityBody}</Feature>
+        <Feature icon="🔔" title={t.systemTitle}>{t.systemBody}</Feature>
+      </Section>
+      <Section title={t.catalogTitle}>
+        <Feature icon="🗂️" title={t.catalogItemsTitle}>{t.catalogItemsBody}</Feature>
+        <Tip>{t.catalogTip}</Tip>
+      </Section>
+      <Section title={t.importExportTitle}>
+        <Feature icon="📤" title={t.exportTitle}>{t.exportBody}</Feature>
+        <Feature icon="📥" title={t.importTitle}>{t.importBody}</Feature>
+      </Section>
+      <Section title={t.mcpTitle}>
+        <Feature icon="🤖" title={t.mcpConnectTitle}>{t.mcpConnectBody}</Feature>
+        <Feature icon="⚡" title={t.mcpSkillTitle}>{t.mcpSkillBody}</Feature>
+      </Section>
+    </>
   );
 }
 
-function ScreenBulk() {
-  return (
-    <svg viewBox="0 0 320 100" xmlns="http://www.w3.org/2000/svg" className="help-screen">
-      <rect width="320" height="100" rx="10" fill="#F0F2F8"/>
-      {/* bulk bar */}
-      <rect x="10" y="8" width="300" height="28" rx="7" fill="#1E1B4B"/>
-      <text x="22" y="26" fontSize="8" fontWeight="600" fill="white">3 selected</text>
-      <rect x="100" y="12" width="44" height="18" rx="5" fill="rgba(255,255,255,0.12)"/>
-      <text x="107" y="24" fontSize="7" fill="rgba(255,255,255,0.85)">Export</text>
-      <rect x="150" y="12" width="56" height="18" rx="5" fill="rgba(255,255,255,0.12)"/>
-      <text x="155" y="24" fontSize="7" fill="rgba(255,255,255,0.85)">Move categ.</text>
-      <rect x="212" y="12" width="46" height="18" rx="5" fill="rgba(255,255,255,0.12)"/>
-      <text x="217" y="24" fontSize="7" fill="rgba(255,255,255,0.85)">Move flow</text>
-      <rect x="264" y="12" width="38" height="18" rx="5" fill="rgba(220,38,38,0.3)"/>
-      <text x="270" y="24" fontSize="7" fill="#FCA5A5">Delete</text>
-      {/* cards with checkboxes */}
-      {[10, 115, 220].map((x, i) => (
-        <g key={x}>
-          <rect x={x} y="44" width="90" height="48" rx="8" fill="white" stroke={i < 3 ? "#6366F1" : "#E2E6F0"} strokeWidth={i < 3 ? 1.5 : 1}/>
-          <rect x={x} y="44" width="90" height="6" rx="8" fill="#6366F1"/>
-          <rect x={x+6} y="50" width="10" height="10" rx="3" fill="#6366F1"/>
-          <text x={x+8} y="58" fontSize="7" fill="white">✓</text>
-          <text x={x+10} y="72" fontSize="7" fontWeight="700" fill="#1E293B">{['SFC Hold','Rework','Shift Ready'][i]}</text>
-        </g>
-      ))}
-    </svg>
-  );
-}
-
-/* ── Section data ──────────────────────────────────────────────────────── */
-
-const SECTIONS_EN = [
-  {
-    num: '01', icon: '🃏',
-    title: 'Prompt cards',
-    body: 'Each card shows a title, one or more numbered prompt items, metadata pills (category, flow, solutions, status), notes, and system links. Click a card to flip it to the edit form. A colored left-edge strip reflects the story flow.',
-    tip: 'Cards with multiple prompts show each step as a numbered row — hover a row to preview the full text, click to copy.',
-    screen: <ScreenCard />,
-  },
-  {
-    num: '02', icon: '✏️',
-    title: 'Create & edit a prompt',
-    body: 'Click "+ New" in the toolbar to create a prompt. Fill in title, at least one prompt item (label + body), then use the Details tab for category, flow, solutions, status, tags, and attachments. Save keeps the card, Cancel discards changes.',
-    tip: 'Add multiple prompt items per card (Step 1, Step 2 …) using the + tab in the Content view. Each item gets its own label, EN body, and optional FR body.',
-    screen: <ScreenCreate />,
-  },
-  {
-    num: '03', icon: '📋',
-    title: 'Copy a prompt',
-    body: 'Click any prompt row on the front of a card to copy it to clipboard instantly. If the body contains [PLACEHOLDERS], a substitution modal opens so you can fill values before copying. The row flashes a checkmark on success.',
-    tip: 'Switch EN / FR in the top bar to copy the French version when it is available on the card.',
-  },
-  {
-    num: '04', icon: '🏢',
-    title: 'Library vs Mine workspaces',
-    body: 'Use the Library / Mine toggle in the toolbar to switch workspaces. Library shows all published prompts (and shared drafts for editors/admins). Mine shows only your own drafts — your personal workspace. The background tint changes so it\'s always clear which space you\'re in.',
-    tip: 'Create a prompt from Mine to start it as a private draft. It stays invisible to others until published or approved.',
-    screen: <ScreenSidebar />,
-  },
-  {
-    num: '05', icon: '🔒',
-    title: 'Privacy & publish workflow',
-    body: 'All new drafts start as Private (visible only to you). Editors and admins can flip the toggle on a card to Public (shared draft — visible to other editors/admins) and then set status to Published.\n\nViewers: flip your draft to Public first, then use the "↑ Request publish" button on the card. The bell icon in the header notifies editors/admins who can Approve or Reject.',
-    tip: 'If your request is approved the card moves to the shared library. If you then edit and save the card it resets to Private draft and you can request again.',
-    screen: <ScreenStatus />,
-  },
-  {
-    num: '06', icon: '🔔',
-    title: 'Bell notifications',
-    body: 'The bell icon (top-right) shows a red badge when there are pending items. Editors/admins see all pending publish requests with the prompt preview — Approve makes the card visible in the shared library, Reject returns it to the owner. Viewers see their own request outcomes (approved/rejected).',
-    tip: 'Notifications update in real time — no page refresh needed. Approved/rejected counts also appear as KPI pills in the header.',
-  },
-  {
-    num: '07', icon: '📊',
-    title: 'Header KPIs',
-    body: 'The header shows live counters scoped to your role and workspace:\n• Admin/Editor — Published, Draft (all), Online users, Pending/Approved/Rejected requests\n• Viewer in Library — Published + Draft counts\n• Viewer in Mine — Draft (yours only) + Pending/Approved/Rejected (your requests)',
-    tip: 'KPIs update in real time as prompts are created, approved, or rejected.',
-  },
-  {
-    num: '08', icon: '🗂️',
-    title: 'Navigation & filters',
-    body: 'The left sidebar filters by Category, Story Flow, and Solution. Click any item to filter. Sections collapse with the chevron. In "All Prompts" view, categories appear as tabs with a Favorites row at the top — cards inside tabs are grouped by flow columns.',
-    tip: 'Drag a card and hover over a category tab to switch tabs mid-drag, then drop into the right flow column.',
-    screen: <ScreenSidebar />,
-  },
-  {
-    num: '09', icon: '↕️',
-    title: 'Drag & drop cards',
-    body: 'On the main All Prompts view, drag any card to reorganise it. Drop on the Favorites strip to pin it, on a category tab to change its category, or into a flow column to update its story flow. An undo bar appears for 5 seconds after each move.',
-    tip: 'Drop zones highlight with a dashed indigo border when a card is in flight. The source card fades to show it\'s being moved.',
-    screen: <ScreenDrag />,
-  },
-  {
-    num: '10', icon: '🔍',
-    title: 'Search & zoom',
-    body: 'The search bar is sticky and ranks results by relevance (title match scores highest, then body, tags, solutions). Use − / % / + to zoom the card grid from 50% to 200%. Press Escape to clear search.',
-    screen: <ScreenSearch />,
-  },
-  {
-    num: '11', icon: '☑️',
-    title: 'Bulk actions',
-    body: 'Hover a card to reveal its checkbox. Select multiple cards — a bulk action bar appears at the top with Export, Move category, Move flow, and Delete. "Select all visible" selects every card in the current view.',
-    screen: <ScreenBulk />,
-  },
-  {
-    num: '12', icon: '🌗',
-    title: 'Theme & language',
-    body: 'Use the sun/moon icon in the top-right to switch between dark and light themes. Use the FR/EN button to toggle the display language — cards with French translations will show the FR body when copying in FR mode. Both preferences are saved automatically.',
-    tip: 'Theme and language persist across sessions via localStorage.',
-  },
-  {
-    num: '13', icon: '👥',
-    title: 'User management (admin)',
-    body: 'Open Settings → Users (gear icon, admin only). Invite colleagues by email — it opens a pre-filled mailto. Once they sign up, set their role: Viewer (read + request), Editor (create, publish, approve), Admin (full access including user management). You can also set domain expertise per user.',
-    tip: 'Block a user to revoke access instantly without deleting their account. Kick forces an online user to disconnect.',
-    screen: <ScreenSettings />,
-  },
-  {
-    num: '14', icon: '⚙️',
-    title: 'Settings & catalog',
-    body: 'Click the gear icon (top-right, admin only) to manage the shared catalog: Categories, Story Flows, Solutions, Personas, Tags, and Systems. Systems support MCP endpoint credentials — secrets are hidden by default. Import/Export lets you backup or restore the full library as JSON.',
-    tip: 'Drag rows in catalog sections to reorder them. Changes apply globally for all users immediately.',
-    screen: <ScreenSettings />,
-  },
-];
-
-/* ── Component ─────────────────────────────────────────────────────────── */
+/* ── Main component ─────────────────────────────────────────────────────── */
 
 export default function HelpModal({ onClose }) {
   const { state } = useApp();
-  const lang = state.settings?.lang || 'en';
-  const [active, setActive] = useState(null);
+  const { isAdmin, isEditor } = useAuth();
+  const lang = state.settings?.lang === 'fr' ? 'fr' : 'en';
+  const tr = TR[lang];
+  const [activeTab, setActiveTab] = useState('basics');
+
+  const TABS = [
+    { id: 'basics',   label: tr.tabs.basics,   icon: '🏠' },
+    { id: 'prompts',  label: tr.tabs.prompts,  icon: '📋' },
+    { id: 'library',  label: tr.tabs.library,  icon: '📚' },
+    { id: 'workflow', label: tr.tabs.workflow,  icon: '🔄' },
+    { id: 'admin',    label: tr.tabs.admin,     icon: '⚙️' },
+  ];
+
+  const visibleTabs = isAdmin || isEditor ? TABS : TABS.filter(t => t.id !== 'admin');
+
+  const TAB_CONTENT = {
+    basics:   <TabBasics tr={tr} />,
+    prompts:  <TabPrompts tr={tr} />,
+    library:  <TabLibrary tr={tr} />,
+    workflow: <TabWorkflow tr={tr} />,
+    admin:    <TabAdmin tr={tr} />,
+  };
 
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape') onClose(); }
@@ -344,63 +439,40 @@ export default function HelpModal({ onClose }) {
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const sections = SECTIONS_EN;
-
   return (
     <div className="help-backdrop" onClick={e => { if (e.target.classList.contains('help-backdrop')) onClose(); }}>
       <div className="help-modal">
+
         <div className="help-header">
           <div className="help-header-left">
             <span className="help-header-icon">?</span>
             <div>
-              <div className="help-title">{t('helpTitle', lang)}</div>
-              <div className="help-subtitle">{t('helpSubtitle', lang)}</div>
+              <div className="help-title">{tr.title}</div>
+              <div className="help-subtitle">{tr.subtitle}</div>
             </div>
           </div>
-          <button className="help-close" onClick={onClose}>
+          <button className="help-close" onClick={onClose} aria-label="Close">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
           </button>
         </div>
 
-        <div className="help-body">
-          <div className="help-grid">
-            {sections.map(s => (
-              <div
-                key={s.num}
-                className={`help-card${active === s.num ? ' help-card-open' : ''}`}
-                onClick={() => setActive(active === s.num ? null : s.num)}
-              >
-                <div className="help-card-top">
-                  <div className="help-card-num">{s.num}</div>
-                  <div className="help-card-content">
-                    <div className="help-card-title"><span className="help-card-emoji">{s.icon}</span> {s.title}</div>
-                    <div className="help-card-body">{s.body}</div>
-                    {s.tip && <div className="help-card-tip">💡 {s.tip}</div>}
-                  </div>
-                </div>
-                {s.screen && active === s.num && (
-                  <div className="help-card-screen">{s.screen}</div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div className="help-shortcuts">
-            <div className="help-shortcuts-title">{t('helpShortcuts', lang)}</div>
-            <div className="help-shortcut-row">
-              <kbd>Esc</kbd>
-              <span>{t('helpEscDesc', lang)}</span>
-            </div>
-            <div className="help-shortcut-row">
-              <kbd>Click card</kbd>
-              <span>Flip to edit form</span>
-            </div>
-            <div className="help-shortcut-row">
-              <kbd>Drag card</kbd>
-              <span>Move to different category / flow / favorites</span>
-            </div>
-          </div>
+        <div className="hg-tabs">
+          {visibleTabs.map(tab => (
+            <button
+              key={tab.id}
+              className={`hg-tab${activeTab === tab.id ? ' hg-tab-active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              <span className="hg-tab-icon">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
         </div>
+
+        <div className="help-body">
+          {TAB_CONTENT[activeTab]}
+        </div>
+
       </div>
     </div>
   );

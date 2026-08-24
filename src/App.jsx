@@ -28,7 +28,7 @@ import './styles/auth.css'
 function AppInner() {
   useStorage()
   const { state } = useApp()
-  const { profile, isAdmin, signOut } = useAuth()
+  const { profile, isAdmin, signOut, refreshBanner, setRefreshBanner } = useAuth()
   const [helpOpen, setHelpOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
   const zoom = state.zoom ?? 1
@@ -48,6 +48,13 @@ function AppInner() {
   }
   return (
     <>
+      {refreshBanner && (
+        <div className="refresh-banner">
+          <span>🔔 A new version is available — please refresh to get the latest features.</span>
+          <button className="refresh-banner-btn" onClick={() => window.location.reload()}>Refresh now</button>
+          <button className="refresh-banner-dismiss" onClick={() => setRefreshBanner(false)} title="Dismiss">✕</button>
+        </div>
+      )}
       <TopBar onHelp={() => setHelpOpen(true)} onSignOut={signOut} profile={profile} isAdmin={isAdmin} />
       <div id="main-layout">
         <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(v => !v)} />

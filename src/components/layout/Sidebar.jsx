@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { useSidebarResize } from '../../hooks/useSidebarResize.js';
 import { t } from '../../lib/i18n.js';
 import { getFlowColor } from '../../lib/flowColors.js';
@@ -11,8 +12,10 @@ const IconChevronRightLg = () => <svg width="12" height="12" viewBox="0 0 12 12"
 
 export default function Sidebar({ collapsed, onToggle, mobileNavOpen, onMobileNavClose }) {
   const { state, dispatch } = useApp();
+  const { isAdmin, isEditor } = useAuth();
+  const canSeeArchived = isAdmin || isEditor;
   const lang = state.settings?.lang || 'en';
-  const { prompts, catalog, currentView, currentFilter } = state;
+  const { prompts, catalog, currentView, currentFilter, statusFilter } = state;
   const categories = catalog.categories || [];
   const sidebarRef = useRef(null);
   const resizerRef = useSidebarResize(sidebarRef, collapsed);
@@ -24,6 +27,7 @@ export default function Sidebar({ collapsed, onToggle, mobileNavOpen, onMobileNa
   }
 
   const mostUsedCount = prompts.filter(p => (p.usageCount || 0) > 0).length;
+  const archivedCount = prompts.filter(p => p.status === 'archived').length;
 
   function setView(view, filter) {
     dispatch({ type: 'SET_VIEW', payload: { view, filter: filter ?? { storyFlow: null, solution: null, category: null } } });
@@ -31,6 +35,7 @@ export default function Sidebar({ collapsed, onToggle, mobileNavOpen, onMobileNa
   }
 
   function isActive(view, filterVal) {
+    if (view === 'archived') return statusFilter === 'archived';
     if (view !== currentView) return false;
     if (view === 'flow') return currentFilter?.storyFlow === filterVal;
     if (view === 'solution') return currentFilter?.solution === filterVal;
@@ -60,6 +65,16 @@ export default function Sidebar({ collapsed, onToggle, mobileNavOpen, onMobileNa
           <span style={{ flex: 1 }}>{t('mostUsed', lang)}</span>
           <span className="nav-badge">{mostUsedCount}</span>
         </button>
+
+        {canSeeArchived && (
+          <button
+            className={`nav-item${isActive('archived') ? ' active' : ''}`}
+            onClick={() => dispatch({ type: 'SET_STATUS_FILTER', payload: 'archived' })}
+          >
+            <span style={{ flex: 1 }}>Archived</span>
+            <span className="nav-badge">{archivedCount}</span>
+          </button>
+        )}
 
         <button className="nav-section-label nav-section-toggle" onClick={() => toggleSection('categories')}>
           {t('byCategory', lang)}

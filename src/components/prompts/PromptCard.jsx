@@ -172,9 +172,7 @@ function makeItem(body = '', body_fr = '') {
 }
 
 function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate, onDelete, dupeTarget, setDupeTarget, canPublish, canEdit, approvedRequest }) {
-  const { state } = useApp();
-  const allTags = [...new Set([...(state.catalog.tags || []), ...(state.prompts || []).flatMap(pr => pr.tags || [])])].sort();
-  const [title, setTitle] = useState(p.title || '');
+  const { state } = useApp();  const [title, setTitle] = useState(p.title || '');
   const [items, setItems] = useState(() =>
     p.promptItems?.length
       ? p.promptItems.map(i => ({ ...i }))
@@ -191,8 +189,6 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
   const [personas, setPersonas] = useState(p.personas || []);
   const [notes, setNotes] = useState(p.notes || '');
   const [solutions, setSolutions] = useState(p.solutions || []);
-  const [tags, setTags] = useState(p.tags || []);
-  const [tagInput, setTagInput] = useState('');
   const [systems, setSystems] = useState(() => getSystems(p));
   const [demoLinks, setDemoLinks] = useState(() =>
     Array.isArray(p.demoLinks) ? p.demoLinks.map(l => ({ ...l })) : []
@@ -305,7 +301,6 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
         personas,
         notes: notes.trim(),
         solutions,
-        tags: tags.filter(t => t.trim()),
         systems,
         demoLinks: demoLinks.filter(l => l.url.trim()),
         attachments: attachmentsMeta,
@@ -460,7 +455,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
           <div className="card-edit-field">
             <label className="card-edit-label">{t('statusLabel', lang)}</label>
             <div className="card-status-btns">
-              {(canPublish ? ['', 'draft', 'published'] : ['draft']).map(s => (
+              {(canPublish ? ['', 'draft', 'published', 'archived'] : ['draft']).map(s => (
                 <button key={s} type="button" className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`} onClick={() => setStatus(s)}>
                   {s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'}
                 </button>
@@ -502,47 +497,6 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
                 <span style={{ fontSize: 12, color: 'var(--pm-text3)', fontStyle: 'italic' }}>No systems configured in settings</span>
               )}
             </div>
-          </div>
-
-          <div className="card-edit-field" style={{ position: 'relative' }}>
-            <label className="card-edit-label">{t('tagsLabel', lang)}</label>
-            <div className="card-edit-tags">
-              {tags.map(tag => (
-                <span key={tag} className="card-edit-tag-chip">
-                  #{tag}
-                  <button type="button" className="card-edit-tag-del" onClick={() => setTags(prev => prev.filter(t => t !== tag))}>×</button>
-                </span>
-              ))}
-              <input
-                className="card-edit-tag-input"
-                type="text"
-                value={tagInput}
-                onChange={e => setTagInput(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Escape') { setTagInput(''); return; }
-                  if ((e.key === 'Enter' || e.key === ',') && tagInput.trim()) {
-                    e.preventDefault();
-                    const val = tagInput.trim().replace(/^#/, '');
-                    if (val && !tags.includes(val)) setTags(prev => [...prev, val]);
-                    setTagInput('');
-                  } else if (e.key === 'Backspace' && !tagInput && tags.length) {
-                    setTags(prev => prev.slice(0, -1));
-                  }
-                }}
-                placeholder={tags.length === 0 ? t('tagPlaceholder', lang) : ''}
-              />
-            </div>
-            {tagInput.trim() && (() => {
-              const q = tagInput.trim().replace(/^#/, '').toLowerCase();
-              const suggestions = allTags.filter(t => t.toLowerCase().includes(q) && !tags.includes(t));
-              return suggestions.length > 0 ? (
-                <div className="tag-suggestions">
-                  {suggestions.map(s => (
-                    <button key={s} type="button" className="tag-suggestion-item" onMouseDown={e => { e.preventDefault(); setTags(prev => [...prev, s]); setTagInput(''); }}>#{s}</button>
-                  ))}
-                </div>
-              ) : null;
-            })()}
           </div>
 
           <div className="card-edit-field">
@@ -864,7 +818,6 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
         <div className="prompt-card-meta">
           {(p.solutions || []).map(s => <span key={s} className="pill">{s}</span>)}
           {p.storyFlow && (() => { const c = getFlowColor(p.storyFlow); return <span className="pill flow" style={{ background: c.bg, color: c.text }}>{p.storyFlow}</span>; })()}
-          {(p.tags || []).slice(0, 3).map(tag => <span key={tag} className="pill tag">#{tag}</span>)}
           {p.status && <span className={`pill status-${p.status}`}>{p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span>}
           {langBadge}
           {p.usageCount > 0 && <span className="usage-hint" style={{ marginLeft: 'auto' }}>Used {t('usedCount', lang, p.usageCount)}{p.lastUsedAt ? ` · ${relTime(p.lastUsedAt, lang)}` : ''}</span>}
