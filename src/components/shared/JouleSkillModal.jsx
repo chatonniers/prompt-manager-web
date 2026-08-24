@@ -126,10 +126,18 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
           {step === STEPS.AGENT_STARTING && (
             <div className="jsm-starting">
               <p>The PromptDeck Agent is not running.</p>
-              <p className="jsm-hint">Click <strong>Launch Agent</strong> — your browser will ask permission once, then the agent starts automatically every time.</p>
+              <p className="jsm-hint">Click <strong>Launch Agent</strong> — your browser will ask permission once. Then wait a few seconds and click <strong>Check</strong>.</p>
               <div className="jsm-actions" style={{ marginTop: 12 }}>
                 <button className="btn-secondary" onClick={onClose}>Cancel</button>
-                <button className="btn-primary" onClick={handleLaunchAgent}>Launch Agent</button>
+                <button className="btn-secondary" onClick={() => {
+                  const a = document.createElement('a');
+                  a.href = 'promptdeck://start';
+                  a.style.display = 'none';
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                }}>Launch Agent</button>
+                <button className="btn-primary" onClick={go}>Check</button>
               </div>
             </div>
           )}
