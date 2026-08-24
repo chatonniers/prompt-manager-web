@@ -30,10 +30,17 @@ export const JouleAgent = {
   // Trigger start-agent.bat / start-agent.sh via the promptdeck:// URI scheme.
   // Returns a promise that resolves true once the agent is reachable (polls up to maxWaitMs).
   async startViaURIScheme(maxWaitMs = 15000) {
-    window.location.href = 'promptdeck://start';
+    // Use a temporary <a> click — more reliable than location.href on HTTPS pages
+    const a = document.createElement('a');
+    a.href = 'promptdeck://start';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
     const interval = 2000;
     const deadline = Date.now() + maxWaitMs;
-    await new Promise(r => setTimeout(r, 2000)); // initial wait for process to spawn
+    await new Promise(r => setTimeout(r, 3000)); // wait for process to spawn
     while (Date.now() < deadline) {
       if (await this.isRunning()) return true;
       await new Promise(r => setTimeout(r, interval));
