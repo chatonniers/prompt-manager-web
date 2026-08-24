@@ -426,7 +426,7 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
                     'Joule connected. Click to disconnect.'
                   : 'Joule Desktop integration available. Click to connect.'
               }
-              style={{ display: 'inline-flex', alignItems: 'center', padding: '7px 10px', borderRadius: 8, border: '1px solid rgba(109,40,217,0.5)', background: jouleConnected ? 'rgba(109,40,217,0.18)' : 'rgba(109,40,217,0.06)', cursor: 'pointer' }}
+              style={{ display: 'inline-flex', alignItems: 'center', padding: '7px 10px', borderRadius: 8, border: '1px solid transparent', cursor: 'pointer' }}
             >
               <span className="tb-joule-wrap">
                 <JouleDiamond size={15} />
