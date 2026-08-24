@@ -710,6 +710,9 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
           ? nameMatch[1].trim()
           : jouleAtt.name.replace(/\.[^.]+$/g, '').replace(/[^a-z0-9-]/gi, '-').toLowerCase();
         setJouleModal({ skillName, skillContent: content, promptText: text });
+      } else {
+        // No skill content available — launch Joule with prompt only, skip skill install
+        setJouleModal({ skillName: null, skillContent: null, promptText: text });
       }
     }
   }

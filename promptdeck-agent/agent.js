@@ -144,9 +144,11 @@ async function sendPromptToJoule(promptText) {
 
   const tmpVbs = path.join(os.tmpdir(), `pd-sendkeys-${Date.now()}.vbs`);
   fs.writeFileSync(tmpVbs, vbs, { encoding: 'ascii' });
+  // Also write a debug copy that persists
+  fs.writeFileSync(path.join(os.homedir(), 'promptdeck-agent', 'last-sendkeys.vbs'), vbs, { encoding: 'ascii' });
   let result;
   try {
-    execSync(`wscript.exe //nologo "${tmpVbs}"`, { timeout: 20000 });
+    execSync(`wscript.exe //B //nologo "${tmpVbs}"`, { timeout: 25000 });
     result = 'sent';
     console.log('[send-prompt] VBS sent');
   } catch (e) {

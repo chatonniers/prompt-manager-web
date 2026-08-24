@@ -147,6 +147,8 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
           ? nameMatch[1].trim()
           : jouleAtt.name.replace(/\.[^.]+$/g, '').replace(/[^a-z0-9-]/gi, '-').toLowerCase();
         setJouleModal({ skillName, skillContent: content, promptText: text });
+      } else {
+        setJouleModal({ skillName: null, skillContent: null, promptText: text });
       }
     }
   }

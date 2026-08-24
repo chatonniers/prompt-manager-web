@@ -40,6 +40,7 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
       if (setupOnly) { onClose(); return; }
       const jouleStatus = await JouleAgent.jouleStatus();
       if (!jouleStatus.installed) { setStep(STEPS.NO_JOULE); return; }
+      if (!skillName) { await doLaunch(); return; } // no skill to install — launch directly
       setStep(STEPS.SKILL_CHECK);
       const check = await JouleAgent.checkSkill(skillName);
       if (check.installed) { setSkillInstalled(true); await doLaunch(); return; }
