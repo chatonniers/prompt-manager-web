@@ -1096,7 +1096,7 @@
 .joule-skill-modal {
   background: var(--pm-surface);
   border-radius: 14px;
-  width: 420px;
+  width: 520px;
   max-width: calc(100vw - 32px);
   box-shadow: var(--pm-shadow-lg);
   border: 1.5px solid var(--pm-border);
