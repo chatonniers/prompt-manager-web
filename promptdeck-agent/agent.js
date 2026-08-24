@@ -131,17 +131,43 @@ Add-Type @"
   public class Win32 {
     [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
     [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    [DllImport("user32.dll")] public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+    [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+    [DllImport("kernel32.dll")] public static extern uint GetCurrentThreadId();
   }
 "@
 $joule = Get-Process 'Joule Desktop' -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
 if ($joule) {
-  [Win32]::ShowWindow($joule.MainWindowHandle, 9)
-  [Win32]::SetForegroundWindow($joule.MainWindowHandle)
-  Start-Sleep -Milliseconds 2000
-  [System.Windows.Forms.SendKeys]::SendWait('^v')
-  Start-Sleep -Milliseconds 500
-  [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
-  Write-Output 'sent'
+  $hwnd = $joule.MainWindowHandle
+  [Win32]::ShowWindow($hwnd, 9) | Out-Null
+  # Force foreground via thread input attachment trick
+  $fgHwnd = [Win32]::GetForegroundWindow()
+  $fgPid = [uint32]0
+  [Win32]::GetWindowThreadProcessId($fgHwnd, [ref]$fgPid) | Out-Null
+  $fgTid = [Win32]::GetWindowThreadProcessId($fgHwnd, [ref]$fgPid)
+  $myTid = [Win32]::GetCurrentThreadId()
+  [Win32]::AttachThreadInput($myTid, $fgTid, $true) | Out-Null
+  [Win32]::SetForegroundWindow($hwnd) | Out-Null
+  [Win32]::AttachThreadInput($myTid, $fgTid, $false) | Out-Null
+  Start-Sleep -Milliseconds 1500
+  # Verify we have the right window before sending keys
+  $currentFg = [Win32]::GetForegroundWindow()
+  if ($currentFg -eq $hwnd) {
+    [System.Windows.Forms.SendKeys]::SendWait('^v')
+    Start-Sleep -Milliseconds 500
+    [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
+    Write-Output 'sent'
+  } else {
+    # Fallback: try AppActivate
+    $wsh = New-Object -ComObject WScript.Shell
+    $wsh.AppActivate($joule.Id) | Out-Null
+    Start-Sleep -Milliseconds 1000
+    [System.Windows.Forms.SendKeys]::SendWait('^v')
+    Start-Sleep -Milliseconds 500
+    [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
+    Write-Output 'sent-fallback'
+  }
 } else {
   Write-Output 'not-found'
 }
@@ -160,7 +186,7 @@ if ($joule) {
   } finally {
     try { fs.unlinkSync(tmpPs1); } catch { /* ignore */ }
   }
-  return result === 'sent';
+  return result === 'sent' || result === 'sent-fallback';
 }
 
 // ── Skill helpers ─────────────────────────────────────────────────────────────
