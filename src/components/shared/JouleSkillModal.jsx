@@ -35,42 +35,41 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
   const [sendOk, setSendOk] = useState(null);
   const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgentData?.platform || '');
 
-  const go = useCallback(async () => {
+  const continueAfterAgent = useCallback(async () => {
     try {
-      // 1. Check agent
-      setStep(STEPS.AGENT_CHECK);
-      let agentUp = await JouleAgent.isRunning();
-
-      // 1a. Agent not running — try to auto-start via URI scheme
-      if (!agentUp) {
-        setStep(STEPS.AGENT_STARTING);
-        agentUp = await JouleAgent.startViaURIScheme(15000);
-        if (!agentUp) { setStep(STEPS.NO_AGENT); return; }
-      }
-
-      // setup-only mode: just confirm agent is running then close
       if (setupOnly) { onClose(); return; }
-
-      // 1b. Check Joule Desktop is installed
       const jouleStatus = await JouleAgent.jouleStatus();
       if (!jouleStatus.installed) { setStep(STEPS.NO_JOULE); return; }
-
-      // 2. Check skill
       setStep(STEPS.SKILL_CHECK);
       const check = await JouleAgent.checkSkill(skillName);
-      if (check.installed) {
-        setSkillInstalled(true);
-        await doLaunch();
-        return;
-      }
-
-      // 3. Confirm install
+      if (check.installed) { setSkillInstalled(true); await doLaunch(); return; }
       setStep(STEPS.CONFIRM_INSTALL);
-    } catch (e) {
-      setError(e.message);
-      setStep(STEPS.ERROR);
-    }
+    } catch (e) { setError(e.message); setStep(STEPS.ERROR); }
   }, [skillName, setupOnly]);
+
+  const go = useCallback(async () => {
+    try {
+      setStep(STEPS.AGENT_CHECK);
+      const agentUp = await JouleAgent.isRunning();
+      if (!agentUp) { setStep(STEPS.AGENT_STARTING); return; } // wait for user to click Launch Agent
+      await continueAfterAgent();
+    } catch (e) { setError(e.message); setStep(STEPS.ERROR); }
+  }, [continueAfterAgent]);
+
+  async function handleLaunchAgent() {
+    // Fire URI scheme via explicit user gesture (required by Edge/Chrome)
+    const a = document.createElement('a');
+    a.href = 'promptdeck://start';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    // Poll until agent is up
+    setStep(STEPS.AGENT_CHECK);
+    const up = await JouleAgent.startViaURIScheme(20000);
+    if (!up) { setStep(STEPS.NO_AGENT); return; }
+    await continueAfterAgent();
+  }
 
   async function doInstallAndLaunch() {
     try {
@@ -119,19 +118,11 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
 
           {step === STEPS.AGENT_STARTING && (
             <div className="jsm-starting">
-              <Step icon="⏳" text="Starting PromptDeck Agent…" />
-              <p className="jsm-hint" style={{ marginTop: 10 }}>
-                If a browser dialog appears asking to open a link, click <strong>Open</strong>.
-              </p>
+              <p>The PromptDeck Agent is not running.</p>
+              <p className="jsm-hint">Click <strong>Launch Agent</strong> — your browser will ask permission once, then the agent starts automatically every time.</p>
               <div className="jsm-actions" style={{ marginTop: 12 }}>
-                <button className="btn-primary" onClick={() => {
-                  const a = document.createElement('a');
-                  a.href = 'promptdeck://start';
-                  a.style.display = 'none';
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                }}>Launch Agent</button>
+                <button className="btn-secondary" onClick={onClose}>Cancel</button>
+                <button className="btn-primary" onClick={handleLaunchAgent}>Launch Agent</button>
               </div>
             </div>
           )}
