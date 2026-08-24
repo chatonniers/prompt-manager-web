@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { StorageAPI, uploadSkillFile } from '../../lib/storage.js';
+import { StorageAPI, uploadSkillFile, deleteSkillFile } from '../../lib/storage.js';
 import { AttachmentsDB } from '../../lib/attachments.js';
 import { t } from '../../lib/i18n.js';
 import JouleDiamond from '../shared/JouleDiamond.jsx';
@@ -245,6 +245,10 @@ export default function PromptModal() {
     }
     for (const attId of pendingDeletes) {
       await AttachmentsDB.delete(attId);
+      const att = existingAtts.find(a => a.id === attId);
+      if (att?.skill_url) {
+        try { await deleteSkillFile(promptId, attId, att.name); } catch (e) { console.error('Skill delete failed:', e); }
+      }
     }
 
     if (status === 'published') {

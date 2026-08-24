@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { StorageAPI, uploadSkillFile } from '../../lib/storage.js';
+import { StorageAPI, uploadSkillFile, deleteSkillFile } from '../../lib/storage.js';
 import { AttachmentsDB } from '../../lib/attachments.js';
 import { t } from '../../lib/i18n.js';
 import { getFlowColor } from '../../lib/flowColors.js';
@@ -264,6 +264,10 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
       }
       for (const attId of pendingDeletes) {
         await AttachmentsDB.delete(attId);
+        const att = attachments.find(a => a.id === attId);
+        if (att?.skill_url) {
+          try { await deleteSkillFile(p.id, attId, att.name); } catch (e) { console.error('Skill delete failed:', e); }
+        }
       }
 
       if (status === 'published') {

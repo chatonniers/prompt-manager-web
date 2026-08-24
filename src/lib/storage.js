@@ -12,6 +12,11 @@ export async function uploadSkillFile(promptId, attId, fileName, arrayBuffer) {
   return data.publicUrl;
 }
 
+export async function deleteSkillFile(promptId, attId, fileName) {
+  const path = `${promptId}/${attId}/${fileName}`;
+  await supabase.storage.from('skills').remove([path]);
+}
+
 const SETTINGS_DEFAULTS = {
   autoFilterEnabled: true,
   overlayPosition: 'right',
