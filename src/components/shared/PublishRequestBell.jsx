@@ -60,16 +60,16 @@ export default function PublishRequestBell() {
   const isReviewer = isAdmin || isEditor;
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState({});
+  const [seenUserIds, setSeenUserIds] = useState(
+    () => JSON.parse(localStorage.getItem(SEEN_USERS_KEY) || '[]')
+  );
   const panelRef = useRef(null);
   const lang = state.settings?.lang || 'en';
   const requests = state.publishRequests || [];
   const newUsers = state.newUsers || [];
 
   const unseenUsers = isAdmin
-    ? (() => {
-        const seen = JSON.parse(localStorage.getItem(SEEN_USERS_KEY) || '[]');
-        return newUsers.filter(u => !seen.includes(u.id));
-      })()
+    ? newUsers.filter(u => !seenUserIds.includes(u.id))
     : [];
 
   const badge = isReviewer
@@ -98,9 +98,10 @@ export default function PublishRequestBell() {
     setOpen(o => !o);
     if (!isReviewer) markSeen();
     if (isAdmin && !open) {
-      const seen = JSON.parse(localStorage.getItem(SEEN_USERS_KEY) || '[]');
       const allIds = newUsers.map(u => u.id);
-      localStorage.setItem(SEEN_USERS_KEY, JSON.stringify([...new Set([...seen, ...allIds])]));
+      const merged = [...new Set([...seenUserIds, ...allIds])];
+      localStorage.setItem(SEEN_USERS_KEY, JSON.stringify(merged));
+      setSeenUserIds(merged);
     }
   }
 
