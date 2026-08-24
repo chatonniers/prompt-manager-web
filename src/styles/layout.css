@@ -1124,6 +1124,8 @@
   .tb-hamburger { display: flex; }
   .tb-stat-pill { display: none; }
   .app-wordmark { display: none; }
+  .tb-joule-toggle { display: none; }
+  .tb-beta-badge { display: none; }
 
   /* Workspace toggle: shrink horizontal padding */
   .workspace-seg-btn { padding: 0 8px; }
