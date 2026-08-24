@@ -27,8 +27,8 @@ const STEPS = {
  *   promptText   string   – the prompt body to auto-send after launch
  *   onClose      fn       – called when user closes
  */
-export default function JouleSkillModal({ skillName, skillContent, promptText, onClose }) {
-  const [step, setStep] = useState(STEPS.AGENT_CHECK);
+export default function JouleSkillModal({ skillName, skillContent, promptText, setupOnly, onClose }) {
+  const [step, setStep] = useState(setupOnly ? STEPS.NO_AGENT : STEPS.AGENT_CHECK);
   const [error, setError] = useState('');
   const [skillInstalled, setSkillInstalled] = useState(false);
   const [sendOk, setSendOk] = useState(null);
@@ -39,6 +39,9 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, o
       setStep(STEPS.AGENT_CHECK);
       const agentUp = await JouleAgent.isRunning();
       if (!agentUp) { setStep(STEPS.NO_AGENT); return; }
+
+      // setup-only mode: just confirm agent is running then close
+      if (setupOnly) { onClose(); return; }
 
       // 1b. Check Joule Desktop is installed
       const jouleStatus = await JouleAgent.jouleStatus();
@@ -90,7 +93,7 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, o
     }
   }
 
-  useEffect(() => { go(); }, [go]);
+  useEffect(() => { if (!setupOnly) go(); }, [go]);
 
   return (
     <div className="modal-overlay" onClick={onClose}>

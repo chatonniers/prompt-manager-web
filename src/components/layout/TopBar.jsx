@@ -7,6 +7,7 @@ import { t } from '../../lib/i18n.js';
 import { JouleAgent } from '../../lib/jouleAgent.js';
 import PublishRequestBell from '../shared/PublishRequestBell.jsx';
 import JouleDiamond from '../shared/JouleDiamond.jsx';
+import JouleSkillModal from '../shared/JouleSkillModal.jsx';
 
 const STEP = 0.1;
 
@@ -259,6 +260,7 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
   const [jouleStatus, setJouleStatus] = useState(null);
   const [jouleConnected, setJouleConnected] = useState(false);
   const [jouleToggling, setJouleToggling] = useState(false);
+  const [showAgentSetup, setShowAgentSetup] = useState(false);
   const visiblePrompts = (() => {
     const vr = state.catalog?.visibilityRules;
     const role = authProfile?.role || 'viewer';
@@ -349,11 +351,11 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
       setJouleStatus(null);
       JouleAgent.shutdown();
     } else {
-      // Check agent is reachable; if not, warn the user
+      // Check agent is reachable; if not, open setup guide
       try {
         const running = await JouleAgent.isRunning();
-        if (!running) dispatch({ type: 'SHOW_TOAST', payload: 'PromptDeck Agent is not running — start it first (node agent.js).' });
-      } catch { /* silent */ }
+        if (!running) setShowAgentSetup(true);
+      } catch { setShowAgentSetup(true); }
     }
     await supabase.from('profiles').update({ joule_connected: newVal }).eq('id', authProfile.id);
     await refreshProfile();
@@ -593,6 +595,15 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
           )}
         </div>
       </header>
+      {showAgentSetup && (
+        <JouleSkillModal
+          skillName={null}
+          skillContent={null}
+          promptText={null}
+          setupOnly
+          onClose={() => setShowAgentSetup(false)}
+        />
+      )}
     </>
   );
 }
