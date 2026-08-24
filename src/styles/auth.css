@@ -208,7 +208,155 @@
 }
 .tb-user-signout:hover { color: #fff; }
 
-/* ── User management table ────────────────────────────────────────────── */
+/* ── User profile dropdown ────────────────────────────────────────────── */
+.tb-user-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tb-user-pill-btn {
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.tb-user-pill-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.2); }
+
+.tb-profile-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 270px;
+  background: var(--pm-surface);
+  border: 1.5px solid var(--pm-border);
+  border-radius: 12px;
+  box-shadow: var(--pm-shadow-lg);
+  padding: 16px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tb-profile-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--pm-text1);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 2px;
+}
+
+.tb-profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tb-profile-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pm-text3);
+}
+
+.tb-profile-input {
+  width: 100%;
+  background: var(--pm-bg);
+  border: 1.5px solid var(--pm-border2);
+  border-radius: 7px;
+  padding: 7px 10px;
+  font-size: 12px;
+  color: var(--pm-text1);
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.tb-profile-input:focus { outline: none; border-color: var(--pm-accent); }
+
+.tb-profile-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  background: var(--pm-bg);
+  border: 1.5px solid var(--pm-border2);
+  border-radius: 7px;
+  padding: 5px 8px;
+  min-height: 36px;
+  align-items: center;
+  cursor: text;
+}
+.tb-profile-chips:focus-within { border-color: var(--pm-accent); }
+
+.tb-profile-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--pm-accent-bg);
+  color: var(--pm-accent);
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tb-profile-chip button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--pm-accent);
+  font-size: 13px;
+  line-height: 1;
+  padding: 0 0 0 2px;
+  opacity: 0.7;
+}
+.tb-profile-chip button:hover { opacity: 1; }
+
+.tb-profile-chip-input {
+  flex: 1;
+  min-width: 80px;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 12px;
+  color: var(--pm-text1);
+  font-family: inherit;
+  padding: 0;
+}
+.tb-profile-chip-input::placeholder { color: var(--pm-text3); }
+
+.tb-profile-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.tb-profile-save {
+  flex: 1;
+  background: var(--pm-accent);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 8px 0;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.tb-profile-save:hover:not(:disabled) { background: var(--pm-accent-hover, #4F46E5); }
+.tb-profile-save:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.tb-profile-cancel {
+  background: var(--pm-bg);
+  border: 1.5px solid var(--pm-border2);
+  border-radius: 7px;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--pm-text2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.12s, border-color 0.12s;
+}
+.tb-profile-cancel:hover { color: var(--pm-text1); border-color: var(--pm-border); }
 .user-mgmt { width: 100%; }
 
 .admin-section-title {

@@ -158,6 +158,101 @@ function LogoMark() {
   );
 }
 
+function UserProfileMenu({ profile, onSignOut, refreshProfile }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState(profile?.display_name || '');
+  const [domains, setDomains] = useState(profile?.domain_expertise || []);
+  const [domainInput, setDomainInput] = useState('');
+  const [saving, setSaving] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    setName(profile?.display_name || '');
+    setDomains(profile?.domain_expertise || []);
+  }, [profile?.display_name, profile?.domain_expertise]);
+
+  useEffect(() => {
+    if (!open) return;
+    function close(e) { if (!ref.current?.contains(e.target)) setOpen(false); }
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [open]);
+
+  function handleDomainKey(e) {
+    if ((e.key === 'Enter' || e.key === ',') && domainInput.trim()) {
+      e.preventDefault();
+      const v = domainInput.trim().replace(/,$/, '');
+      if (v && !domains.includes(v)) setDomains(d => [...d, v]);
+      setDomainInput('');
+    } else if (e.key === 'Backspace' && !domainInput && domains.length) {
+      setDomains(d => d.slice(0, -1));
+    }
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    const { error } = await supabase.from('profiles').update({
+      display_name: name.trim() || null,
+      domain_expertise: domains,
+    }).eq('id', profile.id);
+    if (!error) await refreshProfile();
+    setSaving(false);
+    setOpen(false);
+  }
+
+  return (
+    <div ref={ref} className="tb-user-wrap">
+      <button className="tb-user-pill tb-user-pill-btn" onClick={() => setOpen(o => !o)} title="Edit your profile">
+        <span className="tb-user-avatar">{(profile.display_name || profile.email || '?')[0].toUpperCase()}</span>
+        <span className="tb-user-name">{profile.display_name || profile.email?.split('@')[0]}</span>
+        {profile.role && <span className={`tb-user-role role-${profile.role}`}>{profile.role}</span>}
+      </button>
+      <button className="tb-user-signout" onClick={onSignOut} title="Sign out">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3M10 11l3-3-3-3M13 8H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      </button>
+      {open && (
+        <div className="tb-profile-panel">
+          <div className="tb-profile-title">Edit Profile</div>
+          <div className="tb-profile-field">
+            <label className="tb-profile-label">Display name</label>
+            <input
+              className="tb-profile-input"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="Your name"
+              autoFocus
+            />
+          </div>
+          <div className="tb-profile-field">
+            <label className="tb-profile-label">Domain expertise</label>
+            <div className="tb-profile-chips">
+              {domains.map(d => (
+                <span key={d} className="tb-profile-chip">
+                  {d}
+                  <button type="button" onClick={() => setDomains(ds => ds.filter(x => x !== d))}>×</button>
+                </span>
+              ))}
+              <input
+                className="tb-profile-chip-input"
+                value={domainInput}
+                onChange={e => setDomainInput(e.target.value)}
+                onKeyDown={handleDomainKey}
+                placeholder={domains.length === 0 ? 'Add domain, press Enter…' : 'Add…'}
+              />
+            </div>
+          </div>
+          <div className="tb-profile-actions">
+            <button className="tb-profile-save" onClick={handleSave} disabled={saving}>
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+            <button className="tb-profile-cancel" type="button" onClick={() => setOpen(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburger }) {
   const { state, dispatch } = useApp();
   const { isAdmin: canAdmin, isEditor, profile: authProfile, refreshProfile } = useAuth();
@@ -429,14 +524,7 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
           <PublishRequestBell />
           <div className="tb-divider" />
           {profile && (
-            <div className="tb-user-pill">
-              <span className="tb-user-avatar">{(profile.display_name || profile.email || '?')[0].toUpperCase()}</span>
-              <span className="tb-user-name">{profile.display_name || profile.email?.split('@')[0]}</span>
-              {profile.role && <span className={`tb-user-role role-${profile.role}`}>{profile.role}</span>}
-              <button className="tb-user-signout" onClick={onSignOut} title="Sign out">
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3M10 11l3-3-3-3M13 8H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </button>
-            </div>
+            <UserProfileMenu profile={profile} onSignOut={onSignOut} refreshProfile={refreshProfile} />
           )}
           <div className="tb-divider" />
           <DisplayMenu

@@ -333,13 +333,18 @@ function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen, publishRequ
   );
 }
 
-function applyViewFilter(prompts, view, filter, workspace, userId, canPublish, visibilityRules, role) {
+function applyViewFilter(prompts, view, filter, workspace, userId, canPublish, visibilityRules, role, statusFilter) {
   const roleKey = role === 'admin' ? 'admin' : role === 'editor' ? 'editor' : 'viewer';
   const wsRules = visibilityRules?.[roleKey]?.[workspace];
 
   if (wsRules) {
     prompts = prompts.filter(p => {
-      if (!wsRules.statuses.includes(p.status)) return false;
+      // When explicitly filtering for archived, bypass saved status rules for editors/admins
+      if (statusFilter === 'archived' && canPublish) {
+        if (p.status !== 'archived') return false;
+      } else {
+        if (!wsRules.statuses.includes(p.status)) return false;
+      }
       if (!wsRules.includePrivate && p.isPrivate) return false;
       if (workspace === 'mine') return p.ownerId === userId;
       return true;
@@ -503,7 +508,7 @@ export default function PromptGrid() {
   const role = profile?.role || 'viewer';
 
   const publishRequests = state.publishRequests || [];
-  let pool = applyViewFilter(prompts, currentView, currentFilter, workspace, profile?.id, canPublish, visibilityRules, role);
+  let pool = applyViewFilter(prompts, currentView, currentFilter, workspace, profile?.id, canPublish, visibilityRules, role, statusFilter);
   // Hide archived prompts from normal views unless explicitly filtering for them
   if (statusFilter !== 'archived') {
     pool = pool.filter(p => p.status !== 'archived');
