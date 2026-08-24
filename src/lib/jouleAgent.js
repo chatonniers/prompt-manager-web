@@ -4,11 +4,12 @@
  */
 
 const AGENT_URL = 'http://localhost:27384';
-const TIMEOUT = 3000;
+const TIMEOUT = 5000;
+const LONG_TIMEOUT = 30000;
 
-async function agentFetch(path, options = {}) {
+async function agentFetch(path, options = {}, timeoutMs = TIMEOUT) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(AGENT_URL + path, { ...options, signal: controller.signal });
     return await res.json();
@@ -44,7 +45,7 @@ export const JouleAgent = {
   },
 
   async launchJoule() {
-    const data = await agentFetch('/joule/launch', { method: 'POST' });
+    const data = await agentFetch('/joule/launch', { method: 'POST' }, LONG_TIMEOUT);
     return data; // { ok, wasRunning }
   },
 
@@ -71,7 +72,7 @@ export const JouleAgent = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt }),
-    });
+    }, LONG_TIMEOUT);
     return data; // { ok: bool }
   },
 
