@@ -154,21 +154,21 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
                 <li>
                   <span className="jsm-step-num">3</span>
                   <div>
-                    <strong>Install dependencies</strong> — open a terminal and run once:
-                    <CopyBlock code={isMac
-                      ? 'cd ~/promptdeck-agent\nnpm install'
-                      : 'cd %USERPROFILE%\\promptdeck-agent\nnpm install'} />
+                    <strong>Register the auto-start shortcut</strong> — do this first, once:<br />
+                    {isMac ? (
+                      <><span className="jsm-hint">Open Terminal and run:</span><CopyBlock code={'bash ~/promptdeck-agent/install-mac.sh'} /></>
+                    ) : (
+                      <span className="jsm-hint">Open File Explorer → go to <code>%USERPROFILE%\promptdeck-agent</code> → double-click <code>install-windows.reg</code> → click <strong>Yes</strong>.</span>
+                    )}
                   </div>
                 </li>
                 <li>
                   <span className="jsm-step-num">4</span>
                   <div>
-                    <strong>Register the auto-start shortcut</strong> (one-time only):<br />
-                    {isMac ? (
-                      <span className="jsm-hint">Open Terminal and run: <CopyBlock code={'bash ~/promptdeck-agent/install-mac.sh'} /></span>
-                    ) : (
-                      <span className="jsm-hint">Open File Explorer → go to <code>%USERPROFILE%\promptdeck-agent</code> → double-click <code>install-windows.reg</code> → click <strong>Yes</strong>.</span>
-                    )}
+                    <strong>Install dependencies</strong> — open a terminal and run once:
+                    <CopyBlock code={isMac
+                      ? 'cd ~/promptdeck-agent\nnpm install'
+                      : 'cd %USERPROFILE%\\promptdeck-agent\nnpm install'} />
                   </div>
                 </li>
                 <li>
