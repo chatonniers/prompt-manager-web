@@ -525,7 +525,7 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
           <PublishRequestBell />
           <div className="tb-divider" />
           {profile && (
-            <UserProfileMenu profile={profile} onSignOut={onSignOut} refreshProfile={refreshProfile} solutions={state.catalog?.solutions || []} />
+            <UserProfileMenu profile={profile} onSignOut={onSignOut} refreshProfile={refreshProfile} solutions={state.catalog?.categories || []} />
           )}
           <div className="tb-divider" />
           <DisplayMenu
