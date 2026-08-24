@@ -4,7 +4,16 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { t } from '../../lib/i18n.js';
 
+function timeAgo(iso) {
+  const secs = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (secs < 60) return 'just now';
+  if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
+  if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`;
+  return `${Math.floor(secs / 86400)}d ago`;
+}
+
 const SEEN_KEY = 'pm-seen-reqs';
+const SEEN_USERS_KEY = 'pm-seen-new-users';
 
 function BellIcon() {
   return (
@@ -54,9 +63,17 @@ export default function PublishRequestBell() {
   const panelRef = useRef(null);
   const lang = state.settings?.lang || 'en';
   const requests = state.publishRequests || [];
+  const newUsers = state.newUsers || [];
+
+  const unseenUsers = isAdmin
+    ? (() => {
+        const seen = JSON.parse(localStorage.getItem(SEEN_USERS_KEY) || '[]');
+        return newUsers.filter(u => !seen.includes(u.id));
+      })()
+    : [];
 
   const badge = isReviewer
-    ? requests.filter(r => r.status === 'pending').length
+    ? requests.filter(r => r.status === 'pending').length + unseenUsers.length
     : (() => {
         const seen = JSON.parse(sessionStorage.getItem(SEEN_KEY) || '[]');
         return requests.filter(r => r.status !== 'pending' && !seen.includes(r.id)).length;
@@ -80,6 +97,11 @@ export default function PublishRequestBell() {
   function handleOpen() {
     setOpen(o => !o);
     if (!isReviewer) markSeen();
+    if (isAdmin && !open) {
+      const seen = JSON.parse(localStorage.getItem(SEEN_USERS_KEY) || '[]');
+      const allIds = newUsers.map(u => u.id);
+      localStorage.setItem(SEEN_USERS_KEY, JSON.stringify([...new Set([...seen, ...allIds])]));
+    }
   }
 
   async function approve(req) {
@@ -177,6 +199,25 @@ export default function PublishRequestBell() {
                     </div>
                   </div>
                 ))
+          )}
+
+          {isAdmin && newUsers.length > 0 && (
+            <>
+              <div className="tb-bell-section-label">New Users</div>
+              {newUsers.map(u => (
+                <div key={u.id} className={`tb-bell-item${unseenUsers.find(x => x.id === u.id) ? ' tb-bell-item--unseen' : ''}`}>
+                  <div className="tb-bell-item-title">{u.email}</div>
+                  <div className="tb-bell-item-meta">
+                    {u.display_name && <span>{u.display_name} · </span>}
+                    <span className="tb-bell-item-role">{u.role}</span>
+                    <span> · {timeAgo(u.created_at)}</span>
+                  </div>
+                </div>
+              ))}
+              <button className="tb-bell-goto-users" onClick={() => { dispatch({ type: 'SET_VIEW', payload: { view: 'settings' } }); setOpen(false); }}>
+                Go to Users ↗
+              </button>
+            </>
           )}
         </div>
       )}

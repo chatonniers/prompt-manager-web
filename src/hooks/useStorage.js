@@ -11,11 +11,12 @@ export function useStorage() {
     let cancelled = false;
 
     async function init() {
-      let [prompts, catalog, settings, publishRequests] = await Promise.all([
+      let [prompts, catalog, settings, publishRequests, newUsers] = await Promise.all([
         StorageAPI.getAllPrompts(),
         StorageAPI.getCatalog(),
         StorageAPI.getSettings(),
         StorageAPI.getPublishRequests().catch(() => []),
+        StorageAPI.getNewUsers().catch(() => []),
       ]);
       if (cancelled) return;
 
@@ -27,7 +28,7 @@ export function useStorage() {
       }
 
       if (!cancelled) {
-        dispatch({ type: 'LOAD_INITIAL', payload: { prompts, catalog, settings, publishRequests } });
+        dispatch({ type: 'LOAD_INITIAL', payload: { prompts, catalog, settings, publishRequests, newUsers } });
         document.documentElement.dataset.theme = settings.theme || 'dark';
       }
 
@@ -53,7 +54,14 @@ export function useStorage() {
         } catch { /* retain stale requests on network error */ }
       });
 
-      channelsRef.current = [promptsCh, catalogCh, requestsCh];
+      const profilesCh = StorageAPI.subscribeToProfiles(async () => {
+        try {
+          const fresh = await StorageAPI.getNewUsers().catch(() => []);
+          dispatch({ type: 'SET_NEW_USERS', payload: fresh });
+        } catch { /* retain stale new users on network error */ }
+      });
+
+      channelsRef.current = [promptsCh, catalogCh, requestsCh, profilesCh];
     }
 
     init();

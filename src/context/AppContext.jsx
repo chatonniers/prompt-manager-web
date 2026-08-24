@@ -23,6 +23,7 @@ const initialState = {
   draggingId: null,
   workspace: (() => { const v = localStorage.getItem('pm-workspace'); return v === 'mine' || v === 'library' ? v : 'library'; })(),
   publishRequests: [],
+  newUsers: [],
   zoom: (() => { const v = parseFloat(localStorage.getItem('pm-zoom')); return v >= 0.5 && v <= 2 ? v : 1; })(),
   displayMode: (() => { const v = localStorage.getItem('pm-display'); return v === 'table' || v === 'cards' ? v : 'cards'; })(),
 };
@@ -116,6 +117,8 @@ function reducer(state, action) {
     }
     case 'SET_PUBLISH_REQUESTS':
       return { ...state, publishRequests: action.payload };
+    case 'SET_NEW_USERS':
+      return { ...state, newUsers: action.payload };
     default:
       return state;
   }

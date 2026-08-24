@@ -382,6 +382,23 @@ export const StorageAPI = {
       .subscribe();
   },
 
+  subscribeToProfiles(onUpdate) {
+    return supabase
+      .channel('profiles-changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, onUpdate)
+      .subscribe();
+  },
+
+  async getNewUsers() {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, email, display_name, role, created_at')
+      .eq('role', 'viewer')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
   unsubscribe(channel) {
     supabase.removeChannel(channel);
   },
