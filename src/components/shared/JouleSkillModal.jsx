@@ -56,8 +56,16 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
     } catch (e) { setError(e.message); setStep(STEPS.ERROR); }
   }, [continueAfterAgent]);
 
+  function fireURI() {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = 'promptdeck://start';
+    document.body.appendChild(iframe);
+    setTimeout(() => document.body.removeChild(iframe), 2000);
+  }
+
   async function handleLaunchAgent() {
-    window.location.href = 'promptdeck://start';
+    fireURI();
     setStep(STEPS.AGENT_CHECK);
     const up = await JouleAgent.startViaURIScheme(30000);
     if (!up) {
@@ -124,9 +132,7 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
               <p className="jsm-hint">Click <strong>Launch Agent</strong> — your browser will ask permission once. Then wait a few seconds and click <strong>Check</strong>.</p>
               <div className="jsm-actions" style={{ marginTop: 12 }}>
                 <button className="btn-secondary" onClick={onClose}>Cancel</button>
-                <button className="btn-secondary" onClick={() => {
-                  window.location.href = 'promptdeck://start';
-                }}>Launch Agent</button>
+                <button className="btn-secondary" onClick={() => fireURI()}>Launch Agent</button>
                 <button className="btn-primary" onClick={go}>Check</button>
               </div>
             </div>
