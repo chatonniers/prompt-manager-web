@@ -345,7 +345,16 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
     const newVal = !jouleConnected;
     setJouleToggling(true);
     setJouleConnected(newVal);
-    if (!newVal) setJouleStatus(null);
+    if (!newVal) {
+      setJouleStatus(null);
+      JouleAgent.shutdown();
+    } else {
+      // Check agent is reachable; if not, warn the user
+      try {
+        const running = await JouleAgent.isRunning();
+        if (!running) dispatch({ type: 'SHOW_TOAST', payload: 'PromptDeck Agent is not running — start it first (node agent.js).' });
+      } catch { /* silent */ }
+    }
     await supabase.from('profiles').update({ joule_connected: newVal }).eq('id', authProfile.id);
     await refreshProfile();
     setJouleToggling(false);
