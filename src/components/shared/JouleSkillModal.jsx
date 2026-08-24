@@ -130,33 +130,24 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
           {step === STEPS.NO_AGENT && (
             <div className="jsm-no-agent">
               <p className="jsm-warn">Could not start PromptDeck Agent automatically.</p>
-              <p>Run the one-click installer once — it handles everything (Node.js, agent, auto-start):</p>
+              <p>Run this one-time installer — it sets up everything automatically:</p>
 
               <ol className="jsm-setup-steps">
                 <li>
                   <span className="jsm-step-num">1</span>
                   <div>
-                    <strong>Download the PromptDeck Agent</strong> from{' '}
-                    <a href="https://github.com/chatonniers/prompt-manager-web/releases" target="_blank" rel="noreferrer">GitHub Releases</a>
-                    {' '}and extract it anywhere.
+                    {isMac ? (
+                      <>Open <strong>Terminal</strong> and paste:<CopyBlock code={'curl -fsSL https://raw.githubusercontent.com/chatonniers/prompt-manager-web/master/promptdeck-agent/install.sh | bash'} /></>
+                    ) : (
+                      <>Press <kbd>Win+R</kbd>, type <code>powershell</code>, press Enter, then paste:<CopyBlock code={'irm https://raw.githubusercontent.com/chatonniers/prompt-manager-web/master/promptdeck-agent/install.ps1 | iex'} /></>
+                    )}
+                    <span className="jsm-hint">This installs Node.js if needed, downloads the agent, registers the auto-start shortcut, and starts it — all automatically.</span>
                   </div>
                 </li>
                 <li>
                   <span className="jsm-step-num">2</span>
                   <div>
-                    {isMac ? (
-                      <>Open Terminal in the extracted folder and run:
-                      <CopyBlock code={'bash install.sh'} /></>
-                    ) : (
-                      <>Right-click <code>install.ps1</code> → <strong>Run with PowerShell</strong>.<br />
-                      <span className="jsm-hint">The installer sets up Node.js, the agent, and the auto-start shortcut automatically.</span></>
-                    )}
-                  </div>
-                </li>
-                <li>
-                  <span className="jsm-step-num">3</span>
-                  <div>
-                    <strong>Click "Try again"</strong> — the Joule toggle will start the agent automatically from now on.
+                    <strong>Click "Try again"</strong> once the installer finishes — the Joule toggle will start the agent automatically from now on.
                   </div>
                 </li>
               </ol>
