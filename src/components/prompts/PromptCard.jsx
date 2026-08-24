@@ -719,7 +719,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
         const skillName = nameMatch
           ? nameMatch[1].trim()
           : jouleAtt.name.replace(/\.[^.]+$/g, '').replace(/[^a-z0-9-]/gi, '-').toLowerCase();
-        setJouleModal({ skillName, skillContent: content });
+        setJouleModal({ skillName, skillContent: content, promptText: text });
       }
     }
   }
@@ -954,6 +954,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
         <JouleSkillModal
           skillName={jouleModal.skillName}
           skillContent={jouleModal.skillContent}
+          promptText={jouleModal.promptText}
           onClose={() => setJouleModal(null)}
         />
       )}

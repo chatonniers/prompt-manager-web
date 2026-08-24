@@ -19,17 +19,19 @@ const STEPS = {
  * 1. Check agent is running
  * 2. Check / install skill in Joule Desktop
  * 3. Launch / focus Joule Desktop
- * 4. Show "paste your prompt" instruction
+ * 4. Auto-send the prompt text to Joule
  *
  * Props:
  *   skillName    string   – kebab-case name from SKILL.md frontmatter
  *   skillContent string   – full SKILL.md text to install if missing
+ *   promptText   string   – the prompt body to auto-send after launch
  *   onClose      fn       – called when user closes
  */
-export default function JouleSkillModal({ skillName, skillContent, onClose }) {
+export default function JouleSkillModal({ skillName, skillContent, promptText, onClose }) {
   const [step, setStep] = useState(STEPS.AGENT_CHECK);
   const [error, setError] = useState('');
   const [skillInstalled, setSkillInstalled] = useState(false);
+  const [sendOk, setSendOk] = useState(null);
 
   const go = useCallback(async () => {
     try {
@@ -73,8 +75,14 @@ export default function JouleSkillModal({ skillName, skillContent, onClose }) {
   async function doLaunch() {
     setStep(STEPS.LAUNCHING);
     try {
-      await JouleAgent.launchJoule();
-      await new Promise(r => setTimeout(r, 800));
+      if (promptText) {
+        // send-prompt launches/focuses Joule AND pastes+submits the text
+        const result = await JouleAgent.sendPrompt(promptText);
+        setSendOk(result.ok);
+      } else {
+        await JouleAgent.launchJoule();
+        await new Promise(r => setTimeout(r, 800));
+      }
       setStep(STEPS.DONE);
     } catch (e) {
       setError(e.message);
@@ -168,7 +176,7 @@ export default function JouleSkillModal({ skillName, skillContent, onClose }) {
           )}
 
           {step === STEPS.LAUNCHING && (
-            <Step icon="⏳" text="Launching Joule Desktop…" />
+            <Step icon="⏳" text="Sending prompt to Joule Desktop…" />
           )}
 
           {step === STEPS.DONE && (
@@ -181,10 +189,18 @@ export default function JouleSkillModal({ skillName, skillContent, onClose }) {
                   ? `Skill "${skillName}" is already active.`
                   : `Skill "${skillName}" installed.`}
               </p>
-              <p className="jsm-paste-hint">
-                Joule Desktop is ready.<br />
-                <strong>Paste your prompt (Ctrl+V) to start a conversation.</strong>
-              </p>
+              {promptText ? (
+                <p className="jsm-paste-hint">
+                  {sendOk
+                    ? <><strong>Prompt sent to Joule!</strong> Your conversation has started.</>
+                    : <>Joule is open — <strong>paste your prompt (Ctrl+V)</strong> to start.</>}
+                </p>
+              ) : (
+                <p className="jsm-paste-hint">
+                  Joule Desktop is ready.<br />
+                  <strong>Paste your prompt (Ctrl+V) to start a conversation.</strong>
+                </p>
+              )}
               <div className="jsm-actions">
                 <button className="btn-primary" onClick={onClose}>Done</button>
               </div>

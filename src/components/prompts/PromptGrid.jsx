@@ -131,7 +131,7 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
         const skillName = nameMatch
           ? nameMatch[1].trim()
           : jouleAtt.name.replace(/\.[^.]+$/g, '').replace(/[^a-z0-9-]/gi, '-').toLowerCase();
-        setJouleModal({ skillName, skillContent: content });
+        setJouleModal({ skillName, skillContent: content, promptText: text });
       }
     }
   }
@@ -260,6 +260,7 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
         <JouleSkillModal
           skillName={jouleModal.skillName}
           skillContent={jouleModal.skillContent}
+          promptText={jouleModal.promptText}
           onClose={() => setJouleModal(null)}
         />
       )}

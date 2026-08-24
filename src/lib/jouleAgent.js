@@ -55,6 +55,15 @@ export const JouleAgent = {
     return data; // { ok, id, alreadyInstalled? }
   },
 
+  async sendPrompt(prompt) {
+    const data = await agentFetch('/joule/send-prompt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt }),
+    });
+    return data; // { ok: bool }
+  },
+
   shutdown() {
     // Fire-and-forget — no await, used on page unload
     try {
