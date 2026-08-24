@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import JouleDiamond from './JouleDiamond.jsx';
 import { JouleAgent } from '../../lib/jouleAgent.js';
 
@@ -109,32 +109,47 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, o
           {step === STEPS.NO_AGENT && (
             <div className="jsm-no-agent">
               <p className="jsm-warn">PromptDeck Agent is not running.</p>
-              <p>The agent is a small local program that bridges PromptDeck with Joule Desktop on your PC.</p>
+              <p>The agent is a small local program that connects PromptDeck to Joule Desktop on your PC. Follow these steps once:</p>
 
-              <p className="jsm-section-label">Prerequisites</p>
-              <ol className="jsm-prereq-list">
+              <ol className="jsm-setup-steps">
                 <li>
-                  <strong>Node.js 18+</strong> —{' '}
-                  <a href="https://nodejs.org/en/download" target="_blank" rel="noreferrer">download nodejs.org</a>
-                  <span className="jsm-hint"> (free, ~30 MB)</span>
+                  <span className="jsm-step-num">1</span>
+                  <div>
+                    <strong>Install Node.js 18+</strong> if you don't have it yet.<br />
+                    <a href="https://nodejs.org/en/download" target="_blank" rel="noreferrer">Download from nodejs.org</a>
+                    <span className="jsm-hint"> — free, ~30 MB, run the installer and click Next.</span>
+                  </div>
                 </li>
                 <li>
-                  <strong>PromptDeck Agent</strong> — download and extract{' '}
-                  <a href="https://github.com/chatonniers/prompt-manager-web/releases" target="_blank" rel="noreferrer">
-                    promptdeck-agent from GitHub Releases
-                  </a>
+                  <span className="jsm-step-num">2</span>
+                  <div>
+                    <strong>Download the PromptDeck Agent</strong> and unzip it anywhere on your PC.<br />
+                    <a href="https://github.com/chatonniers/prompt-manager-web/releases" target="_blank" rel="noreferrer">
+                      Get the latest release on GitHub
+                    </a>
+                    <span className="jsm-hint"> — download <code>promptdeck-agent.zip</code>, extract to e.g. <code>C:\promptdeck-agent</code></span>
+                  </div>
+                </li>
+                <li>
+                  <span className="jsm-step-num">3</span>
+                  <div>
+                    <strong>Open a terminal</strong> (Windows: press <kbd>Win+R</kbd>, type <code>cmd</code>, press Enter) and run:
+                    <CopyBlock code={'cd C:\\promptdeck-agent\nnpm install\nnode agent.js'} />
+                    <span className="jsm-hint">Keep the terminal window open — the agent stops when you close it.</span>
+                  </div>
+                </li>
+                <li>
+                  <span className="jsm-step-num">4</span>
+                  <div>
+                    <strong>Click "Check again"</strong> below once the terminal shows<br />
+                    <code className="jsm-inline-code">PromptDeck Agent running on http://localhost:27384</code>
+                  </div>
                 </li>
               </ol>
 
-              <p className="jsm-section-label">Start the agent</p>
-              <p>Open a terminal and run:</p>
-              <pre className="jsm-code">cd path\to\promptdeck-agent{'\n'}npm install{'\n'}node agent.js</pre>
-              <p className="jsm-hint">
-                Keep the terminal open. The agent runs on <code>localhost:27384</code> and stops when you close it.
-              </p>
               <div className="jsm-actions">
                 <button className="btn-secondary" onClick={onClose}>Cancel</button>
-                <button className="btn-primary" onClick={go}>Retry</button>
+                <button className="btn-primary" onClick={go}>Check again</button>
               </div>
             </div>
           )}
@@ -229,5 +244,23 @@ function Step({ icon, text }) {
       <span className="jsm-step-icon">{icon}</span>
       {text}
     </p>
+  );
+}
+
+function CopyBlock({ code }) {
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+  return (
+    <div className="jsm-copy-block">
+      <pre className="jsm-code">{code}</pre>
+      <button className="jsm-copy-btn" onClick={copy} title="Copy to clipboard">
+        {copied ? '✓ Copied' : 'Copy'}
+      </button>
+    </div>
   );
 }

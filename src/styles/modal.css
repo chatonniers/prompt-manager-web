@@ -1163,6 +1163,88 @@
 
 .jsm-no-agent { }
 
+.jsm-setup-steps {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.jsm-setup-steps li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 13px;
+  color: var(--pm-text2);
+  line-height: 1.55;
+}
+.jsm-setup-steps a { color: var(--pm-accent); text-decoration: none; }
+.jsm-setup-steps a:hover { text-decoration: underline; }
+.jsm-step-num {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  background: var(--pm-accent);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+.jsm-inline-code {
+  font-family: monospace;
+  font-size: 11.5px;
+  background: var(--pm-bg2);
+  border: 1px solid var(--pm-border);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--pm-text);
+  display: inline-block;
+  margin-top: 3px;
+}
+.jsm-setup-steps kbd {
+  font-family: monospace;
+  font-size: 11px;
+  background: var(--pm-bg2);
+  border: 1px solid var(--pm-border);
+  border-bottom-width: 2px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: var(--pm-text2);
+}
+.jsm-setup-steps code {
+  font-family: monospace;
+  font-size: 11.5px;
+  background: var(--pm-bg2);
+  padding: 1px 4px;
+  border-radius: 3px;
+  color: var(--pm-text2);
+}
+.jsm-copy-block {
+  position: relative;
+  margin: 6px 0 4px;
+}
+.jsm-copy-block .jsm-code { margin: 0; padding-right: 56px; }
+.jsm-copy-btn {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: var(--pm-border);
+  border: none;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-family: inherit;
+  color: var(--pm-text2);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.jsm-copy-btn:hover { background: var(--pm-accent); color: #fff; }
+
 .jsm-section-label {
   font-weight: 700;
   font-size: 12px;
