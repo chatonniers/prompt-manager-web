@@ -130,41 +130,33 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
           {step === STEPS.NO_AGENT && (
             <div className="jsm-no-agent">
               <p className="jsm-warn">Could not start PromptDeck Agent automatically.</p>
-              <p>One-time setup — takes ~2 minutes, then everything is automatic:</p>
+              <p>Run the one-click installer once — it handles everything (Node.js, agent, auto-start):</p>
 
               <ol className="jsm-setup-steps">
                 <li>
                   <span className="jsm-step-num">1</span>
                   <div>
-                    <strong>Install Node.js 18+</strong> —{' '}
-                    <a href="https://nodejs.org/en/download" target="_blank" rel="noreferrer">nodejs.org</a>
-                    <span className="jsm-hint"> (free, ~30 MB, click Next through the installer)</span>
+                    <strong>Download the PromptDeck Agent</strong> from{' '}
+                    <a href="https://github.com/chatonniers/prompt-manager-web/releases" target="_blank" rel="noreferrer">GitHub Releases</a>
+                    {' '}and extract it anywhere.
                   </div>
                 </li>
                 <li>
                   <span className="jsm-step-num">2</span>
                   <div>
-                    <strong>Download &amp; extract the PromptDeck Agent</strong> to{' '}
-                    <code>{isMac ? '~/promptdeck-agent' : '%USERPROFILE%\\promptdeck-agent'}</code> —{' '}
-                    <a href="https://github.com/chatonniers/prompt-manager-web/releases" target="_blank" rel="noreferrer">GitHub Releases</a>
+                    {isMac ? (
+                      <>Open Terminal in the extracted folder and run:
+                      <CopyBlock code={'bash install.sh'} /></>
+                    ) : (
+                      <>Right-click <code>install.ps1</code> → <strong>Run with PowerShell</strong>.<br />
+                      <span className="jsm-hint">The installer sets up Node.js, the agent, and the auto-start shortcut automatically.</span></>
+                    )}
                   </div>
                 </li>
                 <li>
                   <span className="jsm-step-num">3</span>
                   <div>
-                    {isMac ? (
-                      <><strong>Run in Terminal:</strong><CopyBlock code={'cd ~/promptdeck-agent\nnpm install\nbash install-mac.sh'} /></>
-                    ) : (
-                      <><strong>Run in Command Prompt:</strong>
-                      <CopyBlock code={'cd %USERPROFILE%\\promptdeck-agent\nnpm install'} />
-                      Then double-click <code>install-windows.reg</code> and click <strong>Yes</strong>.</>
-                    )}
-                  </div>
-                </li>
-                <li>
-                  <span className="jsm-step-num">4</span>
-                  <div>
-                    <strong>Click "Try again"</strong> — everything runs automatically after this.
+                    <strong>Click "Try again"</strong> — the Joule toggle will start the agent automatically from now on.
                   </div>
                 </li>
               </ol>
