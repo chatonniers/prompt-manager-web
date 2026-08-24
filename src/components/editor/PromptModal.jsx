@@ -446,7 +446,7 @@ export default function PromptModal() {
               <div className="field-col">
                 <label>Status</label>
                 <div className="card-status-btns">
-                  {(canPublish ? ['', 'draft', 'published', 'archived'] : ['draft']).map(s => (
+                  {(canPublish ? ['draft', 'published', 'archived'] : ['draft']).map(s => (
                     <button key={s} type="button"
                       className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`}
                       onClick={() => setStatus(s)} disabled={!canPublish && s !== 'draft'}>

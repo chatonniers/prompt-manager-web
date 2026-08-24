@@ -455,7 +455,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
           <div className="card-edit-field">
             <label className="card-edit-label">{t('statusLabel', lang)}</label>
             <div className="card-status-btns">
-              {(canPublish ? ['', 'draft', 'published', 'archived'] : ['draft']).map(s => (
+              {(canPublish ? ['draft', 'published', 'archived'] : ['draft']).map(s => (
                 <button key={s} type="button" className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`} onClick={() => setStatus(s)}>
                   {s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'}
                 </button>
