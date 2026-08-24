@@ -158,11 +158,10 @@ function LogoMark() {
   );
 }
 
-function UserProfileMenu({ profile, onSignOut, refreshProfile }) {
+function UserProfileMenu({ profile, onSignOut, refreshProfile, solutions }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(profile?.display_name || '');
   const [domains, setDomains] = useState(profile?.domain_expertise || []);
-  const [domainInput, setDomainInput] = useState('');
   const [saving, setSaving] = useState(false);
   const ref = useRef(null);
 
@@ -178,15 +177,8 @@ function UserProfileMenu({ profile, onSignOut, refreshProfile }) {
     return () => document.removeEventListener('mousedown', close);
   }, [open]);
 
-  function handleDomainKey(e) {
-    if ((e.key === 'Enter' || e.key === ',') && domainInput.trim()) {
-      e.preventDefault();
-      const v = domainInput.trim().replace(/,$/, '');
-      if (v && !domains.includes(v)) setDomains(d => [...d, v]);
-      setDomainInput('');
-    } else if (e.key === 'Backspace' && !domainInput && domains.length) {
-      setDomains(d => d.slice(0, -1));
-    }
+  function toggleDomain(sol) {
+    setDomains(d => d.includes(sol) ? d.filter(x => x !== sol) : [...d, sol]);
   }
 
   async function handleSave() {
@@ -225,20 +217,20 @@ function UserProfileMenu({ profile, onSignOut, refreshProfile }) {
           </div>
           <div className="tb-profile-field">
             <label className="tb-profile-label">Domain expertise</label>
-            <div className="tb-profile-chips">
-              {domains.map(d => (
-                <span key={d} className="tb-profile-chip">
-                  {d}
-                  <button type="button" onClick={() => setDomains(ds => ds.filter(x => x !== d))}>×</button>
-                </span>
+            <div className="tb-profile-sol-list">
+              {solutions.map(sol => (
+                <label key={sol} className="tb-profile-sol-item">
+                  <input
+                    type="checkbox"
+                    checked={domains.includes(sol)}
+                    onChange={() => toggleDomain(sol)}
+                  />
+                  <span>{sol}</span>
+                </label>
               ))}
-              <input
-                className="tb-profile-chip-input"
-                value={domainInput}
-                onChange={e => setDomainInput(e.target.value)}
-                onKeyDown={handleDomainKey}
-                placeholder={domains.length === 0 ? 'Add domain, press Enter…' : 'Add…'}
-              />
+              {solutions.length === 0 && (
+                <span className="tb-profile-sol-empty">No solutions configured yet</span>
+              )}
             </div>
           </div>
           <div className="tb-profile-actions">
@@ -524,7 +516,7 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
           <PublishRequestBell />
           <div className="tb-divider" />
           {profile && (
-            <UserProfileMenu profile={profile} onSignOut={onSignOut} refreshProfile={refreshProfile} />
+            <UserProfileMenu profile={profile} onSignOut={onSignOut} refreshProfile={refreshProfile} solutions={state.catalog?.solutions || []} />
           )}
           <div className="tb-divider" />
           <DisplayMenu
