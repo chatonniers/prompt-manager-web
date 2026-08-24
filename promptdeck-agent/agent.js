@@ -116,77 +116,48 @@ async function sendPromptToJoule(promptText) {
         if (out === 'ready') break;
       } catch { /* keep polling */ }
     }
-    await sleep(1000); // extra settle time after window appears
+    await sleep(2500); // extra settle time after window appears
   } else {
     focusJoule();
     await sleep(1500);
   }
 
-  // 3. Focus Joule window and send Ctrl+V + Enter via PowerShell UI automation
-  const ps = `
-Add-Type -AssemblyName System.Windows.Forms
-Add-Type @"
-  using System;
-  using System.Runtime.InteropServices;
-  public class Win32 {
-    [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
-    [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-    [DllImport("user32.dll")] public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
-    [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
-    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
-    [DllImport("kernel32.dll")] public static extern uint GetCurrentThreadId();
-  }
-"@
-$joule = Get-Process 'Joule Desktop' -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
-if ($joule) {
-  $hwnd = $joule.MainWindowHandle
-  [Win32]::ShowWindow($hwnd, 9) | Out-Null
-  # Force foreground via thread input attachment trick
-  $fgHwnd = [Win32]::GetForegroundWindow()
-  $fgPid = [uint32]0
-  [Win32]::GetWindowThreadProcessId($fgHwnd, [ref]$fgPid) | Out-Null
-  $fgTid = [Win32]::GetWindowThreadProcessId($fgHwnd, [ref]$fgPid)
-  $myTid = [Win32]::GetCurrentThreadId()
-  [Win32]::AttachThreadInput($myTid, $fgTid, $true) | Out-Null
-  [Win32]::SetForegroundWindow($hwnd) | Out-Null
-  [Win32]::AttachThreadInput($myTid, $fgTid, $false) | Out-Null
-  Start-Sleep -Milliseconds 1500
-  # Verify we have the right window before sending keys
-  $currentFg = [Win32]::GetForegroundWindow()
-  if ($currentFg -eq $hwnd) {
-    [System.Windows.Forms.SendKeys]::SendWait('^v')
-    Start-Sleep -Milliseconds 500
-    [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
-    Write-Output 'sent'
-  } else {
-    # Fallback: try AppActivate
-    $wsh = New-Object -ComObject WScript.Shell
-    $wsh.AppActivate($joule.Id) | Out-Null
-    Start-Sleep -Milliseconds 1000
-    [System.Windows.Forms.SendKeys]::SendWait('^v')
-    Start-Sleep -Milliseconds 500
-    [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
-    Write-Output 'sent-fallback'
-  }
-} else {
-  Write-Output 'not-found'
-}
-`.trim();
+  // 3. Focus Joule and send Ctrl+V + Enter via VBS (AppActivate has focus-steal rights)
+  const vbsLines = [
+    'Set wsh = CreateObject("WScript.Shell")',
+    'WScript.Sleep 800',
+    'Dim activated, i',
+    'For i = 1 To 8',
+    '  activated = wsh.AppActivate("Joule Work Desktop")',
+    '  If Not activated Then activated = wsh.AppActivate("Joule Desktop")',
+    '  If activated Then Exit For',
+    '  WScript.Sleep 1000',
+    'Next',
+    'If activated Then',
+    '  WScript.Sleep 800',
+    '  wsh.SendKeys "^v"',
+    '  WScript.Sleep 400',
+    '  wsh.SendKeys "{ENTER}"',
+    'End If',
+  ];
+  const vbs = vbsLines.join('\r\n');
 
-  const tmpPs1 = path.join(os.tmpdir(), `pd-sendkeys-${Date.now()}.ps1`);
-  fs.writeFileSync(tmpPs1, ps, 'utf8');
+  const tmpVbs = path.join(os.tmpdir(), `pd-sendkeys-${Date.now()}.vbs`);
+  fs.writeFileSync(tmpVbs, vbs, { encoding: 'ascii' });
   let result;
   try {
-    result = execSync(`powershell -ExecutionPolicy Bypass -File "${tmpPs1}"`, { timeout: 10000, encoding: 'utf8' });
-    result = result.split(/\r?\n/).map(l => l.trim()).filter(Boolean).pop() || '';
-    console.log('[send-prompt] PS result:', JSON.stringify(result));
+    execSync(`wscript.exe //nologo "${tmpVbs}"`, { timeout: 20000 });
+    result = 'sent';
+    console.log('[send-prompt] VBS sent');
   } catch (e) {
-    console.error('[send-prompt] PS error:', e.message, e.stderr);
+    console.error('[send-prompt] VBS error:', e.message);
+    // Keep file for inspection on error
+    console.error('[send-prompt] VBS content:', fs.readFileSync(tmpVbs, 'ascii'));
     result = 'error';
   } finally {
-    try { fs.unlinkSync(tmpPs1); } catch { /* ignore */ }
+    try { fs.unlinkSync(tmpVbs); } catch { /* ignore */ }
   }
-  return result === 'sent' || result === 'sent-fallback';
+  return result === 'sent';
 }
 
 // ── Skill helpers ─────────────────────────────────────────────────────────────
