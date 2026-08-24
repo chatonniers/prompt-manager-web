@@ -707,7 +707,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
     }
     // If Joule integration is enabled and this prompt has a Joule skill attachment
     const jouleAtt = (p.attachments || []).find(a => a.isJouleSkill);
-    if (jouleAtt && profile?.joule_integration) {
+    if (jouleAtt && profile?.joule_integration && profile?.joule_connected) {
       const allAtts = await AttachmentsDB.getForPrompt(p.id);
       const file = allAtts.find(a => a.id === jouleAtt.id);
       if (file?.data) {

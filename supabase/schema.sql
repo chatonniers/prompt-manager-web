@@ -12,13 +12,16 @@ create type user_role as enum ('admin', 'editor', 'viewer', 'blocked');
 
 -- ── Profiles ─────────────────────────────────────────────────
 create table public.profiles (
-  id             uuid primary key references auth.users(id) on delete cascade,
-  email          text not null,
-  display_name   text,
-  role           user_role not null default 'viewer',
-  pin_hash       text,
-  created_at     timestamptz not null default now(),
-  updated_at     timestamptz not null default now()
+  id                uuid primary key references auth.users(id) on delete cascade,
+  email             text not null,
+  display_name      text,
+  role              user_role not null default 'viewer',
+  pin_hash          text,
+  domain_expertise  text[] not null default '{}',
+  joule_integration boolean not null default false,
+  joule_connected   boolean not null default false,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now()
 );
 alter table public.profiles enable row level security;
 

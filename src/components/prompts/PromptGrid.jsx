@@ -119,7 +119,7 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
     setTimeout(() => setCopiedIdx(null), 1500);
     // If Joule integration is enabled and this prompt has a Joule skill attachment
     const jouleAtt = (p.attachments || []).find(a => a.isJouleSkill);
-    if (jouleAtt && authProfile?.joule_integration) {
+    if (jouleAtt && authProfile?.joule_integration && authProfile?.joule_connected) {
       const allAtts = await AttachmentsDB.getForPrompt(p.id);
       const file = allAtts.find(a => a.id === jouleAtt.id);
       if (file?.data) {

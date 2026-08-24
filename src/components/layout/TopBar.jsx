@@ -127,7 +127,7 @@ function LogoMark() {
 
 export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburger }) {
   const { state, dispatch } = useApp();
-  const { isAdmin: canAdmin, isEditor, profile: authProfile } = useAuth();
+  const { isAdmin: canAdmin, isEditor, profile: authProfile, refreshProfile } = useAuth();
   const canPublish = canAdmin || isEditor;
   const lang = state.settings?.lang || 'en';
   const theme = state.settings?.theme || 'dark';
@@ -137,6 +137,8 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
   const presenceRef = useRef(null);
   // null = unknown, 'ok' = agent up + Joule running, 'warn' = agent up but Joule not running, 'off' = agent not reachable
   const [jouleStatus, setJouleStatus] = useState(null);
+  const [jouleConnected, setJouleConnected] = useState(false);
+  const [jouleToggling, setJouleToggling] = useState(false);
   const visiblePrompts = (() => {
     const vr = state.catalog?.visibilityRules;
     const role = authProfile?.role || 'viewer';
@@ -192,9 +194,14 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
     return () => { channel.untrack(); supabase.removeChannel(channel); };
   }, [profile?.id]);
 
-  // Poll agent + Joule status when integration is enabled for this user
+  // Sync connected state from profile
   useEffect(() => {
-    if (!authProfile?.joule_integration) { setJouleStatus(null); return; }
+    setJouleConnected(!!authProfile?.joule_connected);
+  }, [authProfile?.joule_connected]);
+
+  // Poll agent + Joule status when integration is enabled AND user is connected
+  useEffect(() => {
+    if (!authProfile?.joule_integration || !jouleConnected) { setJouleStatus(null); return; }
     let cancelled = false;
     async function check() {
       try {
@@ -211,7 +218,18 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
     check();
     const interval = setInterval(check, 8000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [authProfile?.joule_integration]);
+  }, [authProfile?.joule_integration, jouleConnected]);
+
+  async function handleJouleToggle() {
+    if (!authProfile?.joule_integration || jouleToggling) return;
+    const newVal = !jouleConnected;
+    setJouleToggling(true);
+    setJouleConnected(newVal);
+    if (!newVal) setJouleStatus(null);
+    await supabase.from('profiles').update({ joule_connected: newVal }).eq('id', authProfile.id);
+    await refreshProfile();
+    setJouleToggling(false);
+  }
 
   function handleFullscreen() {
     if (!document.fullscreenElement) {
@@ -394,25 +412,32 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
             onHelp={onHelp}
             onDisplayMode={m => dispatch({ type: 'SET_DISPLAY_MODE', payload: m })}
           />
-          {/* Joule status indicator — read from profile, set by admin in User Management */}
+          {/* Joule connect/disconnect toggle — visible when admin has enabled integration for this user */}
           {authProfile?.joule_integration && (
-            <span
-              className={`tb-joule-toggle active`}
+            <button
+              className={`tb-joule-toggle${jouleConnected ? ' active' : ''}`}
+              onClick={handleJouleToggle}
+              disabled={jouleToggling}
               title={
-                jouleStatus === 'ok'   ? 'Joule Desktop integration enabled — agent & Joule running' :
-                jouleStatus === 'warn' ? 'Joule Desktop integration enabled — agent running, Joule not open' :
-                jouleStatus === 'off'  ? 'Joule Desktop integration enabled — agent not running' :
-                'Joule Desktop integration enabled'
+                jouleConnected
+                  ? jouleStatus === 'ok'   ? 'Joule connected — agent & Joule running. Click to disconnect.' :
+                    jouleStatus === 'warn' ? 'Joule connected — agent running, Joule not open. Click to disconnect.' :
+                    jouleStatus === 'off'  ? 'Joule connected — agent not reachable. Click to disconnect.' :
+                    'Joule connected. Click to disconnect.'
+                  : 'Joule Desktop integration available. Click to connect.'
               }
-              style={{ display: 'inline-flex', alignItems: 'center', padding: '7px 10px', borderRadius: 8, border: '1px solid rgba(109,40,217,0.5)', background: 'rgba(109,40,217,0.12)', cursor: 'default' }}
+              style={{ display: 'inline-flex', alignItems: 'center', padding: '7px 10px', borderRadius: 8, border: '1px solid rgba(109,40,217,0.5)', background: jouleConnected ? 'rgba(109,40,217,0.18)' : 'rgba(109,40,217,0.06)', cursor: 'pointer' }}
             >
               <span className="tb-joule-wrap">
                 <JouleDiamond size={15} />
-                {jouleStatus && (
+                {jouleConnected && jouleStatus && (
                   <span className={`tb-joule-dot tb-joule-dot--${jouleStatus}`} />
                 )}
+                {!jouleConnected && (
+                  <span className="tb-joule-dot tb-joule-dot--off" style={{ opacity: 0.5 }} />
+                )}
               </span>
-            </span>
+            </button>
           )}
           {/* Settings gear — always last */}
           {canAdmin && (
