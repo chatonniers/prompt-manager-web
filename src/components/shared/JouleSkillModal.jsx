@@ -130,51 +130,41 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
           {step === STEPS.NO_AGENT && (
             <div className="jsm-no-agent">
               <p className="jsm-warn">Could not start PromptDeck Agent automatically.</p>
-              <p>Complete this one-time setup so the agent starts automatically next time:</p>
+              <p>One-time setup — takes ~2 minutes, then everything is automatic:</p>
 
               <ol className="jsm-setup-steps">
                 <li>
                   <span className="jsm-step-num">1</span>
                   <div>
-                    <strong>Install Node.js 18+</strong> if you don't have it yet.<br />
-                    <a href="https://nodejs.org/en/download" target="_blank" rel="noreferrer">Download from nodejs.org</a>
-                    <span className="jsm-hint"> — free, ~30 MB, run the installer and click Next.</span>
+                    <strong>Install Node.js 18+</strong> —{' '}
+                    <a href="https://nodejs.org/en/download" target="_blank" rel="noreferrer">nodejs.org</a>
+                    <span className="jsm-hint"> (free, ~30 MB, click Next through the installer)</span>
                   </div>
                 </li>
                 <li>
                   <span className="jsm-step-num">2</span>
                   <div>
-                    <strong>Download the PromptDeck Agent</strong> and unzip it to{' '}
-                    <code>{isMac ? '~/promptdeck-agent' : '%USERPROFILE%\\promptdeck-agent'}</code>.<br />
-                    <a href="https://github.com/chatonniers/prompt-manager-web/releases" target="_blank" rel="noreferrer">
-                      Get the latest release on GitHub
-                    </a>
+                    <strong>Download &amp; extract the PromptDeck Agent</strong> to{' '}
+                    <code>{isMac ? '~/promptdeck-agent' : '%USERPROFILE%\\promptdeck-agent'}</code> —{' '}
+                    <a href="https://github.com/chatonniers/prompt-manager-web/releases" target="_blank" rel="noreferrer">GitHub Releases</a>
                   </div>
                 </li>
                 <li>
                   <span className="jsm-step-num">3</span>
                   <div>
-                    <strong>Register the auto-start shortcut</strong> — do this first, once:<br />
                     {isMac ? (
-                      <><span className="jsm-hint">Open Terminal and run:</span><CopyBlock code={'bash ~/promptdeck-agent/install-mac.sh'} /></>
+                      <><strong>Run in Terminal:</strong><CopyBlock code={'cd ~/promptdeck-agent\nnpm install\nbash install-mac.sh'} /></>
                     ) : (
-                      <span className="jsm-hint">Open File Explorer → go to <code>%USERPROFILE%\promptdeck-agent</code> → double-click <code>install-windows.reg</code> → click <strong>Yes</strong>.</span>
+                      <><strong>Run in Command Prompt:</strong>
+                      <CopyBlock code={'cd %USERPROFILE%\\promptdeck-agent\nnpm install'} />
+                      Then double-click <code>install-windows.reg</code> and click <strong>Yes</strong>.</>
                     )}
                   </div>
                 </li>
                 <li>
                   <span className="jsm-step-num">4</span>
                   <div>
-                    <strong>Install dependencies</strong> — open a terminal and run once:
-                    <CopyBlock code={isMac
-                      ? 'cd ~/promptdeck-agent\nnpm install'
-                      : 'cd %USERPROFILE%\\promptdeck-agent\nnpm install'} />
-                  </div>
-                </li>
-                <li>
-                  <span className="jsm-step-num">5</span>
-                  <div>
-                    <strong>Click "Try again"</strong> — the agent will start automatically from now on.
+                    <strong>Click "Try again"</strong> — everything runs automatically after this.
                   </div>
                 </li>
               </ol>
