@@ -1203,3 +1203,33 @@
   justify-content: flex-end;
   margin-top: 16px;
 }
+
+/* ── JouleSkillModal shared buttons ──────────────────────────────────── */
+.btn-primary {
+  background: var(--pm-accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: var(--pm-accent2, #4F46E5); }
+.btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.btn-secondary {
+  background: var(--pm-bg);
+  color: var(--pm-text2);
+  border: 1.5px solid var(--pm-border2);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.btn-secondary:hover { background: var(--pm-surface); color: var(--pm-text1); border-color: var(--pm-border); }
