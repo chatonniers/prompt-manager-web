@@ -114,7 +114,7 @@ create table public.prompts (
   personas     text[] not null default '{}',
   tags         text[] not null default '{}',
   notes        text,
-  status       text check (status in ('draft', 'published')),
+  status       text check (status in ('draft', 'published', 'archived')),
   is_private   boolean not null default true,
   is_favorite  boolean not null default false,
   usage_count  integer not null default 0,
