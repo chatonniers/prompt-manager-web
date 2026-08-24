@@ -214,7 +214,7 @@ export default function PublishRequestBell() {
                   </div>
                 </div>
               ))}
-              <button className="tb-bell-goto-users" onClick={() => { dispatch({ type: 'SET_VIEW', payload: { view: 'settings' } }); setOpen(false); }}>
+              <button className="tb-bell-goto-users" onClick={() => { dispatch({ type: 'SET_VIEW', payload: { view: 'settings', settingsSection: 'users' } }); setOpen(false); }}>
                 Go to Users ↗
               </button>
             </>

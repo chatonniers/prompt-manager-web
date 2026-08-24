@@ -65,6 +65,7 @@ function reducer(state, action) {
         currentFilter: (action.payload?.filter ?? action.filter) ?? { storyFlow: null, solution: null, category: null },
         searchQuery: '',
         statusFilter: action.payload?.statusFilter ?? null,
+        settingsSection: action.payload?.settingsSection ?? null,
       };
     case 'SET_STATUS_FILTER':
       return { ...state, statusFilter: action.payload, searchQuery: '' };

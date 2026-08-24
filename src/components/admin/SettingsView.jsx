@@ -35,7 +35,7 @@ export default function SettingsView() {
   const { state, dispatch } = useApp();
   const { isAdmin } = useAuth();
   const lang = state.settings?.lang || 'en';
-  const [activeSection, setActiveSection] = useState('categories');
+  const [activeSection, setActiveSection] = useState(state.settingsSection || 'categories');
 
   const allSections = [
     ...FUNCTIONAL_SECTIONS,
