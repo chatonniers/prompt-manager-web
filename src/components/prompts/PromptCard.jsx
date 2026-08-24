@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { StorageAPI } from '../../lib/storage.js';
+import { StorageAPI, uploadSkillFile } from '../../lib/storage.js';
 import { AttachmentsDB } from '../../lib/attachments.js';
 import { t } from '../../lib/i18n.js';
 import { getFlowColor } from '../../lib/flowColors.js';
@@ -265,8 +265,28 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
       for (const attId of pendingDeletes) {
         await AttachmentsDB.delete(attId);
       }
+
+      if (status === 'published') {
+        for (const att of savedNewAtts) {
+          const fileObj = pendingFiles.find(f => f.name === att.name);
+          if (fileObj?.data) {
+            try { att.skill_url = await uploadSkillFile(p.id, att.id, att.name, fileObj.data); }
+            catch (e) { console.error('Skill upload failed:', e); }
+          }
+        }
+        for (const att of attachments) {
+          if (!att.skill_url && !pendingDeletes.includes(att.id)) {
+            const stored = await AttachmentsDB.get(att.id);
+            if (stored?.data) {
+              try { att.skill_url = await uploadSkillFile(p.id, att.id, att.name, stored.data); }
+              catch (e) { console.error('Skill upload failed:', e); }
+            }
+          }
+        }
+      }
+
       const attachmentsMeta = [
-        ...attachments.filter(a => !pendingDeletes.includes(a.id)).map(a => ({ id: a.id, name: a.name, type: a.type, size: a.size, isJouleSkill: a.isJouleSkill || false })),
+        ...attachments.filter(a => !pendingDeletes.includes(a.id)).map(a => ({ id: a.id, name: a.name, type: a.type, size: a.size, isJouleSkill: a.isJouleSkill || false, skill_url: a.skill_url || null })),
         ...savedNewAtts,
       ];
 
