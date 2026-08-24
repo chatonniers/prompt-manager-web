@@ -507,9 +507,10 @@
 .pill.lang-missing  { background: var(--pm-warn-bg); color: var(--pm-warn); }
 
 /* Status badges */
-.pill.status-draft     { background: #F3F4F6; color: #6B7280; border: 1px solid #D1D5DB; font-weight: 700; letter-spacing: 0.3px; }
+.pill.status-draft     { background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; font-weight: 700; letter-spacing: 0.3px; }
 .pill.status-published { background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; font-weight: 700; letter-spacing: 0.3px; }
 .pill.status-archived  { background: #F1F5F9; color: #64748B; border: 1px solid #CBD5E1; font-weight: 700; letter-spacing: 0.3px; }
+[data-theme="dark"] .pill.status-draft { background: rgba(251,191,36,0.15); color: #FCD34D; border-color: rgba(251,191,36,0.35); }
 
 .attach-count-pill {
   font-size: 11px;
@@ -1043,7 +1044,7 @@
   color: var(--pm-text3);
   transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
-.card-status-btn.status-opt-draft.active      { background: #F3F4F6; border-color: #9CA3AF; color: #6B7280; }
+.card-status-btn.status-opt-draft.active      { background: #FEF3C7; border-color: #FCD34D; color: #92400E; }
 .card-status-btn.status-opt-published.active  { background: #ECFDF5; border-color: #059669; color: #059669; }
 .card-status-btn.status-opt-archived.active   { background: #F1F5F9; border-color: #94A3B8; color: #64748B; }
 .card-status-btn:hover { border-color: var(--pm-accent); color: var(--pm-accent); }
