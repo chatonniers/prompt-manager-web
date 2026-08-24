@@ -309,16 +309,16 @@ const server = http.createServer(async (req, res) => {
       const { name, content } = await readBody(req);
       if (!name || !content) return send(res, 400, { error: 'name and content required' });
       const existing = findSkill(name);
-      if (existing) return send(res, 200, { ok: true, id: existing.id, alreadyInstalled: true });
-      const id = installSkill(name, content);
-      // Restart Joule so it picks up the new skill
+      const id = existing ? existing.id : installSkill(name, content);
+      const alreadyInstalled = !!existing;
+      // Always restart Joule so it picks up current skills
       if (isJouleRunning()) {
         try {
           execSync(`taskkill /IM "Joule Desktop.exe" /F`, { timeout: 5000 });
           await sleep(1500);
-        } catch { /* ignore if already closed */ }
+        } catch { /* ignore */ }
       }
-      return send(res, 200, { ok: true, id, needsRestart: true });
+      return send(res, 200, { ok: true, id, alreadyInstalled });
     }
 
     if (req.method === 'POST' && url.pathname === '/shutdown') {
