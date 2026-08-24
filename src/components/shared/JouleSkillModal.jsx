@@ -121,9 +121,18 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
             <div className="jsm-starting">
               <Step icon="⏳" text="Starting PromptDeck Agent…" />
               <p className="jsm-hint" style={{ marginTop: 10 }}>
-                The agent is launching in the background. This takes a few seconds.<br />
-                If a browser dialog asks permission to open a link, click <strong>Open</strong>.
+                If a browser dialog appears asking to open a link, click <strong>Open</strong>.
               </p>
+              <div className="jsm-actions" style={{ marginTop: 12 }}>
+                <button className="btn-primary" onClick={() => {
+                  const a = document.createElement('a');
+                  a.href = 'promptdeck://start';
+                  a.style.display = 'none';
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                }}>Launch Agent</button>
+              </div>
             </div>
           )}
 
