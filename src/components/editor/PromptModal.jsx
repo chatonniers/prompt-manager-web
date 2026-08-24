@@ -544,7 +544,15 @@ export default function PromptModal() {
                       type="button"
                       className={`card-edit-att-joule${a.isJouleSkill ? ' active' : ''}`}
                       title={a.isJouleSkill ? 'Unmark as Joule Skill' : 'Mark as Joule Skill'}
-                      onClick={() => setExistingAtts(prev => prev.map(x => x.id === a.id ? { ...x, isJouleSkill: !x.isJouleSkill } : x))}
+                      onClick={() => {
+                        if (!a.isJouleSkill) {
+                          // Enforce max 1: unmark all others first
+                          setExistingAtts(prev => prev.map(x => ({ ...x, isJouleSkill: x.id === a.id })));
+                          setPendingFiles(prev => prev.map(x => ({ ...x, isJouleSkill: false })));
+                        } else {
+                          setExistingAtts(prev => prev.map(x => x.id === a.id ? { ...x, isJouleSkill: false } : x));
+                        }
+                      }}
                     ><JouleDiamond size={13} /></button>
                     <button className="attach-remove-btn" onClick={() => setPendingDeletes(prev => [...prev, a.id])}>×</button>
                   </div>
@@ -557,7 +565,14 @@ export default function PromptModal() {
                       type="button"
                       className={`card-edit-att-joule${f.isJouleSkill ? ' active' : ''}`}
                       title={f.isJouleSkill ? 'Unmark as Joule Skill' : 'Mark as Joule Skill'}
-                      onClick={() => setPendingFiles(prev => prev.map(x => x._tempId === f._tempId ? { ...x, isJouleSkill: !x.isJouleSkill } : x))}
+                      onClick={() => {
+                        if (!f.isJouleSkill) {
+                          setExistingAtts(prev => prev.map(x => ({ ...x, isJouleSkill: false })));
+                          setPendingFiles(prev => prev.map(x => ({ ...x, isJouleSkill: x._tempId === f._tempId })));
+                        } else {
+                          setPendingFiles(prev => prev.map(x => x._tempId === f._tempId ? { ...x, isJouleSkill: false } : x));
+                        }
+                      }}
                     ><JouleDiamond size={13} /></button>
                     <button className="attach-remove-btn" onClick={() => setPendingFiles(prev => prev.filter(x => x._tempId !== f._tempId))}>×</button>
                   </div>

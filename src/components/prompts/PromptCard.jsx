@@ -686,11 +686,20 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
     if (jouleAtt && profile?.joule_integration && profile?.joule_connected) {
       const allAtts = await AttachmentsDB.getForPrompt(p.id);
       const file = allAtts.find(a => a.id === jouleAtt.id);
+      let content = null;
       if (file?.data) {
         const decoder = new TextDecoder('utf-8');
-        const content = file.data instanceof ArrayBuffer
+        content = file.data instanceof ArrayBuffer
           ? decoder.decode(file.data)
           : decoder.decode(await file.data.arrayBuffer());
+      } else if (jouleAtt.skill_url) {
+        // No local copy — fetch from Supabase Storage
+        try {
+          const res = await fetch(jouleAtt.skill_url);
+          content = await res.text();
+        } catch (e) { console.error('Skill fetch failed:', e); }
+      }
+      if (content) {
         const nameMatch = content.match(/(?:^|\n)name:\s*([^\n\r]+)/);
         const skillName = nameMatch
           ? nameMatch[1].trim()
