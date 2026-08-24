@@ -1,6 +1,17 @@
 import { supabase } from './supabase.js';
 import { AttachmentsDB } from './attachments.js';
 
+export async function uploadSkillFile(promptId, attId, fileName, arrayBuffer) {
+  const path = `${promptId}/${attId}/${fileName}`;
+  const { error } = await supabase.storage.from('skills').upload(path, arrayBuffer, {
+    contentType: 'application/octet-stream',
+    upsert: true,
+  });
+  if (error) throw error;
+  const { data } = supabase.storage.from('skills').getPublicUrl(path);
+  return data.publicUrl;
+}
+
 const SETTINGS_DEFAULTS = {
   autoFilterEnabled: true,
   overlayPosition: 'right',
