@@ -673,7 +673,11 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
     await StorageAPI.incrementUsage(p.id);
     const prompts = await StorageAPI.getAllPrompts();
     dispatch({ type: 'SET_PROMPTS', payload: prompts });
-    dispatch({ type: 'SHOW_TOAST', payload: t('copied', lang) });
+    const jouleAtt = (p.attachments || []).find(a => a.isJouleSkill);
+    const jouleWillHandle = jouleAtt && profile?.joule_integration && profile?.joule_connected && p.status === 'published';
+    if (!jouleWillHandle) {
+      dispatch({ type: 'SHOW_TOAST', payload: t('copied', lang) });
+    }
     if (isCta) {
       setCtaCopied(true);
       setTimeout(() => setCtaCopied(false), 1500);
@@ -681,8 +685,6 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
       setCopiedItemId(item.id);
       setTimeout(() => setCopiedItemId(null), 1500);
     }
-    // If Joule integration is enabled and this prompt has a Joule skill attachment
-    const jouleAtt = (p.attachments || []).find(a => a.isJouleSkill);
     if (jouleAtt && profile?.joule_integration && profile?.joule_connected) {
       if (p.status !== 'published') {
         dispatch({ type: 'SHOW_TOAST', payload: 'Joule Desktop integration is only available for published prompts. Prompt copied.' });

@@ -114,7 +114,11 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
     await StorageAPI.incrementUsage(p.id);
     const fresh = await StorageAPI.getAllPrompts();
     dispatch({ type: 'SET_PROMPTS', payload: fresh });
-    dispatch({ type: 'SHOW_TOAST', payload: t('copied', lang) });
+    const jouleAtt = (p.attachments || []).find(a => a.isJouleSkill);
+    const jouleWillHandle = jouleAtt && authProfile?.joule_integration && authProfile?.joule_connected && p.status === 'published';
+    if (!jouleWillHandle) {
+      dispatch({ type: 'SHOW_TOAST', payload: t('copied', lang) });
+    }
     setCopiedIdx(idx);
     setTimeout(() => setCopiedIdx(null), 1500);
     // If Joule integration is enabled and this prompt has a Joule skill attachment
