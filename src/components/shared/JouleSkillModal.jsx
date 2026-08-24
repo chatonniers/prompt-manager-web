@@ -33,6 +33,7 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
   const [error, setError] = useState('');
   const [skillInstalled, setSkillInstalled] = useState(false);
   const [sendOk, setSendOk] = useState(null);
+  const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgentData?.platform || '');
 
   const go = useCallback(async () => {
     try {
@@ -143,7 +144,8 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
                 <li>
                   <span className="jsm-step-num">2</span>
                   <div>
-                    <strong>Download the PromptDeck Agent</strong> and unzip it to <code>C:\promptdeck-agent</code>.<br />
+                    <strong>Download the PromptDeck Agent</strong> and unzip it to{' '}
+                    <code>{isMac ? '~/promptdeck-agent' : '%USERPROFILE%\\promptdeck-agent'}</code>.<br />
                     <a href="https://github.com/chatonniers/prompt-manager-web/releases" target="_blank" rel="noreferrer">
                       Get the latest release on GitHub
                     </a>
@@ -152,16 +154,21 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
                 <li>
                   <span className="jsm-step-num">3</span>
                   <div>
-                    <strong>Register the auto-start shortcut</strong> (Windows — run once):<br />
-                    <span className="jsm-hint">Open File Explorer, go to <code>C:\promptdeck-agent</code>, double-click <code>install-windows.reg</code>, click Yes.</span>
-                    <br /><span className="jsm-hint">On Mac: open Terminal and run <code>bash ~/promptdeck-agent/install-mac.sh</code></span>
+                    <strong>Install dependencies</strong> — open a terminal and run once:
+                    <CopyBlock code={isMac
+                      ? 'cd ~/promptdeck-agent\nnpm install'
+                      : 'cd %USERPROFILE%\\promptdeck-agent\nnpm install'} />
                   </div>
                 </li>
                 <li>
                   <span className="jsm-step-num">4</span>
                   <div>
-                    <strong>Install dependencies</strong> — open a terminal and run once:
-                    <CopyBlock code={'cd C:\\promptdeck-agent\nnpm install'} />
+                    <strong>Register the auto-start shortcut</strong> (one-time only):<br />
+                    {isMac ? (
+                      <span className="jsm-hint">Open Terminal and run: <CopyBlock code={'bash ~/promptdeck-agent/install-mac.sh'} /></span>
+                    ) : (
+                      <span className="jsm-hint">Open File Explorer → go to <code>%USERPROFILE%\promptdeck-agent</code> → double-click <code>install-windows.reg</code> → click <strong>Yes</strong>.</span>
+                    )}
                   </div>
                 </li>
                 <li>
