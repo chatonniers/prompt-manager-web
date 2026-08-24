@@ -29,7 +29,7 @@ const STEPS = {
  *   onClose      fn       – called when user closes
  */
 export default function JouleSkillModal({ skillName, skillContent, promptText, setupOnly, onClose }) {
-  const [step, setStep] = useState(setupOnly ? STEPS.NO_AGENT : STEPS.AGENT_CHECK);
+  const [step, setStep] = useState(STEPS.AGENT_CHECK);
   const [error, setError] = useState('');
   const [skillInstalled, setSkillInstalled] = useState(false);
   const [sendOk, setSendOk] = useState(null);
@@ -104,7 +104,7 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
     }
   }
 
-  useEffect(() => { if (!setupOnly) go(); }, [go]);
+  useEffect(() => { go(); }, [go]);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
