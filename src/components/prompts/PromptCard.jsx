@@ -270,21 +270,19 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
         }
       }
 
-      if (status === 'published') {
-        for (const att of savedNewAtts) {
-          const fileObj = pendingFiles.find(f => f.name === att.name);
-          if (fileObj?.data) {
-            try { att.skill_url = await uploadSkillFile(p.id, att.id, att.name, fileObj.data); }
-            catch (e) { console.error('Skill upload failed:', e); }
-          }
+      for (const att of savedNewAtts) {
+        const fileObj = pendingFiles.find(f => f.name === att.name);
+        if (fileObj?.data) {
+          try { att.skill_url = await uploadSkillFile(p.id, att.id, att.name, fileObj.data); }
+          catch (e) { console.error('Skill upload failed:', e); }
         }
-        for (const att of attachments) {
-          if (!att.skill_url && !pendingDeletes.includes(att.id)) {
-            const stored = await AttachmentsDB.get(att.id);
-            if (stored?.data) {
-              try { att.skill_url = await uploadSkillFile(p.id, att.id, att.name, stored.data); }
-              catch (e) { console.error('Skill upload failed:', e); }
-            }
+      }
+      for (const att of attachments) {
+        if (!att.skill_url && !pendingDeletes.includes(att.id)) {
+          const stored = await AttachmentsDB.get(att.id);
+          if (stored?.data) {
+            try { att.skill_url = await uploadSkillFile(p.id, att.id, att.name, stored.data); }
+            catch (e) { console.error('Skill upload failed:', e); }
           }
         }
       }

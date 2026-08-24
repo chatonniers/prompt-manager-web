@@ -251,21 +251,19 @@ export default function PromptModal() {
       }
     }
 
-    if (status === 'published') {
-      for (const att of savedNewAtts) {
-        const fileObj = pendingFiles.find(f => f.name === att.name);
-        if (fileObj?.data) {
-          try { att.skill_url = await uploadSkillFile(promptId, att.id, att.name, fileObj.data); }
-          catch (e) { console.error('Skill upload failed:', e); }
-        }
+    for (const att of savedNewAtts) {
+      const fileObj = pendingFiles.find(f => f.name === att.name);
+      if (fileObj?.data) {
+        try { att.skill_url = await uploadSkillFile(promptId, att.id, att.name, fileObj.data); }
+        catch (e) { console.error('Skill upload failed:', e); }
       }
-      for (const att of existingAtts) {
-        if (!att.skill_url && !pendingDeletes.includes(att.id)) {
-          const stored = await AttachmentsDB.get(att.id);
-          if (stored?.data) {
-            try { att.skill_url = await uploadSkillFile(promptId, att.id, att.name, stored.data); }
-            catch (e) { console.error('Skill upload failed:', e); }
-          }
+    }
+    for (const att of existingAtts) {
+      if (!att.skill_url && !pendingDeletes.includes(att.id)) {
+        const stored = await AttachmentsDB.get(att.id);
+        if (stored?.data) {
+          try { att.skill_url = await uploadSkillFile(promptId, att.id, att.name, stored.data); }
+          catch (e) { console.error('Skill upload failed:', e); }
         }
       }
     }
