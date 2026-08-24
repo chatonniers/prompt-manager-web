@@ -948,6 +948,11 @@
 }
 .tb-display-help-btn:hover { background: rgba(99,102,241,0.12); color: #fff; }
 
+.tb-display-joule-btn { color: #A78BFA; }
+.tb-display-joule-btn:hover { background: rgba(109,40,217,0.15); color: #C4B5FD; }
+[data-theme="light"] .tb-display-joule-btn { color: #6D28D9; }
+[data-theme="light"] .tb-display-joule-btn:hover { background: rgba(109,40,217,0.1); color: #5B21B6; }
+
 /* Light mode overrides for display panel */
 [data-theme="light"] .tb-display-panel { background: #f5f7ff; border-color: rgba(79,70,229,0.25); box-shadow: 0 8px 32px rgba(79,70,229,0.12); }
 [data-theme="light"] .tb-display-label { color: rgba(10,15,30,0.45); }

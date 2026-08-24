@@ -10,7 +10,7 @@ import JouleDiamond from '../shared/JouleDiamond.jsx';
 
 const STEP = 0.1;
 
-function DisplayMenu({ theme, lang, zoom, zoomPct, isFullscreen, displayMode, onTheme, onLang, onZoom, onFullscreen, onHelp, onDisplayMode }) {
+function DisplayMenu({ theme, lang, zoom, zoomPct, isFullscreen, displayMode, onTheme, onLang, onZoom, onFullscreen, onHelp, onDisplayMode, jouleIntegration, onLaunchJoule }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -108,6 +108,19 @@ function DisplayMenu({ theme, lang, zoom, zoomPct, isFullscreen, displayMode, on
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M6.2 6.2c0-1 .8-1.7 1.8-1.7s1.8.7 1.8 1.7c0 .8-.5 1.3-1.2 1.7-.4.2-.6.5-.6.9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><circle cx="8" cy="11" r="0.7" fill="currentColor"/></svg>
             Help & guide
           </button>
+
+          {/* Launch Joule — only when integration is enabled for this user */}
+          {jouleIntegration && (
+            <>
+              <div className="tb-display-divider" />
+              <button className="tb-display-help-btn tb-display-joule-btn" onClick={() => { onLaunchJoule(); setOpen(false); }}>
+                <svg width="13" height="13" viewBox="526 513 997 922" xmlns="http://www.w3.org/2000/svg">
+                  <path fill="rgb(109,40,217)" d="M 1000.05 513.879 C 1014.25 513.687 1029.4 514.204 1043.27 513.82 L 1238.35 513.952 C 1272.98 513.966 1309.42 513.392 1343.82 514.153 C 1354.31 517.46 1357.73 520.221 1364.26 529.563 C 1403.94 583.338 1441.45 639.282 1481.23 693.071 C 1492.33 708.089 1505.89 725.77 1515.8 741.387 C 1521.5 751.464 1522.96 756.801 1517.41 767.824 C 1509.05 780.949 1495.32 798.09 1485.6 811.392 L 1422.62 897.905 L 1238.16 1151.03 L 1094.85 1347.5 C 1082.51 1364.22 1070.32 1381.06 1058.28 1397.99 C 1053.74 1404.35 1043.51 1419.58 1038.73 1425.11 C 1037.85 1426.54 1035.58 1429.13 1034.29 1430.18 C 1030.34 1433.48 1025.15 1434.87 1020.08 1434.01 C 1011.29 1432.6 1007.1 1427.8 1002.35 1421.1 C 993.664 1410.86 978.546 1388.93 970.26 1377.62 L 901.008 1282.12 L 724.522 1040.01 L 588.844 854.034 L 549.259 800.138 C 541.805 790.016 532.73 778.524 526.301 767.975 C 522.411 757.891 522.616 750.772 527.711 741.387 C 575.944 671.294 629.184 600.336 678.602 530.269 C 685.984 520.85 688.914 517.888 700.211 514.182 C 734.74 512.965 774.86 513.934 809.772 513.929 L 1000.05 513.879 z"/>
+                </svg>
+                Launch Joule Desktop
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -236,6 +249,14 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
       document.documentElement.requestFullscreen?.();
     } else {
       document.exitFullscreen?.();
+    }
+  }
+
+  async function handleLaunchJoule() {
+    try {
+      await JouleAgent.launchJoule();
+    } catch {
+      dispatch({ type: 'SHOW_TOAST', payload: 'Could not reach PromptDeck Agent — is it running?' });
     }
   }
 
@@ -411,6 +432,8 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
             onFullscreen={handleFullscreen}
             onHelp={onHelp}
             onDisplayMode={m => dispatch({ type: 'SET_DISPLAY_MODE', payload: m })}
+            jouleIntegration={!!authProfile?.joule_integration}
+            onLaunchJoule={handleLaunchJoule}
           />
           {/* Joule connect/disconnect toggle — visible when admin has enabled integration for this user */}
           {authProfile?.joule_integration && (
