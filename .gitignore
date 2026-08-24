@@ -29,3 +29,4 @@ dist-ssr
 # Environment variables (never commit credentials)
 .env
 .env.*
+promptdeck-agent/node_modules/
