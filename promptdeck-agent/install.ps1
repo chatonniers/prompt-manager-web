@@ -38,7 +38,7 @@ if (-not $nodeOk) {
 Write-Host "Downloading PromptDeck Agent..." -ForegroundColor Yellow
 if (-not (Test-Path $AgentDir)) { New-Item -ItemType Directory -Path $AgentDir | Out-Null }
 
-$files = @("agent.js", "package.json", "start-agent.bat")
+$files = @("agent.js", "package.json")
 foreach ($f in $files) {
     Invoke-WebRequest -Uri "$AgentRepo/$f" -OutFile "$AgentDir\$f" -UseBasicParsing
 }
