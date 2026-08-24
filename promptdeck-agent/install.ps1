@@ -54,11 +54,13 @@ try {
     Pop-Location
 }
 
-# ── 3b. Write start-agent.bat with resolved node path ────────────────────────
+# ── 3b. Write start-agent.vbs + start-agent.bat with resolved absolute paths ──
 $NodeExe = (Get-Command node).Source
-$BatContent = "@echo off`r`npowershell -WindowStyle Hidden -Command `"Start-Process -FilePath '$NodeExe' -ArgumentList 'agent.js' -WorkingDirectory '$AgentDir' -WindowStyle Hidden -RedirectStandardOutput '$AgentDir\agent.log' -RedirectStandardError '$AgentDir\agent-err.log'`"`r`n"
+$VbsContent = "Set WshShell = CreateObject(`"WScript.Shell`")`r`nWshShell.Run `"`"`"$NodeExe`"`" `"`"`"$AgentDir\agent.js`"`"`"`, 0, False`r`n"
+[System.IO.File]::WriteAllText("$AgentDir\start-agent.vbs", $VbsContent, [System.Text.Encoding]::ASCII)
+$BatContent = "@echo off`r`nwscript.exe //nologo `"`"`"$AgentDir\start-agent.vbs`"`"`"`r`n"
 [System.IO.File]::WriteAllText("$AgentDir\start-agent.bat", $BatContent, [System.Text.Encoding]::ASCII)
-Write-Host "  start-agent.bat written with node path: $NodeExe" -ForegroundColor Green
+Write-Host "  Launcher written (node: $NodeExe)" -ForegroundColor Green
 
 # ── 4. Register promptdeck:// URI scheme ─────────────────────────────────────
 Write-Host "Registering promptdeck:// URI scheme..." -ForegroundColor Yellow

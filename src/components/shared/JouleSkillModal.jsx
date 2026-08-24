@@ -57,12 +57,7 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
   }, [continueAfterAgent]);
 
   async function handleLaunchAgent() {
-    const a = document.createElement('a');
-    a.href = 'promptdeck://start';
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    window.location.href = 'promptdeck://start';
     setStep(STEPS.AGENT_CHECK);
     const up = await JouleAgent.startViaURIScheme(30000);
     if (!up) {
@@ -130,12 +125,7 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
               <div className="jsm-actions" style={{ marginTop: 12 }}>
                 <button className="btn-secondary" onClick={onClose}>Cancel</button>
                 <button className="btn-secondary" onClick={() => {
-                  const a = document.createElement('a');
-                  a.href = 'promptdeck://start';
-                  a.style.display = 'none';
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
+                  window.location.href = 'promptdeck://start';
                 }}>Launch Agent</button>
                 <button className="btn-primary" onClick={go}>Check</button>
               </div>
