@@ -57,17 +57,21 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
   }, [continueAfterAgent]);
 
   async function handleLaunchAgent() {
-    // Fire URI scheme via explicit user gesture (required by Edge/Chrome)
     const a = document.createElement('a');
     a.href = 'promptdeck://start';
     a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    // Poll until agent is up
     setStep(STEPS.AGENT_CHECK);
-    const up = await JouleAgent.startViaURIScheme(20000);
-    if (!up) { setStep(STEPS.NO_AGENT); return; }
+    const up = await JouleAgent.startViaURIScheme(30000);
+    if (!up) {
+      // Agent may have started but be slow — do one final direct check
+      const finalCheck = await JouleAgent.isRunning();
+      if (finalCheck) { await continueAfterAgent(); return; }
+      setStep(STEPS.NO_AGENT);
+      return;
+    }
     await continueAfterAgent();
   }
 
@@ -113,7 +117,10 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
 
         <div className="jsm-body">
           {step === STEPS.AGENT_CHECK && (
-            <Step icon="⏳" text="Connecting to PromptDeck Agent…" />
+            <div>
+              <Step icon="⏳" text="Connecting to PromptDeck Agent…" />
+              <p className="jsm-hint" style={{ marginTop: 8 }}>Starting agent in background, please wait up to 30 seconds…</p>
+            </div>
           )}
 
           {step === STEPS.AGENT_STARTING && (

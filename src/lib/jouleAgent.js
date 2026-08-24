@@ -28,11 +28,9 @@ export const JouleAgent = {
   },
 
   // Trigger start-agent.bat / start-agent.sh via the promptdeck:// URI scheme.
-  // Poll until agent is reachable (URI launch triggered by user button click in modal).
-  async startViaURIScheme(maxWaitMs = 20000) {
+  async startViaURIScheme(maxWaitMs = 30000) {
     const interval = 2000;
     const deadline = Date.now() + maxWaitMs;
-    await new Promise(r => setTimeout(r, 2000));
     while (Date.now() < deadline) {
       if (await this.isRunning()) return true;
       await new Promise(r => setTimeout(r, interval));
