@@ -216,7 +216,7 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
                 <p>{skillInstalled ? `Skill "${skillName}" is active.` : `Import "${skillName}.md" in Joule Settings → Skills if you haven't yet.`}</p>
               )}
               <p className="jsm-paste-hint">
-                Joule is opening — your prompt is on the clipboard.<br />
+                Joule is open (or opening) — your prompt is on the clipboard.<br />
                 <strong>Press Ctrl+V in Joule to submit.</strong>
               </p>
               <div className="jsm-actions">
