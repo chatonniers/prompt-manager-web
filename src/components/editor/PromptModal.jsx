@@ -116,7 +116,6 @@ export default function PromptModal() {
       setIsFavorite(false);
       setSelectedSolutions([]);
       setPersonas([]);
-      setTags([]);
       setSystems([]);
       setDemoLinks([]);
       setNotes('');
