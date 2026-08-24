@@ -104,7 +104,7 @@ export default function PromptModal() {
         const meta = existing.attachments || [];
         setExistingAtts(atts.map(a => {
           const m = meta.find(x => x.id === a.id);
-          return m?.isJouleSkill ? { ...a, isJouleSkill: true } : a;
+          return m ? { ...a, isJouleSkill: m.isJouleSkill || false, skill_url: m.skill_url || null } : a;
         }));
       });
     } else {
@@ -237,19 +237,19 @@ export default function PromptModal() {
     }
 
     for (const att of savedNewAtts) {
+      if (!att.isJouleSkill) continue;
       const fileObj = pendingFiles.find(f => f.name === att.name);
       if (fileObj?.data) {
         try { att.skill_url = await uploadSkillFile(promptId, att.id, att.name, fileObj.data); }
-        catch (e) { console.error('Skill upload failed:', e); }
+        catch (e) { console.error('Skill upload failed:', e); dispatch({ type: 'SHOW_TOAST', payload: `Skill upload failed: ${e.message}` }); }
       }
     }
     for (const att of existingAtts) {
-      if (!att.skill_url && !pendingDeletes.includes(att.id)) {
-        const stored = await AttachmentsDB.get(att.id);
-        if (stored?.data) {
-          try { att.skill_url = await uploadSkillFile(promptId, att.id, att.name, stored.data); }
-          catch (e) { console.error('Skill upload failed:', e); }
-        }
+      if (!att.isJouleSkill || att.skill_url || pendingDeletes.includes(att.id)) continue;
+      const stored = await AttachmentsDB.get(att.id);
+      if (stored?.data) {
+        try { att.skill_url = await uploadSkillFile(promptId, att.id, att.name, stored.data); }
+        catch (e) { console.error('Skill upload failed:', e); dispatch({ type: 'SHOW_TOAST', payload: `Skill upload failed: ${e.message}` }); }
       }
     }
 
