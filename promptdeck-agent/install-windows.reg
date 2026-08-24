@@ -1,0 +1,12 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\Software\Classes\promptdeck]
+@="PromptDeck Agent"
+"URL Protocol"=""
+
+[HKEY_CURRENT_USER\Software\Classes\promptdeck\shell]
+
+[HKEY_CURRENT_USER\Software\Classes\promptdeck\shell\open]
+
+[HKEY_CURRENT_USER\Software\Classes\promptdeck\shell\open\command]
+@="cmd /c \"%USERPROFILE%\\promptdeck-agent\\start-agent.bat\""

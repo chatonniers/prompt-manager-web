@@ -1,0 +1,17 @@
+{
+  "name": "promptdeck-agent",
+  "version": "1.0.0",
+  "description": "Local companion agent for PromptDeck – Joule Desktop integration",
+  "type": "module",
+  "main": "agent.js",
+  "scripts": {
+    "start": "node agent.js",
+    "build-exe": "pkg agent.js --target node18-win-x64 --output promptdeck-agent.exe"
+  },
+  "dependencies": {
+    "uuid": "^11.0.0"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  }
+}
