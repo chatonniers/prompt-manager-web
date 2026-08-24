@@ -93,19 +93,13 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
   async function doLaunch() {
     setStep(STEPS.LAUNCHING);
     try {
-      if (promptText) {
-        // send-prompt launches/focuses Joule AND pastes+submits the text
-        const result = await JouleAgent.sendPrompt(promptText);
-        setSendOk(result.ok);
-      } else {
-        await JouleAgent.launchJoule();
-        await new Promise(r => setTimeout(r, 800));
-      }
-      setStep(STEPS.DONE);
+      await JouleAgent.launchJoule();
     } catch (e) {
       setError(e.message);
       setStep(STEPS.ERROR);
+      return;
     }
+    setStep(STEPS.DONE);
   }
 
   useEffect(() => { go(); }, [go]);
@@ -208,7 +202,7 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
           )}
 
           {step === STEPS.LAUNCHING && (
-            <Step icon="⏳" text="Sending prompt to Joule Desktop…" />
+            <Step icon="⏳" text="Opening Joule Desktop…" />
           )}
 
           {step === STEPS.DONE && (
@@ -216,23 +210,13 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
               <div className="jsm-done-icon">
                 <JouleDiamond size={36} />
               </div>
-              <p>
-                {skillInstalled
-                  ? `Skill "${skillName}" is already active.`
-                  : `Skill "${skillName}" installed.`}
-              </p>
-              {promptText ? (
-                <p className="jsm-paste-hint">
-                  {sendOk
-                    ? <><strong>Prompt sent to Joule!</strong> Your conversation has started.</>
-                    : <>Joule is open — <strong>paste your prompt (Ctrl+V)</strong> to start.</>}
-                </p>
-              ) : (
-                <p className="jsm-paste-hint">
-                  Joule Desktop is ready.<br />
-                  <strong>Paste your prompt (Ctrl+V) to start a conversation.</strong>
-                </p>
+              {skillName && (
+                <p>{skillInstalled ? `Skill "${skillName}" is active.` : `Skill "${skillName}" installed.`}</p>
               )}
+              <p className="jsm-paste-hint">
+                Joule is open and your prompt is on the clipboard.<br />
+                <strong>Press Ctrl+V in Joule to submit.</strong>
+              </p>
               <div className="jsm-actions">
                 <button className="btn-primary" onClick={onClose}>Done</button>
               </div>

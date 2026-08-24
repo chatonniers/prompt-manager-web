@@ -199,11 +199,13 @@ function installSkill(name, content) {
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(name)) {
     throw new Error('Invalid skill name — must be kebab-case (e.g. my-skill)');
   }
+  // Normalize escaped newlines that may come from JSON transport
+  const normalized = content.replace(/\\n/g, '\n').replace(/\\r/g, '');
   if (!fs.existsSync(SKILLS_DIR)) fs.mkdirSync(SKILLS_DIR, { recursive: true });
   const id = uuidv4();
   const skillDir = path.join(SKILLS_DIR, id);
   fs.mkdirSync(skillDir);
-  fs.writeFileSync(path.join(skillDir, 'SKILL.md'), content, 'utf8');
+  fs.writeFileSync(path.join(skillDir, 'SKILL.md'), normalized, 'utf8');
   return id;
 }
 
