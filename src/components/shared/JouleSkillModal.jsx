@@ -4,6 +4,7 @@ import { JouleAgent } from '../../lib/jouleAgent.js';
 
 const STEPS = {
   AGENT_CHECK: 'agent_check',
+  AGENT_STARTING: 'agent_starting',
   NO_AGENT: 'no_agent',
   NO_JOULE: 'no_joule',
   SKILL_CHECK: 'skill_check',
@@ -37,8 +38,14 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
     try {
       // 1. Check agent
       setStep(STEPS.AGENT_CHECK);
-      const agentUp = await JouleAgent.isRunning();
-      if (!agentUp) { setStep(STEPS.NO_AGENT); return; }
+      let agentUp = await JouleAgent.isRunning();
+
+      // 1a. Agent not running — try to auto-start via URI scheme
+      if (!agentUp) {
+        setStep(STEPS.AGENT_STARTING);
+        agentUp = await JouleAgent.startViaURIScheme(15000);
+        if (!agentUp) { setStep(STEPS.NO_AGENT); return; }
+      }
 
       // setup-only mode: just confirm agent is running then close
       if (setupOnly) { onClose(); return; }
@@ -62,7 +69,7 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
       setError(e.message);
       setStep(STEPS.ERROR);
     }
-  }, [skillName]);
+  }, [skillName, setupOnly]);
 
   async function doInstallAndLaunch() {
     try {
@@ -109,10 +116,20 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
             <Step icon="⏳" text="Connecting to PromptDeck Agent…" />
           )}
 
+          {step === STEPS.AGENT_STARTING && (
+            <div className="jsm-starting">
+              <Step icon="⏳" text="Starting PromptDeck Agent…" />
+              <p className="jsm-hint" style={{ marginTop: 10 }}>
+                The agent is launching in the background. This takes a few seconds.<br />
+                If a browser dialog asks permission to open a link, click <strong>Open</strong>.
+              </p>
+            </div>
+          )}
+
           {step === STEPS.NO_AGENT && (
             <div className="jsm-no-agent">
-              <p className="jsm-warn">PromptDeck Agent is not running.</p>
-              <p>The agent is a small local program that connects PromptDeck to Joule Desktop on your PC. Follow these steps once:</p>
+              <p className="jsm-warn">Could not start PromptDeck Agent automatically.</p>
+              <p>Complete this one-time setup so the agent starts automatically next time:</p>
 
               <ol className="jsm-setup-steps">
                 <li>
@@ -126,33 +143,38 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
                 <li>
                   <span className="jsm-step-num">2</span>
                   <div>
-                    <strong>Download the PromptDeck Agent</strong> and unzip it anywhere on your PC.<br />
+                    <strong>Download the PromptDeck Agent</strong> and unzip it to <code>C:\promptdeck-agent</code>.<br />
                     <a href="https://github.com/chatonniers/prompt-manager-web/releases" target="_blank" rel="noreferrer">
                       Get the latest release on GitHub
                     </a>
-                    <span className="jsm-hint"> — download <code>promptdeck-agent.zip</code>, extract to e.g. <code>C:\promptdeck-agent</code></span>
                   </div>
                 </li>
                 <li>
                   <span className="jsm-step-num">3</span>
                   <div>
-                    <strong>Open a terminal</strong> (Windows: press <kbd>Win+R</kbd>, type <code>cmd</code>, press Enter) and run:
-                    <CopyBlock code={'cd C:\\promptdeck-agent\nnpm install\nnode agent.js'} />
-                    <span className="jsm-hint">Keep the terminal window open — the agent stops when you close it.</span>
+                    <strong>Register the auto-start shortcut</strong> (Windows — run once):<br />
+                    <span className="jsm-hint">Open File Explorer, go to <code>C:\promptdeck-agent</code>, double-click <code>install-windows.reg</code>, click Yes.</span>
+                    <br /><span className="jsm-hint">On Mac: open Terminal and run <code>bash ~/promptdeck-agent/install-mac.sh</code></span>
                   </div>
                 </li>
                 <li>
                   <span className="jsm-step-num">4</span>
                   <div>
-                    <strong>Click "Check again"</strong> below once the terminal shows<br />
-                    <code className="jsm-inline-code">PromptDeck Agent running on http://localhost:27384</code>
+                    <strong>Install dependencies</strong> — open a terminal and run once:
+                    <CopyBlock code={'cd C:\\promptdeck-agent\nnpm install'} />
+                  </div>
+                </li>
+                <li>
+                  <span className="jsm-step-num">5</span>
+                  <div>
+                    <strong>Click "Try again"</strong> — the agent will start automatically from now on.
                   </div>
                 </li>
               </ol>
 
               <div className="jsm-actions">
                 <button className="btn-secondary" onClick={onClose}>Cancel</button>
-                <button className="btn-primary" onClick={go}>Check again</button>
+                <button className="btn-primary" onClick={go}>Try again</button>
               </div>
             </div>
           )}
