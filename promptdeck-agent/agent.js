@@ -104,8 +104,19 @@ async function sendPromptToJoule(promptText) {
   // 2. Launch or focus Joule
   if (!wasRunning) {
     launchJoule();
-    // Wait for Joule to fully start up before sending keys
-    await sleep(6000);
+    // Poll until Joule window is ready (up to 20s)
+    const deadline = Date.now() + 20000;
+    while (Date.now() < deadline) {
+      await sleep(1000);
+      try {
+        const out = execSync(
+          `powershell -Command "if (Get-Process 'Joule Desktop' -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 }) { 'ready' } else { 'wait' }"`,
+          { timeout: 3000 }
+        ).toString().trim();
+        if (out === 'ready') break;
+      } catch { /* keep polling */ }
+    }
+    await sleep(1000); // extra settle time after window appears
   } else {
     focusJoule();
     await sleep(1500);
