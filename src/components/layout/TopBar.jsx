@@ -324,7 +324,7 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
         {/* Center — search + zoom + new */}
         {showSearch && (
           <div id="top-bar-center">
-            <span className="tb-beta-badge">BETA</span>
+            <span className="tb-beta-badge">BETA RELEASE</span>
             <div id="tb-search-wrap">
               <svg id="tb-search-icon" width="15" height="15" viewBox="0 0 16 16" fill="none">
                 <circle cx="6.5" cy="6.5" r="4.5" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5"/>
