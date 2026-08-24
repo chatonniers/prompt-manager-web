@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { AttachmentsDB } from '../../lib/attachments.js';
 import { t } from '../../lib/i18n.js';
+import JouleDiamond from '../shared/JouleDiamond.jsx';
 
 function fmtSize(bytes) {
   if (bytes < 1024) return bytes + ' B';
@@ -102,7 +103,13 @@ export default function PromptModal() {
       setStatus(existing.status || 'draft');
       setIsPrivate(existing.isPrivate ?? true);
       setDemoLinks(Array.isArray(existing.demoLinks) ? existing.demoLinks.map(l => ({ ...l })) : []);
-      AttachmentsDB.getForPrompt(existing.id).then(atts => setExistingAtts(atts));
+      AttachmentsDB.getForPrompt(existing.id).then(atts => {
+        const meta = existing.attachments || [];
+        setExistingAtts(atts.map(a => {
+          const m = meta.find(x => x.id === a.id);
+          return m?.isJouleSkill ? { ...a, isJouleSkill: true } : a;
+        }));
+      });
     } else {
       setTitle('');
       setPromptItems([makeItem()]);
@@ -234,14 +241,14 @@ export default function PromptModal() {
     for (const f of pendingFiles) {
       const attId = crypto.randomUUID();
       await AttachmentsDB.save({ id: attId, promptId, name: f.name, type: f.type, size: f.size, data: f.data });
-      savedNewAtts.push({ id: attId, name: f.name, type: f.type, size: f.size });
+      savedNewAtts.push({ id: attId, name: f.name, type: f.type, size: f.size, isJouleSkill: f.isJouleSkill || false });
     }
     for (const attId of pendingDeletes) {
       await AttachmentsDB.delete(attId);
     }
 
     const attachmentsMeta = [
-      ...existingAtts.filter(a => !pendingDeletes.includes(a.id)).map(a => ({ id: a.id, name: a.name, type: a.type, size: a.size })),
+      ...existingAtts.filter(a => !pendingDeletes.includes(a.id)).map(a => ({ id: a.id, name: a.name, type: a.type, size: a.size, isJouleSkill: a.isJouleSkill || false })),
       ...savedNewAtts,
     ];
 
@@ -557,6 +564,12 @@ export default function PromptModal() {
                   <div key={a.id} className="attach-row">
                     <button className="attach-name-btn" onClick={() => downloadExisting(a)}>{a.name}</button>
                     <span className="attach-size">{fmtSize(a.size)}</span>
+                    <button
+                      type="button"
+                      className={`card-edit-att-joule${a.isJouleSkill ? ' active' : ''}`}
+                      title={a.isJouleSkill ? 'Unmark as Joule Skill' : 'Mark as Joule Skill'}
+                      onClick={() => setExistingAtts(prev => prev.map(x => x.id === a.id ? { ...x, isJouleSkill: !x.isJouleSkill } : x))}
+                    ><JouleDiamond size={13} /></button>
                     <button className="attach-remove-btn" onClick={() => setPendingDeletes(prev => [...prev, a.id])}>×</button>
                   </div>
                 ))}
@@ -564,6 +577,12 @@ export default function PromptModal() {
                   <div key={f._tempId} className="attach-row pending">
                     <span className="attach-name">{f.name}</span>
                     <span className="attach-size">{fmtSize(f.size)}</span>
+                    <button
+                      type="button"
+                      className={`card-edit-att-joule${f.isJouleSkill ? ' active' : ''}`}
+                      title={f.isJouleSkill ? 'Unmark as Joule Skill' : 'Mark as Joule Skill'}
+                      onClick={() => setPendingFiles(prev => prev.map(x => x._tempId === f._tempId ? { ...x, isJouleSkill: !x.isJouleSkill } : x))}
+                    ><JouleDiamond size={13} /></button>
                     <button className="attach-remove-btn" onClick={() => setPendingFiles(prev => prev.filter(x => x._tempId !== f._tempId))}>×</button>
                   </div>
                 ))}

@@ -4,7 +4,9 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { supabase } from '../../lib/supabase.js';
 import { t } from '../../lib/i18n.js';
+import { JouleAgent } from '../../lib/jouleAgent.js';
 import PublishRequestBell from '../shared/PublishRequestBell.jsx';
+import JouleDiamond from '../shared/JouleDiamond.jsx';
 
 const STEP = 0.1;
 
@@ -133,6 +135,8 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
   const [onlineCount, setOnlineCount] = useState(1);
   const presenceRef = useRef(null);
+  // null = unknown, 'ok' = agent up + Joule running, 'warn' = agent up but Joule not running, 'off' = agent not reachable
+  const [jouleStatus, setJouleStatus] = useState(null);
   const visiblePrompts = (() => {
     const vr = state.catalog?.visibilityRules;
     const role = authProfile?.role || 'viewer';
@@ -187,6 +191,27 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
     presenceRef.current = channel;
     return () => { channel.untrack(); supabase.removeChannel(channel); };
   }, [profile?.id]);
+
+  // Poll agent + Joule status when integration is enabled for this user
+  useEffect(() => {
+    if (!authProfile?.joule_integration) { setJouleStatus(null); return; }
+    let cancelled = false;
+    async function check() {
+      try {
+        const agentUp = await JouleAgent.isRunning();
+        if (cancelled) return;
+        if (!agentUp) { setJouleStatus('off'); return; }
+        const status = await JouleAgent.jouleStatus();
+        if (cancelled) return;
+        setJouleStatus(status.running ? 'ok' : 'warn');
+      } catch {
+        if (!cancelled) setJouleStatus('off');
+      }
+    }
+    check();
+    const interval = setInterval(check, 8000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [authProfile?.joule_integration]);
 
   function handleFullscreen() {
     if (!document.fullscreenElement) {
@@ -299,6 +324,7 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
         {/* Center — search + zoom + new */}
         {showSearch && (
           <div id="top-bar-center">
+            <span className="tb-beta-badge">BETA</span>
             <div id="tb-search-wrap">
               <svg id="tb-search-icon" width="15" height="15" viewBox="0 0 16 16" fill="none">
                 <circle cx="6.5" cy="6.5" r="4.5" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5"/>
@@ -321,11 +347,11 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
             <div className={`workspace-seg ${workspace}`}>
               <button
                 className="workspace-seg-btn"
-                onClick={() => dispatch({ type: 'SET_WORKSPACE', payload: 'library' })}
+                onClick={() => { if (workspace !== 'library') { dispatch({ type: 'SET_WORKSPACE', payload: 'library' }); dispatch({ type: 'SHOW_TOAST', payload: t('switchedToLibrary', lang) }); } }}
               >Library</button>
               <button
                 className="workspace-seg-btn"
-                onClick={() => dispatch({ type: 'SET_WORKSPACE', payload: 'mine' })}
+                onClick={() => { if (workspace !== 'mine') { dispatch({ type: 'SET_WORKSPACE', payload: 'mine' }); dispatch({ type: 'SHOW_TOAST', payload: t('switchedToMine', lang) }); } }}
               >Mine</button>
             </div>
           </div>
@@ -368,6 +394,27 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
             onHelp={onHelp}
             onDisplayMode={m => dispatch({ type: 'SET_DISPLAY_MODE', payload: m })}
           />
+          {/* Joule status indicator — read from profile, set by admin in User Management */}
+          {authProfile?.joule_integration && (
+            <span
+              className={`tb-joule-toggle active`}
+              title={
+                jouleStatus === 'ok'   ? 'Joule Desktop integration enabled — agent & Joule running' :
+                jouleStatus === 'warn' ? 'Joule Desktop integration enabled — agent running, Joule not open' :
+                jouleStatus === 'off'  ? 'Joule Desktop integration enabled — agent not running' :
+                'Joule Desktop integration enabled'
+              }
+              style={{ display: 'inline-flex', alignItems: 'center', padding: '7px 10px', borderRadius: 8, border: '1px solid rgba(109,40,217,0.5)', background: 'rgba(109,40,217,0.12)', cursor: 'default' }}
+            >
+              <span className="tb-joule-wrap">
+                <JouleDiamond size={15} />
+                {jouleStatus && (
+                  <span className={`tb-joule-dot tb-joule-dot--${jouleStatus}`} />
+                )}
+              </span>
+            </span>
+          )}
+          {/* Settings gear — always last */}
           {canAdmin && (
           <button
             className={`tb-btn tb-btn-icon${state.currentView === 'settings' ? ' tb-btn-active' : ''}`}

@@ -155,8 +155,8 @@ create policy "prompts: update"
       select 1 from public.profiles p
       where p.id = auth.uid() and p.role = 'editor'
     )
-    -- viewers/owners: can only save as private draft
-    or (status = 'draft' and is_private = true and owner_id = auth.uid())
+    -- viewers/owners: can save own drafts (any is_private value) but cannot publish
+    or (status = 'draft' and owner_id = auth.uid())
   );
 
 -- DELETE: owner deletes their own; admin deletes any

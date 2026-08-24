@@ -12,9 +12,9 @@ export default function ConfirmModal() {
   async function handleConfirm() {
     if (!pendingDeleteId) return;
     const id = pendingDeleteId;
-    const deleted = prompts.find(p => p.id === id);
     const remaining = prompts.filter(p => p.id !== id);
 
+    dispatch({ type: 'MARK_DELETING', payload: id });
     dispatch({ type: 'SET_PROMPTS', payload: remaining });
     dispatch({ type: 'CLOSE_CONFIRM' });
 
@@ -23,6 +23,7 @@ export default function ConfirmModal() {
       if (undone) return;
       await AttachmentsDB.deleteForPrompt(id);
       await StorageAPI.deletePrompt(id);
+      dispatch({ type: 'UNMARK_DELETING', payload: id });
     }, 10000);
 
     dispatch({
@@ -31,6 +32,7 @@ export default function ConfirmModal() {
       undo: () => {
         undone = true;
         clearTimeout(timer);
+        dispatch({ type: 'UNMARK_DELETING', payload: id });
         dispatch({ type: 'SET_PROMPTS', payload: prompts });
       },
     });
