@@ -108,7 +108,7 @@ async function sendPromptToJoule(promptText) {
     await sleep(3500);
   } else {
     focusJoule();
-    await sleep(800);
+    await sleep(1500);
   }
 
   // 3. Focus Joule window and send Ctrl+V + Enter via PowerShell UI automation
@@ -126,9 +126,9 @@ $joule = Get-Process 'Joule Desktop' -ErrorAction SilentlyContinue | Where-Objec
 if ($joule) {
   [Win32]::ShowWindow($joule.MainWindowHandle, 9)
   [Win32]::SetForegroundWindow($joule.MainWindowHandle)
-  Start-Sleep -Milliseconds 600
+  Start-Sleep -Milliseconds 1200
   [System.Windows.Forms.SendKeys]::SendWait('^v')
-  Start-Sleep -Milliseconds 300
+  Start-Sleep -Milliseconds 500
   [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
   Write-Output 'sent'
 } else {
