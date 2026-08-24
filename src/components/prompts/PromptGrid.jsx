@@ -122,7 +122,6 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
     setCopiedIdx(idx);
     setTimeout(() => setCopiedIdx(null), 1500);
     // If Joule integration is enabled and this prompt has a Joule skill attachment
-    const jouleAtt = (p.attachments || []).find(a => a.isJouleSkill);
     if (jouleAtt && authProfile?.joule_integration && authProfile?.joule_connected) {
       if (p.status !== 'published') {
         dispatch({ type: 'SHOW_TOAST', payload: 'Joule Desktop integration is only available for published prompts. Prompt copied.' });
