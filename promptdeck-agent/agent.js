@@ -274,7 +274,14 @@ const server = http.createServer(async (req, res) => {
       const existing = findSkill(name);
       if (existing) return send(res, 200, { ok: true, id: existing.id, alreadyInstalled: true });
       const id = installSkill(name, content);
-      return send(res, 200, { ok: true, id });
+      // Restart Joule so it picks up the new skill
+      if (isJouleRunning()) {
+        try {
+          execSync(`taskkill /IM "Joule Desktop.exe" /F`, { timeout: 5000 });
+          await sleep(1500);
+        } catch { /* ignore if already closed */ }
+      }
+      return send(res, 200, { ok: true, id, needsRestart: true });
     }
 
     if (req.method === 'POST' && url.pathname === '/shutdown') {
