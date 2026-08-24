@@ -126,7 +126,7 @@ $joule = Get-Process 'Joule Desktop' -ErrorAction SilentlyContinue | Where-Objec
 if ($joule) {
   [Win32]::ShowWindow($joule.MainWindowHandle, 9)
   [Win32]::SetForegroundWindow($joule.MainWindowHandle)
-  Start-Sleep -Milliseconds 1200
+  Start-Sleep -Milliseconds 2000
   [System.Windows.Forms.SendKeys]::SendWait('^v')
   Start-Sleep -Milliseconds 500
   [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
