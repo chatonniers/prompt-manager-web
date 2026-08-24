@@ -114,19 +114,19 @@ async function sendPromptToJoule(promptText) {
   // 3. Focus Joule window and send Ctrl+V + Enter via PowerShell UI automation
   const ps = `
 Add-Type -AssemblyName System.Windows.Forms
-$joule = Get-Process 'Joule Desktop' -ErrorAction SilentlyContinue | Select-Object -First 1
-if ($joule) {
-  Add-Type @"
-    using System;
-    using System.Runtime.InteropServices;
-    public class Win32 {
-      [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
-      [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-    }
+Add-Type @"
+  using System;
+  using System.Runtime.InteropServices;
+  public class Win32 {
+    [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+    [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+  }
 "@
+$joule = Get-Process 'Joule Desktop' -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+if ($joule) {
   [Win32]::ShowWindow($joule.MainWindowHandle, 9)
   [Win32]::SetForegroundWindow($joule.MainWindowHandle)
-  Start-Sleep -Milliseconds 500
+  Start-Sleep -Milliseconds 600
   [System.Windows.Forms.SendKeys]::SendWait('^v')
   Start-Sleep -Milliseconds 300
   [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
@@ -136,7 +136,19 @@ if ($joule) {
 }
 `.trim();
 
-  const result = execSync(`powershell -Command "${ps.replace(/"/g, '\\"')}"`, { timeout: 10000, encoding: 'utf8' }).trim();
+  const tmpPs1 = path.join(os.tmpdir(), `pd-sendkeys-${Date.now()}.ps1`);
+  fs.writeFileSync(tmpPs1, ps, 'utf8');
+  let result;
+  try {
+    result = execSync(`powershell -ExecutionPolicy Bypass -File "${tmpPs1}"`, { timeout: 10000, encoding: 'utf8' });
+    result = result.split(/\r?\n/).map(l => l.trim()).filter(Boolean).pop() || '';
+    console.log('[send-prompt] PS result:', JSON.stringify(result));
+  } catch (e) {
+    console.error('[send-prompt] PS error:', e.message, e.stderr);
+    result = 'error';
+  } finally {
+    try { fs.unlinkSync(tmpPs1); } catch { /* ignore */ }
+  }
   return result === 'sent';
 }
 
