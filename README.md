@@ -2,9 +2,9 @@
 
 **Live app → https://chatonniers.github.io/prompt-manager-web/**
 
-A web application for SAP Solution Advisors to store, organise, and instantly copy demo prompts during live customer demos. Backed by **Supabase** (PostgreSQL + Auth + Realtime) with role-based access control.
+A web application for Solution Advisors to store, organise, and instantly copy demo prompts during live customer demos. Backed by **Supabase** (PostgreSQL + Auth + Realtime) with role-based access control.
 
-> Built by Sylvain Chatonnier — SAP Solution Advisor, Supply Chain
+> Built by Sylvain Chatonnier —  Solution Advisor, Supply Chain
 
 ---
 
@@ -16,7 +16,7 @@ A web application for SAP Solution Advisors to store, organise, and instantly co
 | **Multiple prompt bodies** | Each card holds several prompt items (Step 1, Step 2…) — each with its own Copy button |
 | **EN / FR bilingual** | Each prompt body has an optional French version; toggle with the FR/EN button |
 | **Variable substitution** | Placeholders like `[CUSTOMER_NAME]` trigger a fill-in modal before copy |
-| **Story Flow & Solution tags** | Organise by SAP solution and end-to-end story flow |
+| **Story Flow & Solution tags** | Organise by  solution and end-to-end story flow |
 | **Autonomous Suite categories** | Group cards by Finance, Supply Chain, Spend, HCM, CX |
 | **Systems & MCP credentials** | Attach landscape URLs and MCP endpoints (Client ID, Client Secret) to any card |
 | **Card mode / Table mode** | Toggle between card grid and compact table view |
@@ -94,4 +94,4 @@ Key tables: `profiles`, `prompts`, `catalog`, `favorites`, `publish_requests`, `
 
 ## Related
 
-- [SAP Demo Prompt Manager — Edge Extension](https://github.com/chatonniers/prompt-manager)
+- [ Demo Prompt Manager — Edge Extension](https://github.com/chatonniers/prompt-manager)
