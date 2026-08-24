@@ -105,7 +105,7 @@ async function sendPromptToJoule(promptText) {
   if (!wasRunning) {
     launchJoule();
     // Wait for Joule to fully start up before sending keys
-    await sleep(3500);
+    await sleep(6000);
   } else {
     focusJoule();
     await sleep(1500);
