@@ -108,6 +108,7 @@ export default function AdminStatsView() {
     const usedPrompts = prompts?.filter(p => p.usage_count > 0).length || 0;
     const draftCount = prompts?.filter(p => p.status === 'draft').length || 0;
     const publishedCount = prompts?.filter(p => p.status === 'published').length || 0;
+    const archivedCount = prompts?.filter(p => p.status === 'archived').length || 0;
     const noStatusCount = prompts?.filter(p => !p.status).length || 0;
 
     const topPrompts = [...(prompts || [])]
@@ -164,7 +165,7 @@ export default function AdminStatsView() {
       .reduce((min, d) => (min === null || d < min ? d : min), null);
 
     setRaw({
-      totalPrompts, totalUsage, usedPrompts, draftCount, publishedCount, noStatusCount,
+      totalPrompts, totalUsage, usedPrompts, draftCount, publishedCount, archivedCount, noStatusCount,
       topPrompts, categoryBreakdown,
       totalUsers, byRole, newUsersThisWeek,
       topUsers, topFavorited,
@@ -274,6 +275,7 @@ export default function AdminStatsView() {
           <div className="stats-status-grid">
             <div className="stats-status-row"><span className="pill status-published">Published</span><strong>{s.publishedCount}</strong></div>
             <div className="stats-status-row"><span className="pill status-draft">Draft</span><strong>{s.draftCount}</strong></div>
+            <div className="stats-status-row"><span className="pill status-archived">Archived</span><strong>{s.archivedCount}</strong></div>
             <div className="stats-status-row"><span style={{ fontSize: 11, color: 'var(--pm-text3)' }}>No status</span><strong>{s.noStatusCount}</strong></div>
           </div>
         </div>

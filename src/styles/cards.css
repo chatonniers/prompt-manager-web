@@ -282,6 +282,13 @@
   overflow: hidden;
   font-style: italic;
 }
+.prompt-card-notes-truncated {
+  cursor: default;
+}
+.prompt-card-notes-truncated:hover {
+  border-left-color: var(--pm-accent);
+  color: var(--pm-text2);
+}
 
 /* ── Prompt items ────────────────────────────────────────────────────── */
 .prompt-items-list {

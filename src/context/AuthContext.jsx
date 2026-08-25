@@ -18,6 +18,8 @@ export function AuthProvider({ children }) {
   const sessionRowRef = useRef(null);
   const idleTimerRef = useRef(null);
 
+  const idleWatchingRef = useRef(false);
+
   function resetIdleTimer() {
     clearTimeout(idleTimerRef.current);
     idleTimerRef.current = setTimeout(() => {
@@ -27,11 +29,14 @@ export function AuthProvider({ children }) {
   }
 
   function startIdleWatcher() {
+    if (idleWatchingRef.current) { resetIdleTimer(); return; }
+    idleWatchingRef.current = true;
     resetIdleTimer();
     IDLE_EVENTS.forEach(e => window.addEventListener(e, resetIdleTimer, { passive: true }));
   }
 
   function stopIdleWatcher() {
+    idleWatchingRef.current = false;
     clearTimeout(idleTimerRef.current);
     IDLE_EVENTS.forEach(e => window.removeEventListener(e, resetIdleTimer));
   }

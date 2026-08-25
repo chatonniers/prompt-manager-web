@@ -437,11 +437,11 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
             </div>
           </div>
 
-          {(catalog.solutions || []).length > 0 && (
+          {((catalog.solutions || []).length > 0 || solutions.length > 0) && (
             <div className="card-edit-field">
               <label className="card-edit-label">{t('solutionsLabel', lang)}</label>
               <div className="card-edit-systems">
-                {catalog.solutions.map(sol => {
+                {(catalog.solutions || []).map(sol => {
                   const selected = solutions.includes(sol);
                   return (
                     <button key={sol} type="button" className={`card-edit-sys-chip${selected ? ' selected' : ''}`} onClick={() => setSolutions(prev => selected ? prev.filter(x => x !== sol) : [...prev, sol])}>
@@ -449,6 +449,12 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
                     </button>
                   );
                 })}
+                {solutions.filter(s => !(catalog.solutions || []).includes(s)).map(sol => (
+                  <span key={sol} className="card-edit-sys-chip selected orphan-sys" style={{ opacity: 0.6 }}>
+                    · {sol}
+                    <button type="button" className="card-edit-tag-del" onClick={() => setSolutions(prev => prev.filter(x => x !== sol))} title="Remove">×</button>
+                  </span>
+                ))}
               </div>
             </div>
           )}
@@ -562,6 +568,46 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
           {saving ? t('savingLabel', lang) : t('save', lang)}
         </button>
       </div>
+    </div>
+  );
+}
+
+function NotesPreview({ notes }) {
+  const ref = useRef(null);
+  const [popover, setPopover] = useState(null);
+
+  function showPopover() {
+    if (!ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    const popW = 340;
+    const margin = 12;
+    let left = r.right + margin;
+    let side = 'left';
+    if (left + popW > window.innerWidth - margin) {
+      left = r.left - margin - popW;
+      side = 'right';
+    }
+    let top = r.top;
+    top = Math.max(margin, Math.min(top, window.innerHeight - 200 - margin));
+    setPopover({ top, left, side });
+  }
+
+  return (
+    <div
+      ref={ref}
+      className="prompt-card-notes prompt-card-notes-truncated"
+      onMouseEnter={showPopover}
+      onMouseLeave={() => setPopover(null)}
+    >
+      {notes}
+      {popover && createPortal(
+        <div className="prompt-popover" style={{ top: popover.top, left: popover.left, maxWidth: 340 }}>
+          <div className={`prompt-popover-arrow prompt-popover-arrow-${popover.side}`} style={{ top: 16 }} />
+          <div className="prompt-popover-label">Notes</div>
+          <div className="prompt-popover-body" style={{ whiteSpace: 'pre-wrap' }}>{notes}</div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
@@ -823,7 +869,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
         </div>
 
         {/* Notes */}
-        {p.notes && <div className="prompt-card-notes">{p.notes}</div>}
+        {p.notes && <NotesPreview notes={p.notes} />}
 
         {/* Prompt items */}
         <div className="prompt-items-list">
