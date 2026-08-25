@@ -566,9 +566,6 @@
   color: var(--pm-accent);
 }
 .category-tab-active {
-  background: var(--pm-accent-bg) !important;
-  border-left-color: var(--pm-accent) !important;
-  color: var(--pm-accent) !important;
   box-shadow: 0 1px 6px rgba(79,70,229,0.12);
 }
 .category-tab-count {
@@ -580,7 +577,7 @@
   font-weight: 700;
   letter-spacing: 0;
 }
-.category-tab-active .category-tab-count { background: rgba(79,70,229,0.18); }
+.category-tab-active .category-tab-count { }
 .category-tab-empty { opacity: 0.4; }
 .category-tab-empty:hover { opacity: 1; }
 

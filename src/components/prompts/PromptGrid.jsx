@@ -8,6 +8,17 @@ import { AttachmentsDB } from '../../lib/attachments.js';
 import { filterAndRank } from '../../lib/search.js';
 import { t } from '../../lib/i18n.js';
 import { getFlowColor } from '../../lib/flowColors.js';
+
+const CATEGORY_COLORS = [
+  { border: '#818CF8', bg: 'rgba(99,102,241,0.10)', text: '#818CF8' },
+  { border: '#34D399', bg: 'rgba(52,211,153,0.10)', text: '#059669' },
+  { border: '#F59E0B', bg: 'rgba(245,158,11,0.10)', text: '#D97706' },
+  { border: '#F472B6', bg: 'rgba(244,114,182,0.10)', text: '#DB2777' },
+  { border: '#60A5FA', bg: 'rgba(96,165,250,0.10)', text: '#2563EB' },
+  { border: '#A78BFA', bg: 'rgba(167,139,250,0.10)', text: '#7C3AED' },
+  { border: '#4ADE80', bg: 'rgba(74,222,128,0.10)', text: '#16A34A' },
+  { border: '#FB923C', bg: 'rgba(251,146,60,0.10)', text: '#EA580C' },
+];
 import { extractVars } from '../../lib/substitution.js';
 import SubstituteModal from '../shared/SubstituteModal.jsx';
 import JouleSkillModal from '../shared/JouleSkillModal.jsx';
@@ -420,17 +431,6 @@ function DropZone({ className, style, onDrop, children, blockRef }) {
 function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, onToggleSelect, onDrop, hideLabel, groupingMode, assistants }) {
   const effectiveMode = groupingMode || 'flow';
 
-  const ASSISTANT_COLORS = [
-    { border: '#818CF8', bg: 'rgba(99,102,241,0.10)', text: '#818CF8' },
-    { border: '#34D399', bg: 'rgba(52,211,153,0.10)', text: '#059669' },
-    { border: '#F59E0B', bg: 'rgba(245,158,11,0.10)', text: '#D97706' },
-    { border: '#F472B6', bg: 'rgba(244,114,182,0.10)', text: '#DB2777' },
-    { border: '#60A5FA', bg: 'rgba(96,165,250,0.10)', text: '#2563EB' },
-    { border: '#A78BFA', bg: 'rgba(167,139,250,0.10)', text: '#7C3AED' },
-    { border: '#4ADE80', bg: 'rgba(74,222,128,0.10)', text: '#16A34A' },
-    { border: '#FB923C', bg: 'rgba(251,146,60,0.10)', text: '#EA580C' },
-  ];
-
   let columns;
   if (effectiveMode === 'assistant') {
     const domainAssistants = (assistants || []).filter(a => !a.domain || a.domain === catKey);
@@ -473,7 +473,7 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
       <div className="category-flow-columns">
         {columns.map(col => {
           const isAssistantCol = effectiveMode === 'assistant' && col.isAssistant;
-          const assistantColor = isAssistantCol ? ASSISTANT_COLORS[col.colorIdx % ASSISTANT_COLORS.length] : null;
+          const assistantColor = isAssistantCol ? CATEGORY_COLORS[col.colorIdx % CATEGORY_COLORS.length] : null;
           const color = (!isAssistantCol && col.key !== '__none__') ? getFlowColor(col.label) : null;
           const dropTarget = effectiveMode === 'assistant'
             ? { category: catKey }
@@ -748,10 +748,14 @@ export default function PromptGrid() {
 
           <div className="category-tabs-wrap" style={{ position: 'sticky', top: `var(--favs-h, 0px)`, zIndex: 19, background: 'var(--pm-bg)', paddingBottom: 4, marginBottom: 6 }}>
             <div className="category-tabs">
-              {allTabs.map(block => (
+              {allTabs.map((block, idx) => {
+                  const isActive = tabKey === block.key;
+                  const color = CATEGORY_COLORS[idx % CATEGORY_COLORS.length];
+                  return (
                 <button
                   key={block.key}
-                  className={`category-tab${tabKey === block.key ? ' category-tab-active' : ''}${block.prompts.length === 0 ? ' category-tab-empty' : ''}`}
+                  className={`category-tab${isActive ? ' category-tab-active' : ''}${block.prompts.length === 0 ? ' category-tab-empty' : ''}`}
+                  style={isActive ? { background: color.bg, borderLeftColor: color.border, color: color.text, boxShadow: `0 1px 6px ${color.bg}` } : {}}
                   onClick={() => setActiveTab(block.key)}
                   onDragEnter={() => { if (draggingId) { dragTabRef.current = block.key; setActiveTab(block.key); } }}
                   onDragOver={e => handleTabDragOver(e, block.key)}
@@ -766,9 +770,10 @@ export default function PromptGrid() {
                   }}
                 >
                   {block.label}
-                  <span className="category-tab-count">{block.prompts.length}</span>
+                  <span className="category-tab-count" style={isActive ? { background: color.bg, color: color.text } : {}}>{block.prompts.length}</span>
                 </button>
-              ))}
+                  );
+                })}
             </div>
 
             <button
