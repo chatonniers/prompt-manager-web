@@ -967,6 +967,30 @@
 }
 .card-edit-select:focus { border-color: var(--pm-accent); }
 
+.card-edit-multiselect {
+  width: 100%;
+  padding: 4px 2px;
+  border-radius: var(--pm-radius-sm);
+  background: var(--pm-surface);
+  font-size: 12px;
+}
+.card-edit-multiselect option {
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.card-edit-multiselect option:checked {
+  background: var(--pm-accent);
+  color: #fff;
+}
+
+.card-edit-selected-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+}
+
 .card-edit-systems { display: flex; flex-wrap: wrap; gap: 6px; }
 
 .card-edit-sys-chip {

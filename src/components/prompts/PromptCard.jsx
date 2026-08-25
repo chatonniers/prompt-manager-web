@@ -371,25 +371,28 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
 
           <div className="card-edit-field">
             <label className="card-edit-label">{t('personasLabel', lang)}</label>
-            <div className="card-edit-systems">
-              {(catalog.personas || []).map(persona => {
-                const selected = personas.includes(persona);
-                return (
-                  <button key={persona} type="button" className={`card-edit-sys-chip${selected ? ' selected' : ''}`} onClick={() => setPersonas(prev => selected ? prev.filter(x => x !== persona) : [...prev, persona])}>
-                    {selected ? '· ' : ''}{persona}
-                  </button>
-                );
-              })}
-              {personas.filter(p => !(catalog.personas || []).includes(p)).map(persona => (
-                <span key={persona} className="card-edit-sys-chip selected orphan-sys" style={{ opacity: 0.6 }}>
-                  · {persona}
-                  <button type="button" className="card-edit-tag-del" onClick={() => setPersonas(prev => prev.filter(x => x !== persona))} title="Remove">×</button>
-                </span>
-              ))}
-              {(catalog.personas || []).length === 0 && personas.length === 0 && (
-                <p className="card-edit-hint">{t('noPersonasYet', lang)}</p>
-              )}
-            </div>
+            <select
+              className="card-edit-select card-edit-multiselect"
+              multiple
+              value={personas}
+              onChange={e => setPersonas(Array.from(e.target.selectedOptions, o => o.value))}
+              size={Math.min(6, (catalog.personas || []).length || 1)}
+            >
+              {(catalog.personas || []).map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+            {personas.length > 0 && (
+              <div className="card-edit-selected-pills">
+                {personas.map(p => (
+                  <span key={p} className={`card-edit-sys-chip selected${!(catalog.personas || []).includes(p) ? ' orphan-sys' : ''}`} style={!(catalog.personas || []).includes(p) ? { opacity: 0.6 } : {}}>
+                    · {p}
+                    <button type="button" className="card-edit-tag-del" onClick={() => setPersonas(prev => prev.filter(x => x !== p))} title="Remove">×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+            {(catalog.personas || []).length === 0 && personas.length === 0 && (
+              <p className="card-edit-hint">{t('noPersonasYet', lang)}</p>
+            )}
           </div>
 
           <div className="card-edit-field">
@@ -474,22 +477,25 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
           {((catalog.solutions || []).length > 0 || solutions.length > 0) && (
             <div className="card-edit-field">
               <label className="card-edit-label">{t('solutionsLabel', lang)}</label>
-              <div className="card-edit-systems">
-                {(catalog.solutions || []).map(sol => {
-                  const selected = solutions.includes(sol);
-                  return (
-                    <button key={sol} type="button" className={`card-edit-sys-chip${selected ? ' selected' : ''}`} onClick={() => setSolutions(prev => selected ? prev.filter(x => x !== sol) : [...prev, sol])}>
-                      {selected ? '· ' : ''}{sol}
-                    </button>
-                  );
-                })}
-                {solutions.filter(s => !(catalog.solutions || []).includes(s)).map(sol => (
-                  <span key={sol} className="card-edit-sys-chip selected orphan-sys" style={{ opacity: 0.6 }}>
-                    · {sol}
-                    <button type="button" className="card-edit-tag-del" onClick={() => setSolutions(prev => prev.filter(x => x !== sol))} title="Remove">×</button>
-                  </span>
-                ))}
-              </div>
+              <select
+                className="card-edit-select card-edit-multiselect"
+                multiple
+                value={solutions}
+                onChange={e => setSolutions(Array.from(e.target.selectedOptions, o => o.value))}
+                size={Math.min(6, (catalog.solutions || []).length || 1)}
+              >
+                {(catalog.solutions || []).map(sol => <option key={sol} value={sol}>{sol}</option>)}
+              </select>
+              {solutions.length > 0 && (
+                <div className="card-edit-selected-pills">
+                  {solutions.map(sol => (
+                    <span key={sol} className={`card-edit-sys-chip selected${!(catalog.solutions || []).includes(sol) ? ' orphan-sys' : ''}`} style={!(catalog.solutions || []).includes(sol) ? { opacity: 0.6 } : {}}>
+                      · {sol}
+                      <button type="button" className="card-edit-tag-del" onClick={() => setSolutions(prev => prev.filter(x => x !== sol))} title="Remove">×</button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
