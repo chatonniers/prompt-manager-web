@@ -664,7 +664,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
   );
 }
 
-function NotesPreview({ notes }) {
+function NotesPreview({ notes, compact }) {
   const ref = useRef(null);
   const [popover, setPopover] = useState(null);
 
@@ -687,7 +687,7 @@ function NotesPreview({ notes }) {
   return (
     <div
       ref={ref}
-      className="prompt-card-notes prompt-card-notes-truncated"
+      className={`prompt-card-notes prompt-card-notes-truncated${compact ? ' prompt-card-notes-compact' : ''}`}
       onMouseEnter={showPopover}
       onMouseLeave={() => setPopover(null)}
     >
@@ -960,7 +960,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
                 <span className="pill assistant-pill">{p.assistant}</span>
               </div>
             )}
-            {p.notes && <NotesPreview notes={p.notes} />}
+            {p.notes && <NotesPreview notes={p.notes} compact />}
             <div className="prompt-items-list">
               {promptItems.map((item, idx) => {
                 const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;

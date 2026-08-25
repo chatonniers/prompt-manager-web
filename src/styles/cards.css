@@ -285,6 +285,9 @@
 .prompt-card-notes-truncated {
   cursor: default;
 }
+.prompt-card-notes-compact {
+  -webkit-line-clamp: 1;
+}
 .prompt-card-notes-truncated:hover {
   border-left-color: var(--pm-accent);
   color: var(--pm-text2);
