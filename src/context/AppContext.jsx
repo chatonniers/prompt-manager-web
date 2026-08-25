@@ -4,7 +4,7 @@ export const AppContext = createContext(null);
 
 const initialState = {
   prompts: [],
-  catalog: { solutions: [], storyFlows: [], categories: [], systems: [], personas: [], tags: [] },
+  catalog: { solutions: [], storyFlows: [], categories: [], systems: [], personas: [], tags: [], assistants: [], industries: [] },
   settings: { autoFilterEnabled: true, lang: 'en', theme: localStorage.getItem('pm-theme') || 'dark' },
   currentView: 'all',
   currentFilter: null,
@@ -17,7 +17,7 @@ const initialState = {
   pendingDeleteId: null,
   pendingDeleteIds: new Set(),
   toastMsg: null,
-  toastUndo: null,   // { label, onUndo } — if set, Toast shows an Undo button
+  toastUndo: null,
   initialized: false,
   selectedIds: new Set(),
   draggingId: null,
@@ -26,6 +26,7 @@ const initialState = {
   newUsers: [],
   zoom: (() => { const v = parseFloat(localStorage.getItem('pm-zoom')); return v >= 0.5 && v <= 2 ? v : 1; })(),
   displayMode: (() => { const v = localStorage.getItem('pm-display'); return v === 'table' || v === 'cards' ? v : 'cards'; })(),
+  groupingMode: (() => { const v = localStorage.getItem('pm-grouping'); return v === 'assistant' ? 'assistant' : 'flow'; })(),
 };
 
 function reducer(state, action) {
@@ -110,6 +111,11 @@ function reducer(state, action) {
       const mode = action.payload === 'table' ? 'table' : 'cards';
       localStorage.setItem('pm-display', mode);
       return { ...state, displayMode: mode };
+    }
+    case 'SET_GROUPING_MODE': {
+      const mode = action.payload === 'assistant' ? 'assistant' : 'flow';
+      localStorage.setItem('pm-grouping', mode);
+      return { ...state, groupingMode: mode };
     }
     case 'SET_WORKSPACE': {
       const ws = action.payload === 'mine' ? 'mine' : 'library';

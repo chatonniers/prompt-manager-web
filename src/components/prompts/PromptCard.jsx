@@ -191,6 +191,14 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
   const [notes, setNotes] = useState(p.notes || '');
   const [solutions, setSolutions] = useState(p.solutions || []);
   const [systems, setSystems] = useState(() => getSystems(p));
+  const [assistant, setAssistant] = useState(p.assistant || '');
+  const [industry, setIndustry] = useState(p.industry || '');
+  const [historyNames, setHistoryNames] = useState({});
+
+  useEffect(() => {
+    if (!p.ownerId && !p.updatedById) return;
+    StorageAPI.getProfileNames([p.ownerId, p.updatedById].filter(Boolean)).then(setHistoryNames);
+  }, [p.ownerId, p.updatedById]);
   const [demoLinks, setDemoLinks] = useState(() =>
     Array.isArray(p.demoLinks) ? p.demoLinks.map(l => ({ ...l })) : []
   );
@@ -305,6 +313,8 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
         systems,
         demoLinks: demoLinks.filter(l => l.url.trim()),
         attachments: attachmentsMeta,
+        assistant: assistant || null,
+        industry: industry || null,
       });
       if (approvedRequest) {
         await StorageAPI.deletePublishRequest(p.id);
@@ -349,6 +359,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
       <div className="card-edit-back-tabs">
         <button className={`card-edit-back-tab${backTab === 'content' ? ' active' : ''}`} onClick={() => setBackTab('content')}>Content</button>
         <button className={`card-edit-back-tab${backTab === 'details' ? ' active' : ''}`} onClick={() => setBackTab('details')}>Details</button>
+        <button className={`card-edit-back-tab${backTab === 'history' ? ' active' : ''}`} onClick={() => setBackTab('history')}>History</button>
       </div>
 
       {backTab === 'content' && (
@@ -435,6 +446,29 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
                 {(catalog.storyFlows || []).map(f => <option key={f} value={f}>{f}</option>)}
               </select>
             </div>
+          </div>
+
+          <div className="card-edit-2col">
+            {(catalog.assistants || []).length > 0 && (
+              <div className="card-edit-field">
+                <label className="card-edit-label">AI Assistant</label>
+                <select className="card-edit-select" value={assistant} onChange={e => setAssistant(e.target.value)}>
+                  <option value="">— None —</option>
+                  {(catalog.assistants || [])
+                    .filter(a => !a.domain || a.domain === category || !category)
+                    .map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
+                </select>
+              </div>
+            )}
+            {(catalog.industries || []).length > 0 && (
+              <div className="card-edit-field">
+                <label className="card-edit-label">Industry</label>
+                <select className="card-edit-select" value={industry} onChange={e => setIndustry(e.target.value)}>
+                  <option value="">— None —</option>
+                  {(catalog.industries || []).map(ind => <option key={ind} value={ind}>{ind}</option>)}
+                </select>
+              </div>
+            )}
           </div>
 
           {((catalog.solutions || []).length > 0 || solutions.length > 0) && (
@@ -541,6 +575,29 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
               <input type="file" ref={fileInputRef} multiple style={{ display: 'none' }} onChange={e => addFiles(e.target.files)} />
             </div>
           </div>
+        </div>
+      )}
+
+      {backTab === 'history' && (
+        <div className="card-edit-body card-history-tab">
+          <div className="card-history-row">
+            <span className="card-history-label">Created by</span>
+            <span className="card-history-user">{historyNames[p.ownerId] || '—'}</span>
+            {p.createdAt && (
+              <span className="card-history-date">{new Date(p.createdAt).toLocaleString('en', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+            )}
+          </div>
+          {(p.updatedById || p.updatedAt) && (
+            <div className="card-history-row">
+              <span className="card-history-label">Last saved by</span>
+              <span className="card-history-user">
+                {p.updatedById ? (historyNames[p.updatedById] || '…') : '—'}
+              </span>
+              {p.updatedAt && (
+                <span className="card-history-date">{new Date(p.updatedAt).toLocaleString('en', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -895,6 +952,8 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
         {/* Meta pills */}
         <div className="prompt-card-meta">
           {(p.solutions || []).map(s => <span key={s} className="pill">{s}</span>)}
+          {p.assistant && <span className="pill assistant-pill">{p.assistant}</span>}
+          {p.industry  && <span className="pill industry-pill">{p.industry}</span>}
           {p.storyFlow && (() => { const c = getFlowColor(p.storyFlow); return <span className="pill flow" style={{ background: c.bg, color: c.text }}>{p.storyFlow}</span>; })()}
           {p.status && <span className={`pill status-${p.status}`}>{p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span>}
           {langBadge}

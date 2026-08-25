@@ -48,9 +48,12 @@ function dbToPrompt(row) {
     systems:      row.systems      || [],
     attachments:  row.attachments  || [],
     ownerId:      row.owner_id,
+    updatedById:  row.updated_by  || null,
     isPrivate:    row.is_private ?? true,
     createdAt:    row.created_at,
     updatedAt:    row.updated_at,
+    assistant:    row.assistant    || null,
+    industry:     row.industry     || null,
   };
 }
 
@@ -74,6 +77,9 @@ function promptToDb(p, userId) {
     demo_links:    p.demoLinks  || [],
     systems:       p.systems    || [],
     attachments:   p.attachments|| [],
+    assistant:     p.assistant  || null,
+    industry:      p.industry   || null,
+    updated_by:    userId || null,
   };
   // Preserve timestamps and usage on import (only set if provided)
   if (p.usageCount != null)  row.usage_count  = p.usageCount;
@@ -83,7 +89,7 @@ function promptToDb(p, userId) {
 }
 
 function dbToCatalog(row) {
-  if (!row) return { solutions: [], storyFlows: [], categories: [], systems: [], personas: [], tags: [], visibilityRules: null, kpiRules: null };
+  if (!row) return { solutions: [], storyFlows: [], categories: [], systems: [], personas: [], tags: [], assistants: [], industries: [], visibilityRules: null, kpiRules: null };
   return {
     solutions:       row.solutions   || [],
     storyFlows:      row.story_flows || [],
@@ -91,6 +97,8 @@ function dbToCatalog(row) {
     systems:         row.systems     || [],
     personas:        row.personas    || [],
     tags:            row.tags        || [],
+    assistants:      row.assistants  || [],
+    industries:      row.industries  || [],
     visibilityRules: row.visibility_rules ?? null,
     kpiRules:        row.kpi_rules        ?? null,
   };
@@ -104,6 +112,8 @@ function catalogToDb(catalog) {
     systems:           catalog.systems    || [],
     personas:          catalog.personas   || [],
     tags:              catalog.tags       || [],
+    assistants:        catalog.assistants || [],
+    industries:        catalog.industries || [],
     visibility_rules:  catalog.visibilityRules ?? null,
     kpi_rules:         catalog.kpiRules        ?? null,
   };
@@ -306,6 +316,15 @@ export const StorageAPI = {
     }
 
     return { imported: toAdd.length, skipped: data.prompts.length - toAdd.length };
+  },
+
+  async getProfileNames(ids) {
+    const unique = [...new Set(ids.filter(Boolean))];
+    if (unique.length === 0) return {};
+    const { data } = await supabase.from('profiles').select('id, display_name, email').in('id', unique);
+    const map = {};
+    (data || []).forEach(p => { map[p.id] = p.display_name || p.email || p.id; });
+    return map;
   },
 
   // ── Publish requests ───────────────────────────────────────────────────

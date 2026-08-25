@@ -409,46 +409,65 @@ function DropZone({ className, style, onDrop, children, blockRef }) {
   );
 }
 
-function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, onToggleSelect, onDrop, hideLabel }) {
-  const usedFlows = storyFlows.filter(f => prompts.some(p => p.storyFlow === f));
-  const noFlow = prompts.filter(p => !p.storyFlow);
-  const hasAnyFlow = usedFlows.length > 0;
+function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, onToggleSelect, onDrop, hideLabel, groupingMode, assistants }) {
+  const effectiveMode = groupingMode || 'flow';
 
-  if (!hasAnyFlow) {
-    return (
-      <DropZone className="category-block" onDrop={id => onDrop(id, { category: catKey, storyFlow: null })}>
-        {!hideLabel && <div className="grid-section-label">{label}<span className="section-count">{prompts.length}</span></div>}
-        {prompts.length === 0
-          ? <div className="category-block-empty-hint">Drop cards here</div>
-          : <div className="category-flat-grid">
-              {prompts.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
-            </div>
-        }
-      </DropZone>
-    );
+  let columns;
+  if (effectiveMode === 'assistant') {
+    const domainAssistants = (assistants || []).filter(a => !a.domain || a.domain === catKey);
+    const usedAssistants = domainAssistants.filter(a => prompts.some(p => p.assistant === a.name));
+    const noAssistant = prompts.filter(p => !p.assistant);
+    columns = [
+      ...usedAssistants.map(a => ({ key: a.id, label: a.name, prompts: prompts.filter(p => p.assistant === a.name), isAssistant: true })),
+      ...(noAssistant.length > 0 ? [{ key: '__none__', label: '—', prompts: noAssistant, isAssistant: false }] : []),
+    ];
+  } else {
+    const usedFlows = storyFlows.filter(f => prompts.some(p => p.storyFlow === f));
+    const noFlow = prompts.filter(p => !p.storyFlow);
+    const hasAnyFlow = usedFlows.length > 0;
+
+    if (!hasAnyFlow) {
+      return (
+        <DropZone className="category-block" onDrop={id => onDrop(id, { category: catKey, storyFlow: null })}>
+          {!hideLabel && <div className="grid-section-label">{label}<span className="section-count">{prompts.length}</span></div>}
+          {prompts.length === 0
+            ? <div className="category-block-empty-hint">Drop cards here</div>
+            : <div className="category-flat-grid">
+                {prompts.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
+              </div>
+          }
+        </DropZone>
+      );
+    }
+    columns = [
+      ...usedFlows.map(f => ({ key: f, label: f, prompts: prompts.filter(p => p.storyFlow === f), isFlow: true })),
+      ...(noFlow.length > 0 ? [{ key: '__none__', label: '—', prompts: noFlow, isFlow: false }] : []),
+    ];
   }
-
-  const columns = [
-    ...usedFlows.map(f => ({ key: f, label: f, prompts: prompts.filter(p => p.storyFlow === f) })),
-    ...(noFlow.length > 0 ? [{ key: '__none__', label: '—', prompts: noFlow }] : []),
-  ];
 
   return (
     <DropZone className="category-block" onDrop={id => onDrop(id, { category: catKey, storyFlow: null })}>
       {!hideLabel && <div className="grid-section-label">{label}<span className="section-count">{prompts.length}</span></div>}
       <div className="category-flow-columns">
         {columns.map(col => {
-          const color = col.key !== '__none__' ? getFlowColor(col.label) : null;
-          const flowName = col.key !== '__none__' ? col.label : null;
+          const isAssistantCol = effectiveMode === 'assistant' && col.isAssistant;
+          const color = (!isAssistantCol && col.key !== '__none__') ? getFlowColor(col.label) : null;
+          const dropTarget = effectiveMode === 'assistant'
+            ? { category: catKey }
+            : { category: catKey, storyFlow: col.key !== '__none__' ? col.label : null };
           return (
             <DropZone
               key={col.key}
               className="flow-column"
-              onDrop={id => onDrop(id, { category: catKey, storyFlow: flowName })}
+              onDrop={id => onDrop(id, dropTarget)}
             >
               <div
                 className="flow-column-label"
-                style={color ? { borderLeftColor: color.border, background: color.bg, color: color.text } : {}}
+                style={
+                  isAssistantCol
+                    ? { borderLeftColor: '#818CF8', background: 'rgba(99,102,241,0.08)', color: '#818CF8' }
+                    : (color ? { borderLeftColor: color.border, background: color.bg, color: color.text } : {})
+                }
               >
                 {col.label}
               </div>
@@ -532,7 +551,7 @@ export default function PromptGrid() {
   const { state, dispatch } = useApp();
   const { isAdmin, isEditor, profile } = useAuth();
   const canPublish = isAdmin || isEditor;
-  const { prompts, currentView, currentFilter, searchQuery, sapContext, settings, catalog, selectedIds, draggingId, workspace, statusFilter, displayMode } = state;
+  const { prompts, currentView, currentFilter, searchQuery, sapContext, settings, catalog, selectedIds, draggingId, workspace, statusFilter, displayMode, groupingMode } = state;
   const lang = settings?.lang || 'en';
   const categories = catalog.categories || [];
   const storyFlows = catalog.storyFlows || [];
@@ -750,6 +769,14 @@ export default function PromptGrid() {
             >
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
+
+            <button
+              className={`grouping-flip-btn${groupingMode === 'assistant' ? ' active' : ''}`}
+              title={groupingMode === 'assistant' ? 'Group by Story Flow' : 'Group by AI Assistant'}
+              onClick={() => dispatch({ type: 'SET_GROUPING_MODE', payload: groupingMode === 'assistant' ? 'flow' : 'assistant' })}
+            >
+              {groupingMode === 'assistant' ? '⇄ Flow' : '⇄ Assistant'}
+            </button>
           </div>
 
           {activeBlock && (
@@ -764,6 +791,8 @@ export default function PromptGrid() {
               onToggleSelect={onToggleSelect}
               onDrop={handleDrop}
               hideLabel
+              groupingMode={groupingMode}
+              assistants={catalog.assistants || []}
             />
           )}
         </div>

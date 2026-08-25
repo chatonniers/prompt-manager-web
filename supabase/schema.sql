@@ -75,6 +75,8 @@ create table public.catalog (
   personas         text[] not null default '{}',
   tags             text[] not null default '{}',
   systems          jsonb  not null default '[]',
+  assistants       jsonb  not null default '[]',
+  industries       text[] not null default '{}',
   visibility_rules jsonb  default null,
   kpi_rules        jsonb  default null,
   updated_at       timestamptz not null default now(),
@@ -122,6 +124,8 @@ create table public.prompts (
   demo_links   jsonb not null default '[]',
   systems      jsonb not null default '[]',
   attachments  jsonb not null default '[]',
+  assistant    text,
+  industry     text,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
 );

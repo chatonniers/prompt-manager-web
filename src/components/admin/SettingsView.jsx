@@ -6,6 +6,7 @@ import { t } from '../../lib/i18n.js';
 import AdminCatalogCard from './AdminCatalogCard.jsx';
 import AdminCategoriesCard from './AdminCategoriesCard.jsx';
 import AdminSystemsCard from './AdminSystemsCard.jsx';
+import AdminAssistantsCard from './AdminAssistantsCard.jsx';
 import AdminVisibilityCard from './AdminVisibilityCard.jsx';
 import ImportModeModal from '../shared/ImportModeModal.jsx';
 import UserManagement from './UserManagement.jsx';
@@ -17,6 +18,8 @@ const FUNCTIONAL_SECTIONS = [
   { id: 'personas',   labelKey: 'personasAdmin' },
   { id: 'solutions',  labelKey: 'solutionsAdmin' },
   { id: 'systems',    labelKey: 'systemsAdmin' },
+  { id: 'assistants', labelKey: 'assistantsAdmin' },
+  { id: 'industries', labelKey: 'industriesAdmin' },
 ];
 
 const TECHNICAL_SECTIONS = [
@@ -175,6 +178,18 @@ export default function SettingsView() {
           )}
 
           {activeSection === 'systems' && <AdminSystemsCard />}
+          {activeSection === 'assistants' && <AdminAssistantsCard />}
+
+          {activeSection === 'industries' && (
+            <AdminCatalogCard
+              titleKey="industriesAdmin"
+              descKey="industriesDesc"
+              addKey="addIndustry"
+              items={state.catalog.industries || []}
+              promptField="industry"
+              isArray={false}
+            />
+          )}
 
           {activeSection === 'solutions' && (
             <AdminCatalogCard
