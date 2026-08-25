@@ -63,7 +63,39 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
   );
 }
 
-export default function PromptModal() {
+function SingleSelectDropdown({ options, value, onChange, placeholder }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    function onOutside(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    if (open) document.addEventListener('mousedown', onOutside);
+    return () => document.removeEventListener('mousedown', onOutside);
+  }, [open]);
+  const label = value || '';
+  return (
+    <div className="ms-dropdown" ref={ref}>
+      <button type="button" className={`ms-trigger${open ? ' open' : ''}`} onClick={() => setOpen(v => !v)}>
+        <span className={!value ? 'ms-placeholder' : 'ms-value'}>{label || placeholder}</span>
+        <span className="ms-arrow">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="ms-menu">
+          <label className={`ms-option${!value ? ' ms-selected' : ''}`} onClick={() => { onChange(''); setOpen(false); }}>
+            <span style={{ opacity: 0.5 }}>{placeholder}</span>
+          </label>
+          {options.map(opt => (
+            <label key={opt} className={`ms-option${value === opt ? ' ms-selected' : ''}`} onClick={() => { onChange(opt); setOpen(false); }}>
+              {opt}
+            </label>
+          ))}
+          {options.length === 0 && <div className="ms-empty">No options</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
   const { state, dispatch } = useApp();
   const { isEditor, isAdmin, profile } = useAuth();
   const canPublish = isEditor || isAdmin;
@@ -430,17 +462,21 @@ export default function PromptModal() {
             <div className="field-row-2col">
               <div className="field-col">
                 <label>{t('category', lang)}</label>
-                <select value={category} onChange={e => { setCategory(e.target.value); setAssistant(''); }}>
-                  <option value="">— {t('noCategory', lang)} —</option>
-                  {(catalog.categories || []).map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                </select>
+                <SingleSelectDropdown
+                  options={catalog.categories || []}
+                  value={category}
+                  onChange={v => { setCategory(v); setAssistant(''); }}
+                  placeholder={`— ${t('noCategory', lang)} —`}
+                />
               </div>
               <div className="field-col">
                 <label>{t('storyFlow', lang)}</label>
-                <select value={storyFlow} onChange={e => setStoryFlow(e.target.value)}>
-                  <option value="">{t('selectFlowNone', lang)}</option>
-                  {catalog.storyFlows.map(f => <option key={f} value={f}>{f}</option>)}
-                </select>
+                <SingleSelectDropdown
+                  options={catalog.storyFlows || []}
+                  value={storyFlow}
+                  onChange={setStoryFlow}
+                  placeholder={t('selectFlowNone', lang)}
+                />
               </div>
             </div>
 
@@ -450,19 +486,23 @@ export default function PromptModal() {
                 {filteredAssistants.length > 0 && (
                   <div className="field-col">
                     <label>AI Assistant</label>
-                    <select value={assistant} onChange={e => setAssistant(e.target.value)}>
-                      <option value="">— None —</option>
-                      {filteredAssistants.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
-                    </select>
+                    <SingleSelectDropdown
+                      options={filteredAssistants.map(a => a.name)}
+                      value={assistant}
+                      onChange={setAssistant}
+                      placeholder="— None —"
+                    />
                   </div>
                 )}
                 {(catalog.industries || []).length > 0 && (
                   <div className="field-col">
                     <label>Industry</label>
-                    <select value={industry} onChange={e => setIndustry(e.target.value)}>
-                      <option value="">— None —</option>
-                      {(catalog.industries || []).map(ind => <option key={ind} value={ind}>{ind}</option>)}
-                    </select>
+                    <SingleSelectDropdown
+                      options={catalog.industries || []}
+                      value={industry}
+                      onChange={setIndustry}
+                      placeholder="— None —"
+                    />
                   </div>
                 )}
               </div>
