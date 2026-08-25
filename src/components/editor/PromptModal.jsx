@@ -16,6 +16,53 @@ function makeItem(body = '', body_fr = '') {
   return { id: crypto.randomUUID(), label: '', body, body_fr };
 }
 
+function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    function onOutside(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    if (open) document.addEventListener('mousedown', onOutside);
+    return () => document.removeEventListener('mousedown', onOutside);
+  }, [open]);
+  function toggle(val) {
+    onChange(selected.includes(val) ? selected.filter(x => x !== val) : [...selected, val]);
+  }
+  const label = selected.length === 0 ? placeholder
+    : selected.length === 1 ? selected[0] : `${selected.length} selected`;
+  return (
+    <div className="ms-dropdown" ref={ref}>
+      <button type="button" className={`ms-trigger${open ? ' open' : ''}`} onClick={() => setOpen(v => !v)}>
+        <span className={selected.length === 0 ? 'ms-placeholder' : 'ms-value'}>{label}</span>
+        <span className="ms-arrow">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="ms-menu">
+          {options.map(opt => {
+            const isSel = selected.includes(opt);
+            return (
+              <label key={opt} className={`ms-option${isSel ? ' ms-selected' : ''}`}>
+                <input type="checkbox" checked={isSel} onChange={() => toggle(opt)} />
+                {opt}
+              </label>
+            );
+          })}
+          {options.length === 0 && <div className="ms-empty">No options</div>}
+        </div>
+      )}
+      {selected.length > 0 && (
+        <div className="card-edit-selected-pills">
+          {selected.map(val => (
+            <span key={val} className="card-edit-sys-chip selected">
+              · {val}
+              <button type="button" className="card-edit-tag-del" onClick={() => onChange(selected.filter(x => x !== val))}>×</button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function PromptModal() {
   const { state, dispatch } = useApp();
   const { isEditor, isAdmin, profile } = useAuth();
@@ -27,7 +74,6 @@ export default function PromptModal() {
   const isOwner = !existing || existing.ownerId === profile?.id;
   const canEdit = canPublish || isOwner;
 
-  // Publish request state (same logic as PromptCard)
   const myRequest = existing ? state.publishRequests?.find(r => r.prompt_id === existing.id) : null;
   const isApprovedRequest = myRequest?.status === 'approved';
   const isPendingRequest = myRequest?.status === 'pending';
@@ -39,6 +85,8 @@ export default function PromptModal() {
   const [itemTabs, setItemTabs] = useState({});
   const [storyFlow, setStoryFlow] = useState('');
   const [category, setCategory] = useState('');
+  const [assistant, setAssistant] = useState('');
+  const [industry, setIndustry] = useState('');
   const [isFavorite, setIsFavorite] = useState(false);
   const [isPrivate, setIsPrivate] = useState(true);
   const [selectedSolutions, setSelectedSolutions] = useState([]);
@@ -67,6 +115,8 @@ export default function PromptModal() {
       setItemTabs({});
       setStoryFlow(existing.storyFlow || '');
       setCategory(existing.category || '');
+      setAssistant(existing.assistant || '');
+      setIndustry(existing.industry || '');
       setIsFavorite(existing.isFavorite || false);
       setSelectedSolutions(existing.solutions || []);
       setPersonas(existing.personas || []);
@@ -113,6 +163,8 @@ export default function PromptModal() {
       setItemTabs({});
       setStoryFlow('');
       setCategory('');
+      setAssistant('');
+      setIndustry('');
       setIsFavorite(false);
       setSelectedSolutions([]);
       setPersonas([]);
@@ -135,12 +187,6 @@ export default function PromptModal() {
     return () => document.removeEventListener('keydown', onKey);
   }, [isModalOpen, dispatch]);
 
-  function toggleSolution(sol) {
-    setSelectedSolutions(prev =>
-      prev.includes(sol) ? prev.filter(s => s !== sol) : [...prev, sol]
-    );
-  }
-
   function updateItem(id, field, value) {
     setPromptItems(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
   }
@@ -153,13 +199,8 @@ export default function PromptModal() {
     });
   }
 
-  function getItemTab(id) {
-    return itemTabs[id] || 'en';
-  }
-
-  function setItemTab(id, tab) {
-    setItemTabs(prev => ({ ...prev, [id]: tab }));
-  }
+  function getItemTab(id) { return itemTabs[id] || 'en'; }
+  function setItemTab(id, tab) { setItemTabs(prev => ({ ...prev, [id]: tab })); }
 
   function addFiles(files) {
     Array.from(files).forEach(file => {
@@ -167,10 +208,7 @@ export default function PromptModal() {
       reader.onload = ev => {
         setPendingFiles(prev => [...prev, {
           _tempId: crypto.randomUUID(),
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          data: ev.target.result,
+          name: file.name, type: file.type, size: file.size, data: ev.target.result,
         }]);
       };
       reader.readAsArrayBuffer(file);
@@ -235,7 +273,6 @@ export default function PromptModal() {
         try { await deleteSkillFile(promptId, attId, att.name); } catch (e) { console.error('Skill delete failed:', e); }
       }
     }
-
     for (const att of savedNewAtts) {
       if (!att.isJouleSkill) continue;
       const fileObj = pendingFiles.find(f => f.name === att.name);
@@ -249,7 +286,7 @@ export default function PromptModal() {
       const stored = await AttachmentsDB.get(att.id);
       if (stored?.data) {
         try { att.skill_url = await uploadSkillFile(promptId, att.id, att.name, stored.data); }
-        catch (e) { console.error('Skill upload failed:', e); dispatch({ type: 'SHOW_TOAST', payload: `Skill upload failed: ${e.message}` }); }
+        catch (e) { console.error('Skill upload failed:', e); }
       }
     }
 
@@ -273,6 +310,8 @@ export default function PromptModal() {
       promptItems: finalItems,
       category: category || null,
       storyFlow,
+      assistant: assistant || null,
+      industry: industry || null,
       solutions: selectedSolutions,
       personas,
       systems,
@@ -300,13 +339,13 @@ export default function PromptModal() {
 
   const activeItem = promptItems[activeItemIdx] || promptItems[0];
   const itemLang = activeItem ? getItemTab(activeItem.id) : 'en';
+  const filteredAssistants = (catalog.assistants || []).filter(a => !a.domain || a.domain === category || !category);
 
   return (
     <div id="modal-backdrop" onClick={e => { if (e.target.id === 'modal-backdrop') dispatch({ type: 'CLOSE_MODAL' }); }}>
       <div id="modal">
         <div id="modal-header">
           <h2 id="modal-title">{isNew ? t('newPrompt', lang) : t('edit', lang)}</h2>
-          {/* Tabs */}
           <div className="modal-tabs">
             <button className={`modal-tab${activeTab === 'content' ? ' active' : ''}`} onClick={() => setActiveTab('content')}>Content</button>
             <button className={`modal-tab${activeTab === 'details' ? ' active' : ''}`} onClick={() => setActiveTab('details')}>Details</button>
@@ -321,52 +360,37 @@ export default function PromptModal() {
           {/* ── CONTENT TAB ─────────────────────────────────────── */}
           {activeTab === 'content' && <>
 
-            {/* Title */}
             <div className="field-row">
               <label>Title <span className="req">*</span></label>
               <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('titlePlaceholder', lang)} maxLength={120} className={errors.title ? 'input-error' : ''} />
               {errors.title && <span className="field-error">{errors.title}</span>}
             </div>
 
-            {/* Personas */}
             <div className="field-row">
               <label>{t('personasLabel', lang)}</label>
               {(catalog.personas || []).length > 0 ? (
-                <div className="catalog-picker">
-                  {catalog.personas.map(persona => {
-                    const selected = personas.includes(persona);
-                    return (
-                      <button key={persona} type="button" className={`catalog-chip${selected ? ' selected' : ''}`}
-                        onClick={() => setPersonas(prev => selected ? prev.filter(x => x !== persona) : [...prev, persona])}>
-                        {persona}
-                      </button>
-                    );
-                  })}
-                </div>
+                <MultiSelectDropdown
+                  options={catalog.personas || []}
+                  selected={personas}
+                  onChange={setPersonas}
+                  placeholder="— Select personas —"
+                />
               ) : (
                 <p className="hint" style={{ fontSize: 12, margin: '4px 0 0' }}>{t('noPersonasYet', lang)}</p>
               )}
             </div>
 
-            {/* Notes */}
             <div className="field-row">
               <label>{t('notes', lang)} <span className="hint">({t('notesHintModal', lang)})</span></label>
               <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={t('notesPlaceholder', lang)} rows={2} />
             </div>
 
-            {/* Prompt Items — card-style tabs */}
             <div className="field-row">
               <label>{t('promptBodiesLabel', lang)} <span className="req">*</span></label>
               {errors.body && <span className="field-error">{errors.body}</span>}
-
-              {/* Item selector tabs */}
               <div className="modal-item-tabs">
                 {promptItems.map((item, idx) => (
-                  <button
-                    key={item.id}
-                    className={`modal-item-tab${activeItemIdx === idx ? ' active' : ''}`}
-                    onClick={() => setActiveItemIdx(idx)}
-                  >
+                  <button key={item.id} className={`modal-item-tab${activeItemIdx === idx ? ' active' : ''}`} onClick={() => setActiveItemIdx(idx)}>
                     {item.label.trim() || `#${idx + 1}`}
                   </button>
                 ))}
@@ -378,18 +402,10 @@ export default function PromptModal() {
                   <button className="modal-item-tab modal-item-tab-del" onClick={() => removeItem(activeItem.id)}>−</button>
                 )}
               </div>
-
-              {/* Active item editor */}
               {activeItem && (
                 <div className="modal-item-editor">
-                  <input
-                    type="text"
-                    className="modal-item-label-input"
-                    value={activeItem.label}
-                    onChange={e => updateItem(activeItem.id, 'label', e.target.value)}
-                    placeholder={t('promptItemLabel', lang)}
-                  />
-                  {/* EN / FR lang tabs */}
+                  <input type="text" className="modal-item-label-input" value={activeItem.label}
+                    onChange={e => updateItem(activeItem.id, 'label', e.target.value)} placeholder={t('promptItemLabel', lang)} />
                   <div className="modal-lang-tabs">
                     <button className={`modal-lang-btn${itemLang === 'en' ? ' active' : ''}`} onClick={() => setItemTab(activeItem.id, 'en')}>EN</button>
                     <button className={`modal-lang-btn${itemLang === 'fr' ? ' active' : ''}`} onClick={() => setItemTab(activeItem.id, 'fr')}>FR</button>
@@ -414,7 +430,7 @@ export default function PromptModal() {
             <div className="field-row-2col">
               <div className="field-col">
                 <label>{t('category', lang)}</label>
-                <select value={category} onChange={e => setCategory(e.target.value)}>
+                <select value={category} onChange={e => { setCategory(e.target.value); setAssistant(''); }}>
                   <option value="">— {t('noCategory', lang)} —</option>
                   {(catalog.categories || []).map(cat => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
@@ -428,18 +444,42 @@ export default function PromptModal() {
               </div>
             </div>
 
-            {/* Solutions */}
-            <div className="field-row">
-              <label>{t('solutionsLabel', lang)}</label>
-              <div className="checkbox-group">
-                {catalog.solutions.map(sol => (
-                  <label key={sol} className="checkbox-label">
-                    <input type="checkbox" checked={selectedSolutions.includes(sol)} onChange={() => toggleSolution(sol)} />
-                    <span>{sol}</span>
-                  </label>
-                ))}
+            {/* Assistant + Industry */}
+            {(filteredAssistants.length > 0 || (catalog.industries || []).length > 0) && (
+              <div className="field-row-2col">
+                {filteredAssistants.length > 0 && (
+                  <div className="field-col">
+                    <label>AI Assistant</label>
+                    <select value={assistant} onChange={e => setAssistant(e.target.value)}>
+                      <option value="">— None —</option>
+                      {filteredAssistants.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
+                    </select>
+                  </div>
+                )}
+                {(catalog.industries || []).length > 0 && (
+                  <div className="field-col">
+                    <label>Industry</label>
+                    <select value={industry} onChange={e => setIndustry(e.target.value)}>
+                      <option value="">— None —</option>
+                      {(catalog.industries || []).map(ind => <option key={ind} value={ind}>{ind}</option>)}
+                    </select>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
+
+            {/* Solutions */}
+            {((catalog.solutions || []).length > 0 || selectedSolutions.length > 0) && (
+              <div className="field-row">
+                <label>{t('solutionsLabel', lang)}</label>
+                <MultiSelectDropdown
+                  options={catalog.solutions || []}
+                  selected={selectedSolutions}
+                  onChange={setSelectedSolutions}
+                  placeholder="— Select solutions —"
+                />
+              </div>
+            )}
 
             {/* Status + Favorite */}
             <div className="field-row-2col">
@@ -469,14 +509,10 @@ export default function PromptModal() {
               <div className="field-row">
                 <label>{t('visibilityLabel', lang) || 'Visibility'}</label>
                 <div className="card-privacy-btns">
-                  <button type="button"
-                    className={`card-privacy-btn${isPrivate !== false ? ' active private' : ''}`}
-                    onClick={() => setIsPrivate(true)}>
+                  <button type="button" className={`card-privacy-btn${isPrivate !== false ? ' active private' : ''}`} onClick={() => setIsPrivate(true)}>
                     {t('visibilityPrivate', lang)}
                   </button>
-                  <button type="button"
-                    className={`card-privacy-btn${isPrivate === false ? ' active shared' : ''}`}
-                    onClick={() => setIsPrivate(false)}>
+                  <button type="button" className={`card-privacy-btn${isPrivate === false ? ' active shared' : ''}`} onClick={() => setIsPrivate(false)}>
                     {t('visibilityPublic', lang)}
                   </button>
                 </div>
@@ -540,20 +576,16 @@ export default function PromptModal() {
                   <div key={a.id} className="attach-row">
                     <button className="attach-name-btn" onClick={() => downloadExisting(a)}>{a.name}</button>
                     <span className="attach-size">{fmtSize(a.size)}</span>
-                    <button
-                      type="button"
-                      className={`card-edit-att-joule${a.isJouleSkill ? ' active' : ''}`}
+                    <button type="button" className={`card-edit-att-joule${a.isJouleSkill ? ' active' : ''}`}
                       title={a.isJouleSkill ? 'Unmark as Joule Skill' : 'Mark as Joule Skill'}
                       onClick={() => {
                         if (!a.isJouleSkill) {
-                          // Enforce max 1: unmark all others first
                           setExistingAtts(prev => prev.map(x => ({ ...x, isJouleSkill: x.id === a.id })));
                           setPendingFiles(prev => prev.map(x => ({ ...x, isJouleSkill: false })));
                         } else {
                           setExistingAtts(prev => prev.map(x => x.id === a.id ? { ...x, isJouleSkill: false } : x));
                         }
-                      }}
-                    ><JouleDiamond size={13} /></button>
+                      }}><JouleDiamond size={13} /></button>
                     <button className="attach-remove-btn" onClick={() => setPendingDeletes(prev => [...prev, a.id])}>×</button>
                   </div>
                 ))}
@@ -561,9 +593,7 @@ export default function PromptModal() {
                   <div key={f._tempId} className="attach-row pending">
                     <span className="attach-name">{f.name}</span>
                     <span className="attach-size">{fmtSize(f.size)}</span>
-                    <button
-                      type="button"
-                      className={`card-edit-att-joule${f.isJouleSkill ? ' active' : ''}`}
+                    <button type="button" className={`card-edit-att-joule${f.isJouleSkill ? ' active' : ''}`}
                       title={f.isJouleSkill ? 'Unmark as Joule Skill' : 'Mark as Joule Skill'}
                       onClick={() => {
                         if (!f.isJouleSkill) {
@@ -572,8 +602,7 @@ export default function PromptModal() {
                         } else {
                           setPendingFiles(prev => prev.map(x => x._tempId === f._tempId ? { ...x, isJouleSkill: false } : x));
                         }
-                      }}
-                    ><JouleDiamond size={13} /></button>
+                      }}><JouleDiamond size={13} /></button>
                     <button className="attach-remove-btn" onClick={() => setPendingFiles(prev => prev.filter(x => x._tempId !== f._tempId))}>×</button>
                   </div>
                 ))}
@@ -583,13 +612,9 @@ export default function PromptModal() {
         </div>
 
         <div id="modal-footer">
-          {/* Delete: canPublish OR viewer's own private draft */}
           {!isNew && (canPublish || (isOwner && existing?.isPrivate !== false && existing?.status === 'draft')) && (
-            <button className="card-edit-del-btn" onClick={handleDelete}>
-              {t('del', lang) || 'Delete'}
-            </button>
+            <button className="card-edit-del-btn" onClick={handleDelete}>{t('del', lang) || 'Delete'}</button>
           )}
-          {/* Publish request: viewer, own draft, public visibility, not yet approved */}
           {!isNew && !canPublish && isOwner && existing?.status === 'draft' && isPrivate === false && !isApprovedRequest && (
             <button className="card-request-btn" onClick={handlePublishRequest}>
               {isPendingRequest ? 'Cancel request' : t('requestPublish', lang) || 'Request publish'}

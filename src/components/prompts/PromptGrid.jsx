@@ -389,6 +389,7 @@ function applyViewFilter(prompts, view, filter, workspace, userId, canPublish, v
   if (view === 'most-used') return [...prompts].sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0)).filter(p => p.usageCount > 0);
   if (view === 'flow') return prompts.filter(p => p.storyFlow === (filter?.storyFlow ?? filter));
   if (view === 'solution') return prompts.filter(p => p.solutions?.includes(filter?.solution ?? filter));
+  if (view === 'assistant') return prompts.filter(p => p.assistant === filter?.assistant);
   if (view === 'category') return prompts.filter(p => p.category === filter?.category);
   return prompts;
 }

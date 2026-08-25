@@ -93,7 +93,7 @@ export default function AdminStatsView() {
       { data: favorites },
       { data: sessions },
     ] = await Promise.all([
-      supabase.from('prompts').select('id, title, usage_count, last_used_at, category, story_flow, solutions, status, owner_id, created_at'),
+      supabase.from('prompts').select('id, title, usage_count, last_used_at, category, story_flow, assistant, industry, solutions, status, owner_id, created_at'),
       supabase.from('profiles').select('id, email, display_name, role, created_at'),
       supabase.from('usage_events').select('prompt_id, user_id, copied_at').order('copied_at', { ascending: true }),
       supabase.from('favorites').select('prompt_id, user_id'),
@@ -118,6 +118,14 @@ export default function AdminStatsView() {
     const catMap = {};
     prompts?.forEach(p => { const k = p.category || '—'; catMap[k] = (catMap[k] || 0) + 1; });
     const categoryBreakdown = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+
+    const assistantMap = {};
+    prompts?.forEach(p => { if (p.assistant) assistantMap[p.assistant] = (assistantMap[p.assistant] || 0) + 1; });
+    const assistantBreakdown = Object.entries(assistantMap).sort((a, b) => b[1] - a[1]);
+
+    const industryMap = {};
+    prompts?.forEach(p => { if (p.industry) industryMap[p.industry] = (industryMap[p.industry] || 0) + 1; });
+    const industryBreakdown = Object.entries(industryMap).sort((a, b) => b[1] - a[1]);
 
     const totalUsers = profiles?.length || 0;
     const byRole = { admin: 0, editor: 0, viewer: 0, blocked: 0 };
@@ -166,7 +174,7 @@ export default function AdminStatsView() {
 
     setRaw({
       totalPrompts, totalUsage, usedPrompts, draftCount, publishedCount, archivedCount, noStatusCount,
-      topPrompts, categoryBreakdown,
+      topPrompts, categoryBreakdown, assistantBreakdown, industryBreakdown,
       totalUsers, byRole, newUsersThisWeek,
       topUsers, topFavorited,
       recentSessions, avgDuration,
@@ -319,6 +327,38 @@ export default function AdminStatsView() {
             </table>
           )}
         </div>
+
+        {s.assistantBreakdown.length > 0 && (
+          <div className="view-card">
+            <h2>Prompts by AI Assistant</h2>
+            <table className="stats-table">
+              <tbody>
+                {s.assistantBreakdown.map(([name, count]) => (
+                  <tr key={name}>
+                    <td className="stats-table-name"><span className="pill assistant-pill">{name}</span></td>
+                    <td className="stats-table-count">{count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {s.industryBreakdown.length > 0 && (
+          <div className="view-card">
+            <h2>Prompts by Industry</h2>
+            <table className="stats-table">
+              <tbody>
+                {s.industryBreakdown.map(([name, count]) => (
+                  <tr key={name}>
+                    <td className="stats-table-name"><span className="pill industry-pill">{name}</span></td>
+                    <td className="stats-table-count">{count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
       </div>
 

@@ -61,7 +61,6 @@ export default function AdminMcpCard() {
             {editingIdx === idx ? (
               <div className="admin-mcp-edit">
                 <input className="admin-item-input" value={editVal.label} onChange={e => setEditVal(p => ({ ...p, label: e.target.value }))} placeholder="Label…" autoFocus />
-                <input className="admin-item-input" value={editVal.url || ''} onChange={e => setEditVal(p => ({ ...p, url: e.target.value }))} placeholder="MCP server URL (optional)…" />
                 <input className="admin-item-input" value={editVal.clientId} onChange={e => setEditVal(p => ({ ...p, clientId: e.target.value }))} placeholder={t('mcpClientId', lang)} />
                 <div className="admin-mcp-secret-row">
                   <input
