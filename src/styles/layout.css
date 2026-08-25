@@ -41,6 +41,14 @@
 }
 .refresh-banner-dismiss:hover { color: #C4B5FD; background: rgba(99,102,241,0.15); }
 
+.admin-message-banner {
+  background: linear-gradient(90deg, #1a2e1a 0%, #0f2010 100%);
+  border-bottom-color: rgba(52,211,153,0.4);
+  color: #6EE7B7;
+}
+.admin-message-banner .refresh-banner-dismiss { color: rgba(110,231,183,0.5); }
+.admin-message-banner .refresh-banner-dismiss:hover { color: #6EE7B7; background: rgba(52,211,153,0.12); }
+
 /* ── Top bar ──────────────────────────────────────────────────────────── */
 #top-bar {
   display: grid;

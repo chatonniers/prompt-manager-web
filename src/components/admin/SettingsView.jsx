@@ -1,7 +1,8 @@
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState, useMemo, useEffect } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
+import { supabase } from '../../lib/supabase.js';
 import { t } from '../../lib/i18n.js';
 import AdminCatalogCard from './AdminCatalogCard.jsx';
 import AdminCategoriesCard from './AdminCategoriesCard.jsx';
@@ -38,12 +39,50 @@ const STATS_SECTIONS = [
 
 export default function SettingsView() {
   const { state, dispatch } = useApp();
-  const { isAdmin, broadcastRefresh } = useAuth();
+  const { isAdmin, broadcastRefresh, broadcastMessage } = useAuth();
   const lang = state.settings?.lang || 'en';
   const [activeSection, setActiveSection] = useState(state.settingsSection || 'categories');
   const [broadcastSent, setBroadcastSent] = useState(false);
   const [navSearch, setNavSearch] = useState('');
   const navSearchRef = useRef(null);
+
+  // Message composer state
+  const [msgText, setMsgText] = useState('');
+  const [msgTargetAll, setMsgTargetAll] = useState(true);
+  const [msgSelectedUsers, setMsgSelectedUsers] = useState(new Set());
+  const [msgUsers, setMsgUsers] = useState([]);
+  const [msgSending, setMsgSending] = useState(false);
+  const [msgSent, setMsgSent] = useState(false);
+
+  const MSG_TEMPLATES = [
+    { label: 'New content available', text: 'New prompts have been published — please refresh to see the latest content.' },
+    { label: 'Maintenance soon', text: 'The app will undergo maintenance shortly. Please save your work and refresh after 10 minutes.' },
+    { label: 'Update deployed', text: 'A new version has been deployed with improvements. Please refresh your browser to get the latest features.' },
+    { label: 'Custom…', text: '' },
+  ];
+
+  useEffect(() => {
+    if (activeSection === 'system' && isAdmin) {
+      supabase.from('profiles').select('id, display_name, email, role').then(({ data }) => {
+        if (data) setMsgUsers(data.filter(u => u.role !== 'blocked'));
+      });
+    }
+  }, [activeSection, isAdmin]);
+
+  async function handleSendMessage() {
+    if (!msgText.trim()) return;
+    setMsgSending(true);
+    const targetIds = msgTargetAll ? null : [...msgSelectedUsers];
+    if (targetIds === null || targetIds.length === 0) {
+      await broadcastMessage(msgText.trim());
+    } else {
+      await broadcastMessage(msgText.trim(), targetIds);
+    }
+    setMsgSending(false);
+    setMsgSent(true);
+    dispatch({ type: 'SHOW_TOAST', payload: `Message sent to ${msgTargetAll ? 'all users' : `${msgSelectedUsers.size} user(s)`}.` });
+    setTimeout(() => setMsgSent(false), 3000);
+  }
 
   const allSections = [
     ...FUNCTIONAL_SECTIONS,
@@ -265,22 +304,113 @@ export default function SettingsView() {
           {activeSection === 'visibility' && <AdminVisibilityCard />}
 
           {activeSection === 'system' && isAdmin && (
-            <div className="view-card">
-              <h2>System Actions</h2>
-              <p style={{ fontSize: 13, color: 'var(--pm-text2)', marginBottom: 16 }}>
-                Notify all connected users to refresh the app — use this after deploying new features or changes.
-              </p>
-              <button
-                className="action-btn"
-                onClick={async () => {
-                  await broadcastRefresh();
-                  setBroadcastSent(true);
-                  dispatch({ type: 'SHOW_TOAST', payload: 'Refresh notification sent to all users.' });
-                  setTimeout(() => setBroadcastSent(false), 4000);
-                }}
-              >
-                {broadcastSent ? '✓ Notification sent' : '🔔 Notify all users to refresh'}
-              </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+              {/* Message Composer */}
+              <div className="view-card">
+                <h2>Send Message to Users</h2>
+                <p style={{ fontSize: 13, color: 'var(--pm-text2)', marginBottom: 16 }}>
+                  Send a notification banner to connected users. Choose a template or write a custom message.
+                </p>
+
+                {/* Templates */}
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--pm-text3)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6 }}>Templates</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {MSG_TEMPLATES.map(tpl => (
+                      <button key={tpl.label} className="admin-sort-btn"
+                        onClick={() => tpl.text ? setMsgText(tpl.text) : setMsgText('')}
+                        style={{ fontSize: 11 }}>
+                        {tpl.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Message text */}
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--pm-text3)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6 }}>Message</div>
+                  <textarea
+                    value={msgText}
+                    onChange={e => setMsgText(e.target.value)}
+                    rows={3}
+                    placeholder="Type your message…"
+                    style={{ width: '100%', resize: 'vertical', borderRadius: 8, border: '1.5px solid var(--pm-border2)', padding: '8px 12px', fontFamily: 'inherit', fontSize: 13, background: 'var(--pm-surface)', color: 'var(--pm-text)', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                  <div style={{ fontSize: 11, color: 'var(--pm-text3)', textAlign: 'right', marginTop: 2 }}>{msgText.length} chars</div>
+                </div>
+
+                {/* Recipients */}
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--pm-text3)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Recipients</div>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                    <button
+                      className={`card-privacy-btn${msgTargetAll ? ' active shared' : ''}`}
+                      onClick={() => setMsgTargetAll(true)}
+                    >All users</button>
+                    <button
+                      className={`card-privacy-btn${!msgTargetAll ? ' active private' : ''}`}
+                      onClick={() => setMsgTargetAll(false)}
+                    >Select users</button>
+                  </div>
+                  {!msgTargetAll && (
+                    <div style={{ border: '1px solid var(--pm-border2)', borderRadius: 8, overflow: 'hidden', maxHeight: 200, overflowY: 'auto' }}>
+                      <div
+                        style={{ padding: '6px 12px', borderBottom: '1px solid var(--pm-border2)', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--pm-text2)' }}
+                        onClick={() => {
+                          if (msgSelectedUsers.size === msgUsers.length) setMsgSelectedUsers(new Set());
+                          else setMsgSelectedUsers(new Set(msgUsers.map(u => u.id)));
+                        }}
+                      >
+                        <input type="checkbox" readOnly checked={msgSelectedUsers.size === msgUsers.length && msgUsers.length > 0} style={{ accentColor: 'var(--pm-accent)' }} />
+                        Select all ({msgUsers.length})
+                      </div>
+                      {msgUsers.map(u => (
+                        <div key={u.id}
+                          style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, borderBottom: '1px solid var(--pm-border)', color: msgSelectedUsers.has(u.id) ? 'var(--pm-accent)' : 'var(--pm-text)' }}
+                          onClick={() => setMsgSelectedUsers(prev => {
+                            const n = new Set(prev);
+                            n.has(u.id) ? n.delete(u.id) : n.add(u.id);
+                            return n;
+                          })}
+                        >
+                          <input type="checkbox" readOnly checked={msgSelectedUsers.has(u.id)} style={{ accentColor: 'var(--pm-accent)' }} />
+                          <span style={{ flex: 1 }}>{u.display_name || u.email}</span>
+                          <span className={`role-badge role-${u.role}`}>{u.role}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  className="card-edit-save-btn"
+                  disabled={msgSending || !msgText.trim() || (!msgTargetAll && msgSelectedUsers.size === 0)}
+                  onClick={handleSendMessage}
+                >
+                  {msgSent ? '✓ Sent' : msgSending ? 'Sending…' : `📢 Send to ${msgTargetAll ? 'all users' : `${msgSelectedUsers.size} user(s)`}`}
+                </button>
+              </div>
+
+              {/* Refresh notification */}
+              <div className="view-card">
+                <h2>Force Refresh</h2>
+                <p style={{ fontSize: 13, color: 'var(--pm-text2)', marginBottom: 16 }}>
+                  Notify all connected users to refresh the app — use this after deploying new features.
+                </p>
+                <button
+                  className="action-btn"
+                  onClick={async () => {
+                    await broadcastRefresh();
+                    setBroadcastSent(true);
+                    dispatch({ type: 'SHOW_TOAST', payload: 'Refresh notification sent to all users.' });
+                    setTimeout(() => setBroadcastSent(false), 4000);
+                  }}
+                >
+                  {broadcastSent ? '✓ Notification sent' : '🔔 Notify all users to refresh'}
+                </button>
+              </div>
+
             </div>
           )}
 

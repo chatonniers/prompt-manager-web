@@ -11,6 +11,7 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
   const [refreshBanner, setRefreshBanner] = useState(false);
+  const [adminMessage, setAdminMessage] = useState(null);
   const profileChannelRef = useRef(null);
   const appBroadcastRef = useRef(null);
   const pollRef = useRef(null);
@@ -79,6 +80,7 @@ export function AuthProvider({ children }) {
     appBroadcastRef.current = supabase
       .channel(APP_BROADCAST_CHANNEL)
       .on('broadcast', { event: 'refresh' }, () => setRefreshBanner(true))
+      .on('broadcast', { event: 'admin-message' }, ({ payload }) => setAdminMessage(payload?.message || ''))
       .subscribe();
 
     return () => {
@@ -144,6 +146,7 @@ export function AuthProvider({ children }) {
         sessionStorage.setItem('pm-auth-error', 'You have been disconnected by an administrator.');
         supabase.auth.signOut();
       })
+      .on('broadcast', { event: 'admin-message' }, ({ payload }) => setAdminMessage(payload?.message || ''))
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
@@ -215,12 +218,35 @@ export function AuthProvider({ children }) {
     });
   }
 
+  async function broadcastMessage(message, userIds = null) {
+    if (userIds && userIds.length > 0) {
+      // Send to specific users via their per-user channels
+      await Promise.all(userIds.map(async uid => {
+        const ch = supabase.channel(`profile-${uid}`);
+        await ch.subscribe(async status => {
+          if (status === 'SUBSCRIBED') {
+            await ch.send({ type: 'broadcast', event: 'admin-message', payload: { message } });
+            await new Promise(r => setTimeout(r, 400));
+            supabase.removeChannel(ch);
+          }
+        });
+      }));
+    } else {
+      // Broadcast to all via global channel
+      await appBroadcastRef.current?.send({
+        type: 'broadcast',
+        event: 'admin-message',
+        payload: { message },
+      });
+    }
+  }
+
   const isAdmin = profile?.role === 'admin';
   const isEditor = profile?.role === 'editor' || isAdmin;
   const loading = session === undefined;
 
   return (
-    <AuthContext.Provider value={{ session, profile, isAdmin, isEditor, loading, isPasswordRecovery, refreshBanner, setRefreshBanner, signIn, signUp, signOut, updatePassword, refreshProfile, broadcastRefresh }}>
+    <AuthContext.Provider value={{ session, profile, isAdmin, isEditor, loading, isPasswordRecovery, refreshBanner, setRefreshBanner, adminMessage, setAdminMessage, signIn, signUp, signOut, updatePassword, refreshProfile, broadcastRefresh, broadcastMessage }}>
       {children}
     </AuthContext.Provider>
   );
