@@ -7,6 +7,7 @@ import { StorageAPI, uploadSkillFile, deleteSkillFile } from '../../lib/storage.
 import { AttachmentsDB } from '../../lib/attachments.js';
 import { t } from '../../lib/i18n.js';
 import { getFlowColor } from '../../lib/flowColors.js';
+import { getAssistantColor } from '../../lib/assistantColors.js';
 import { extractVars } from '../../lib/substitution.js';
 import SubstituteModal from '../shared/SubstituteModal.jsx';
 import JouleDiamond from '../shared/JouleDiamond.jsx';
@@ -996,7 +997,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
             </div>
             {p.assistant && (
               <div className="prompt-card-meta" style={{ marginBottom: 4 }}>
-                <span className="pill assistant-pill">{p.assistant}</span>
+                {(() => { const ac = getAssistantColor(p.assistant, catalog.assistants); return <span className="pill assistant-pill" style={{ background: ac.bg, color: ac.text, borderColor: ac.border }}>{p.assistant}</span>; })()}
               </div>
             )}
             {p.notes && <NotesPreview notes={p.notes} compact />}
@@ -1050,7 +1051,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
             {/* Meta pills */}
             <div className="prompt-card-meta">
               {(p.solutions || []).map(s => <span key={s} className="pill">{s}</span>)}
-              {p.assistant && <span className="pill assistant-pill">{p.assistant}</span>}
+              {p.assistant && (() => { const ac = getAssistantColor(p.assistant, catalog.assistants); return <span className="pill assistant-pill" style={{ background: ac.bg, color: ac.text, borderColor: ac.border }}>{p.assistant}</span>; })()}
               {p.industry  && <span className="pill industry-pill">{p.industry}</span>}
               {p.storyFlow && (() => { const c = getFlowColor(p.storyFlow); return <span className="pill flow" style={{ background: c.bg, color: c.text }}>{p.storyFlow}</span>; })()}
               {p.status && <span className={`pill status-${p.status}`}>{p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span>}
