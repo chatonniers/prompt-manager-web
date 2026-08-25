@@ -89,9 +89,3 @@ npx gh-pages -d dist
 See [`supabase/schema.sql`](supabase/schema.sql) for the full schema including tables, RLS policies, triggers, and realtime configuration.
 
 Key tables: `profiles`, `prompts`, `catalog`, `favorites`, `publish_requests`, `usage_events`, `sessions`.
-
----
-
-## Related
-
-- [ Demo Prompt Manager — Edge Extension](https://github.com/chatonniers/prompt-manager)
