@@ -430,6 +430,12 @@ function DropZone({ className, style, onDrop, children, blockRef }) {
 
 function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, onToggleSelect, onDrop, hideLabel, groupingMode, assistants }) {
   const effectiveMode = groupingMode || 'flow';
+  const scrollRef = useRef(null);
+  const [hovered, setHovered] = useState(false);
+
+  function scroll(dir) {
+    scrollRef.current?.scrollBy({ left: dir * 420, behavior: 'smooth' });
+  }
 
   let columns;
   if (effectiveMode === 'assistant') {
@@ -470,34 +476,50 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
   return (
     <DropZone className="category-block" onDrop={id => onDrop(id, { category: catKey, storyFlow: null })}>
       {!hideLabel && <div className="grid-section-label">{label}<span className="section-count">{prompts.length}</span></div>}
-      <div className="category-flow-columns">
-        {columns.map(col => {
-          const isAssistantCol = effectiveMode === 'assistant' && col.isAssistant;
-          const assistantColor = isAssistantCol ? CATEGORY_COLORS[col.colorIdx % CATEGORY_COLORS.length] : null;
-          const color = (!isAssistantCol && col.key !== '__none__') ? getFlowColor(col.label) : null;
-          const dropTarget = effectiveMode === 'assistant'
-            ? { category: catKey }
-            : { category: catKey, storyFlow: col.key !== '__none__' ? col.label : null };
-          return (
-            <DropZone
-              key={col.key}
-              className="flow-column"
-              onDrop={id => onDrop(id, dropTarget)}
-            >
-              <div
-                className="flow-column-label"
-                style={
-                  isAssistantCol
-                    ? { borderLeftColor: assistantColor.border, background: assistantColor.bg, color: assistantColor.text }
-                    : (color ? { borderLeftColor: color.border, background: color.bg, color: color.text } : {})
-                }
+      <div
+        className="category-columns-wrap"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        {hovered && (
+          <button className="favs-nav favs-nav-left" onClick={() => scroll(-1)}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+        )}
+        <div className="category-flow-columns" ref={scrollRef}>
+          {columns.map(col => {
+            const isAssistantCol = effectiveMode === 'assistant' && col.isAssistant;
+            const assistantColor = isAssistantCol ? CATEGORY_COLORS[col.colorIdx % CATEGORY_COLORS.length] : null;
+            const color = (!isAssistantCol && col.key !== '__none__') ? getFlowColor(col.label) : null;
+            const dropTarget = effectiveMode === 'assistant'
+              ? { category: catKey }
+              : { category: catKey, storyFlow: col.key !== '__none__' ? col.label : null };
+            return (
+              <DropZone
+                key={col.key}
+                className="flow-column"
+                onDrop={id => onDrop(id, dropTarget)}
               >
-                {col.label}
-              </div>
-              {col.prompts.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
-            </DropZone>
-          );
-        })}
+                <div
+                  className="flow-column-label"
+                  style={
+                    isAssistantCol
+                      ? { borderLeftColor: assistantColor.border, background: assistantColor.bg, color: assistantColor.text }
+                      : (color ? { borderLeftColor: color.border, background: color.bg, color: color.text } : {})
+                  }
+                >
+                  {col.label}
+                </div>
+                {col.prompts.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
+              </DropZone>
+            );
+          })}
+        </div>
+        {hovered && (
+          <button className="favs-nav favs-nav-right" onClick={() => scroll(1)}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+        )}
       </div>
     </DropZone>
   );

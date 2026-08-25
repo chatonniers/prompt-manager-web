@@ -125,6 +125,10 @@
   gap: 12px;
 }
 
+.category-columns-wrap {
+  position: relative;
+}
+
 .category-flow-columns {
   display: flex;
   gap: 12px;
