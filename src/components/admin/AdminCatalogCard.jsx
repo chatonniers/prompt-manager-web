@@ -7,6 +7,7 @@ export default function AdminCatalogCard({ titleKey, descKey, addKey, items, pro
   const { state, dispatch } = useApp();
   const lang = state.settings?.lang || 'en';
   const isLandscape = promptField === 'landscapes';
+  const canSort = !isLandscape;
   const [newItem, setNewItem] = useState('');
   const [newLandscapeName, setNewLandscapeName] = useState('');
   const [newLandscapeUrl, setNewLandscapeUrl] = useState('');
@@ -63,6 +64,11 @@ export default function AdminCatalogCard({ titleKey, descKey, addKey, items, pro
     setDragOverIdx(null);
   }
 
+  async function handleSort() {
+    const sorted = [...items].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    await saveNewCatalog(sorted);
+  }
+
   async function handleAdd() {
     if (isLandscape) {
       const name = newLandscapeName.trim();
@@ -80,7 +86,8 @@ export default function AdminCatalogCard({ titleKey, descKey, addKey, items, pro
       const v = newItem.trim();
       if (!v) return;
       if (items.includes(v)) { dispatch({ type: 'SHOW_TOAST', payload: t('nameExists', lang) }); return; }
-      await saveNewCatalog([...items, v]);
+      const sorted = [...items, v].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+      await saveNewCatalog(sorted);
       dispatch({ type: 'SHOW_TOAST', payload: t('added', lang, v) });
       setNewItem('');
     }
@@ -153,6 +160,9 @@ export default function AdminCatalogCard({ titleKey, descKey, addKey, items, pro
           <h2>{t(titleKey, lang)}</h2>
           <p>{t(descKey, lang)}</p>
         </div>
+        {canSort && items.length > 1 && (
+          <button className="admin-sort-btn" onClick={handleSort} title="Sort A–Z">A–Z</button>
+        )}
       </div>
       <div className="admin-list" style={{ marginBottom: 8 }}>
         {items.length === 0 && <div className="admin-empty">{t('noItems', lang)}</div>}

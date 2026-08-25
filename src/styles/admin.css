@@ -84,6 +84,25 @@
 
 .admin-save-btn:hover { background: var(--pm-accent2); }
 
+.admin-sort-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1.5px solid var(--pm-border2);
+  background: var(--pm-bg);
+  color: var(--pm-text2);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  align-self: flex-start;
+}
+.admin-sort-btn:hover {
+  background: var(--pm-accent-bg);
+  border-color: var(--pm-accent);
+  color: var(--pm-accent);
+}
+
 .admin-del-btn {
   background: none;
   border: 1.5px solid transparent;
