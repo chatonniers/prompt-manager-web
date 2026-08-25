@@ -664,9 +664,48 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
   );
 }
 
+function PersonasScroll({ personas }) {
+  const scrollRef = useRef(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+
+  function checkScroll() {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 2);
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+  }
+
+  useEffect(() => {
+    checkScroll();
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    const ro = new ResizeObserver(checkScroll);
+    ro.observe(el);
+    return () => { el.removeEventListener('scroll', checkScroll); ro.disconnect(); };
+  }, [personas]);
+
+  function scroll(dir) {
+    scrollRef.current?.scrollBy({ left: dir * 120, behavior: 'smooth' });
+  }
+
+  return (
+    <div className="personas-scroll-wrap">
+      {canLeft && (
+        <button className="personas-nav personas-nav-left" onClick={e => { e.stopPropagation(); scroll(-1); }}>‹</button>
+      )}
+      <div className="prompt-card-personas" ref={scrollRef}>
+        {personas.map(persona => <span key={persona} className="pill persona">{persona}</span>)}
+      </div>
+      {canRight && (
+        <button className="personas-nav personas-nav-right" onClick={e => { e.stopPropagation(); scroll(1); }}>›</button>
+      )}
+    </div>
+  );
+}
+
 function NotesPreview({ notes, compact }) {
-  const ref = useRef(null);
-  const [popover, setPopover] = useState(null);
 
   function showPopover() {
     if (!ref.current) return;
@@ -985,9 +1024,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
               <div className="prompt-card-title-area">
                 <div className="prompt-card-title">{p.title}</div>
                 {(p.personas || []).length > 0 && (
-                  <div className="prompt-card-personas">
-                    {p.personas.map(persona => <span key={persona} className="pill persona">{persona}</span>)}
-                  </div>
+                  <PersonasScroll personas={p.personas} />
                 )}
               </div>
               {p.category && <span className="pill category card-header-category">{p.category}</span>}

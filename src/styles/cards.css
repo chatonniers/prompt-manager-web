@@ -250,12 +250,48 @@
   letter-spacing: -0.3px;
 }
 
+.personas-scroll-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+  overflow: hidden;
+}
+
 .prompt-card-personas {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 4px;
-  margin-top: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  min-width: 0;
 }
+.prompt-card-personas::-webkit-scrollbar { display: none; }
+
+.personas-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  background: var(--pm-surface);
+  border: 1px solid var(--pm-border2);
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--pm-text2);
+  padding: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+.personas-nav-left  { left: 0; }
+.personas-nav-right { right: 0; }
 
 .pill.persona {
   display: inline-flex;
