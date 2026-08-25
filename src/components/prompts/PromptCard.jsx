@@ -172,6 +172,59 @@ function makeItem(body = '', body_fr = '') {
   return { id: crypto.randomUUID(), label: '', body, body_fr };
 }
 
+function MultiSelectDropdown({ options, selected, onChange, placeholder, catalogOptions }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    function onOutside(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    if (open) document.addEventListener('mousedown', onOutside);
+    return () => document.removeEventListener('mousedown', onOutside);
+  }, [open]);
+
+  function toggle(val) {
+    onChange(selected.includes(val) ? selected.filter(x => x !== val) : [...selected, val]);
+  }
+
+  const label = selected.length === 0
+    ? placeholder
+    : selected.length === 1 ? selected[0] : `${selected.length} selected`;
+
+  return (
+    <div className="ms-dropdown" ref={ref}>
+      <button type="button" className={`card-edit-select ms-trigger${open ? ' open' : ''}`} onClick={() => setOpen(v => !v)}>
+        <span className={selected.length === 0 ? 'ms-placeholder' : 'ms-value'}>{label}</span>
+        <span className="ms-arrow">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="ms-menu">
+          {options.map(opt => {
+            const isSelected = selected.includes(opt);
+            return (
+              <label key={opt} className={`ms-option${isSelected ? ' ms-selected' : ''}`}>
+                <input type="checkbox" checked={isSelected} onChange={() => toggle(opt)} />
+                {opt}
+              </label>
+            );
+          })}
+          {options.length === 0 && <div className="ms-empty">No options</div>}
+        </div>
+      )}
+      {selected.length > 0 && (
+        <div className="card-edit-selected-pills">
+          {selected.map(val => (
+            <span key={val} className={`card-edit-sys-chip selected${!(catalogOptions || options).includes(val) ? ' orphan-sys' : ''}`}
+              style={!(catalogOptions || options).includes(val) ? { opacity: 0.6 } : {}}>
+              · {val}
+              <button type="button" className="card-edit-tag-del" onClick={() => onChange(selected.filter(x => x !== val))} title="Remove">×</button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate, onDelete, dupeTarget, setDupeTarget, canPublish, canEdit, approvedRequest }) {
   const { state } = useApp();  const [title, setTitle] = useState(p.title || '');
   const [items, setItems] = useState(() =>
@@ -371,25 +424,13 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
 
           <div className="card-edit-field">
             <label className="card-edit-label">{t('personasLabel', lang)}</label>
-            <select
-              className="card-edit-select card-edit-multiselect"
-              multiple
-              value={personas}
-              onChange={e => setPersonas(Array.from(e.target.selectedOptions, o => o.value))}
-              size={Math.min(6, (catalog.personas || []).length || 1)}
-            >
-              {(catalog.personas || []).map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
-            {personas.length > 0 && (
-              <div className="card-edit-selected-pills">
-                {personas.map(p => (
-                  <span key={p} className={`card-edit-sys-chip selected${!(catalog.personas || []).includes(p) ? ' orphan-sys' : ''}`} style={!(catalog.personas || []).includes(p) ? { opacity: 0.6 } : {}}>
-                    · {p}
-                    <button type="button" className="card-edit-tag-del" onClick={() => setPersonas(prev => prev.filter(x => x !== p))} title="Remove">×</button>
-                  </span>
-                ))}
-              </div>
-            )}
+            <MultiSelectDropdown
+              options={catalog.personas || []}
+              selected={personas}
+              onChange={setPersonas}
+              placeholder="— Select personas —"
+              catalogOptions={catalog.personas || []}
+            />
             {(catalog.personas || []).length === 0 && personas.length === 0 && (
               <p className="card-edit-hint">{t('noPersonasYet', lang)}</p>
             )}
@@ -477,25 +518,13 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
           {((catalog.solutions || []).length > 0 || solutions.length > 0) && (
             <div className="card-edit-field">
               <label className="card-edit-label">{t('solutionsLabel', lang)}</label>
-              <select
-                className="card-edit-select card-edit-multiselect"
-                multiple
-                value={solutions}
-                onChange={e => setSolutions(Array.from(e.target.selectedOptions, o => o.value))}
-                size={Math.min(6, (catalog.solutions || []).length || 1)}
-              >
-                {(catalog.solutions || []).map(sol => <option key={sol} value={sol}>{sol}</option>)}
-              </select>
-              {solutions.length > 0 && (
-                <div className="card-edit-selected-pills">
-                  {solutions.map(sol => (
-                    <span key={sol} className={`card-edit-sys-chip selected${!(catalog.solutions || []).includes(sol) ? ' orphan-sys' : ''}`} style={!(catalog.solutions || []).includes(sol) ? { opacity: 0.6 } : {}}>
-                      · {sol}
-                      <button type="button" className="card-edit-tag-del" onClick={() => setSolutions(prev => prev.filter(x => x !== sol))} title="Remove">×</button>
-                    </span>
-                  ))}
-                </div>
-              )}
+              <MultiSelectDropdown
+                options={catalog.solutions || []}
+                selected={solutions}
+                onChange={setSolutions}
+                placeholder="— Select solutions —"
+                catalogOptions={catalog.solutions || []}
+              />
             </div>
           )}
 
