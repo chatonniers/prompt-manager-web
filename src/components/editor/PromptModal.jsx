@@ -96,6 +96,7 @@ function SingleSelectDropdown({ options, value, onChange, placeholder }) {
 }
 
 
+export default function PromptModal() {
   const { state, dispatch } = useApp();
   const { isEditor, isAdmin, profile } = useAuth();
   const canPublish = isEditor || isAdmin;
