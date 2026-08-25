@@ -390,12 +390,10 @@ export const StorageAPI = {
   },
 
   async getNewUsers() {
-    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { data, error } = await supabase
       .from('profiles')
       .select('id, email, display_name, role, created_at')
       .eq('role', 'viewer')
-      .gte('created_at', since)
       .order('created_at', { ascending: false });
     if (error) throw error;
     return data || [];

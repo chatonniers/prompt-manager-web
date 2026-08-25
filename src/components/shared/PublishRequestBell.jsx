@@ -202,11 +202,11 @@ export default function PublishRequestBell() {
                 ))
           )}
 
-          {isAdmin && newUsers.length > 0 && (
+          {isAdmin && unseenUsers.length > 0 && (
             <>
               <div className="tb-bell-section-label">New Users</div>
-              {newUsers.map(u => (
-                <div key={u.id} className={`tb-bell-item${unseenUsers.find(x => x.id === u.id) ? ' tb-bell-item--unseen' : ''}`}>
+              {unseenUsers.map(u => (
+                <div key={u.id} className="tb-bell-item tb-bell-item--unseen">
                   <div className="tb-bell-item-title">{u.email}</div>
                   <div className="tb-bell-item-meta">
                     {u.display_name && <span>{u.display_name} · </span>}
