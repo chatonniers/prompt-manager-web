@@ -26,7 +26,7 @@ const initialState = {
   newUsers: [],
   zoom: (() => { const v = parseFloat(localStorage.getItem('pm-zoom')); return v >= 0.5 && v <= 2 ? v : 1; })(),
   displayMode: (() => { const v = localStorage.getItem('pm-display'); return v === 'table' || v === 'cards' ? v : 'cards'; })(),
-  groupingMode: (() => { const v = localStorage.getItem('pm-grouping'); return v === 'assistant' ? 'assistant' : 'flow'; })(),
+  groupingMode: (() => { const v = localStorage.getItem('pm-grouping'); return v === 'flow' ? 'flow' : 'assistant'; })(),
 };
 
 function reducer(state, action) {

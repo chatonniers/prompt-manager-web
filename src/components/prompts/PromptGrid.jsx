@@ -772,10 +772,10 @@ export default function PromptGrid() {
 
             <button
               className={`grouping-flip-btn${groupingMode === 'assistant' ? ' active' : ''}`}
-              title={groupingMode === 'assistant' ? 'Group by Story Flow' : 'Group by AI Assistant'}
+              title={groupingMode === 'assistant' ? 'Switch to Story Flow grouping' : 'Switch to AI Assistant grouping'}
               onClick={() => dispatch({ type: 'SET_GROUPING_MODE', payload: groupingMode === 'assistant' ? 'flow' : 'assistant' })}
             >
-              {groupingMode === 'assistant' ? '⇄ Flow' : '⇄ Assistant'}
+              {groupingMode === 'assistant' ? '⊞ Assistant' : '⊞ Flow'}
             </button>
           </div>
 
