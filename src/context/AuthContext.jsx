@@ -16,6 +16,7 @@ export function AuthProvider({ children }) {
   const pollRef = useRef(null);
   const userIdRef = useRef(null);
   const sessionRowRef = useRef(null);
+  const sessionStartingRef = useRef(false);
   const idleTimerRef = useRef(null);
 
   const idleWatchingRef = useRef(false);
@@ -57,8 +58,10 @@ export function AuthProvider({ children }) {
         return;
       }
       setSession(session);
-      if (session) loadProfile(session.user.id);
-      else {
+      if (session) {
+        loadProfile(session.user.id);
+        if (event === 'SIGNED_IN') startSession(session.user.id);
+      } else {
         endSession();
         stopIdleWatcher();
         setProfile(null);
@@ -89,18 +92,22 @@ export function AuthProvider({ children }) {
   }, []);
 
   async function startSession(userId) {
+    if (sessionRowRef.current || sessionStartingRef.current) return;
+    sessionStartingRef.current = true;
     const { data } = await supabase
       .from('sessions')
       .insert({ user_id: userId })
       .select('id')
       .single();
     if (data) sessionRowRef.current = data.id;
+    sessionStartingRef.current = false;
   }
 
   async function endSession() {
     if (!sessionRowRef.current) return;
     const id = sessionRowRef.current;
     sessionRowRef.current = null;
+    sessionStartingRef.current = false;
     const { data } = await supabase.from('sessions').select('started_at').eq('id', id).single();
     if (!data) return;
     const duration_s = Math.round((Date.now() - new Date(data.started_at).getTime()) / 1000);
@@ -127,7 +134,6 @@ export function AuthProvider({ children }) {
     subscribeToProfile(userId);
     startPolling(userId);
     startIdleWatcher();
-    if (!sessionRowRef.current) startSession(userId);
   }
 
   function subscribeToProfile(userId) {
