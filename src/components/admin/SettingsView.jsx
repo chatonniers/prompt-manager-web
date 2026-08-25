@@ -260,7 +260,7 @@ export default function SettingsView() {
             />
           )}
 
-          {activeSection === 'users' && <UserManagement />}
+          {activeSection === 'users' && <div className="view-card"><UserManagement /></div>}
           {activeSection === 'stats' && <AdminStatsView />}
           {activeSection === 'visibility' && <AdminVisibilityCard />}
 
