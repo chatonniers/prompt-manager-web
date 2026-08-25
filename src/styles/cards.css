@@ -287,6 +287,10 @@
 }
 .prompt-card-notes-compact {
   -webkit-line-clamp: 1;
+  max-height: calc(1.55em + 2px);
+  overflow: hidden;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
 .prompt-card-notes-truncated:hover {
   border-left-color: var(--pm-accent);
@@ -387,6 +391,7 @@
   transition: background 0.12s, border-color 0.12s;
 }
 .prompt-item-row:last-child { border-bottom: none; }
+.prompt-card-compact .prompt-item-row { padding: 6px 10px; }
 .prompt-item-row:hover { background: #F5F7FF; }
 .prompt-item-row.prompt-item-copied {
   background: #DCFCE7 !important;

@@ -918,7 +918,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
   const hasJouleSkill = (p.attachments || []).some(a => a.isJouleSkill);
 
   return (
-    <div className={`prompt-card-flip-wrapper${flipped ? ' flipped' : ''}${flashSaved ? ' card--flash-saved' : ''}`}>
+    <div className={`prompt-card-flip-wrapper${flipped ? ' flipped' : ''}${flashSaved ? ' card--flash-saved' : ''}${compact ? ' prompt-card-compact' : ''}`}>
       {/* Front face */}
       <div
         className={`prompt-card prompt-card-face prompt-card-front${isSingle ? ' prompt-card-single' : ''}${isDragging ? ' is-dragging' : ''}`}
