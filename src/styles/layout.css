@@ -527,45 +527,10 @@
 
 /* ── Category tabs ────────────────────────────────────────────────────── */
 .category-tabs-wrap {
-  position: relative;
   display: flex;
   align-items: center;
-  padding: 0 2px;
+  gap: 8px;
 }
-
-.category-tabs-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: #fff;
-  border: 1.5px solid var(--pm-border2);
-  box-shadow: var(--pm-shadow-md);
-  color: var(--pm-text2);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  pointer-events: none;
-  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s, opacity 0.15s;
-}
-.category-tabs-nav.nav-left  { left: -13px; }
-.category-tabs-nav.nav-right { right: -13px; }
-.category-tabs-wrap:hover .category-tabs-nav:not(:disabled) {
-  opacity: 1;
-  pointer-events: auto;
-}
-.category-tabs-nav:hover:not(:disabled) {
-  background: var(--pm-accent);
-  border-color: var(--pm-accent);
-  color: #fff;
-  transform: translateY(-50%) scale(1.1);
-}
-.category-tabs-nav:disabled { opacity: 0 !important; cursor: not-allowed; }
 
 .category-tabs {
   display: flex;
@@ -1278,12 +1243,6 @@
     max-width: calc(100vw - 32px);
     flex-wrap: wrap;
     bottom: 16px;
-  }
-
-  /* Category tabs nav buttons: always visible (no hover) */
-  .category-tabs-nav:not(:disabled) {
-    opacity: 1;
-    pointer-events: auto;
   }
 }
 

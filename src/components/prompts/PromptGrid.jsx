@@ -724,17 +724,6 @@ export default function PromptGrid() {
           />
 
           <div className="category-tabs-wrap" style={{ position: 'sticky', top: `var(--favs-h, 0px)`, zIndex: 19, background: 'var(--pm-bg)', paddingBottom: 4, marginBottom: 6 }}>
-            <button
-              className="category-tabs-nav nav-left"
-              disabled={allTabs.findIndex(b => b.key === tabKey) === 0}
-              onClick={() => {
-                const i = allTabs.findIndex(b => b.key === tabKey);
-                if (i > 0) setActiveTab(allTabs[i - 1].key);
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
-
             <div className="category-tabs">
               {allTabs.map(block => (
                 <button
@@ -758,17 +747,6 @@ export default function PromptGrid() {
                 </button>
               ))}
             </div>
-
-            <button
-              className="category-tabs-nav nav-right"
-              disabled={allTabs.findIndex(b => b.key === tabKey) === allTabs.length - 1}
-              onClick={() => {
-                const i = allTabs.findIndex(b => b.key === tabKey);
-                if (i < allTabs.length - 1) setActiveTab(allTabs[i + 1].key);
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
 
             <button
               className={`grouping-flip-btn${groupingMode === 'assistant' ? ' active' : ''}`}
