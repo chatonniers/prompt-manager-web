@@ -81,23 +81,32 @@ export default function AdminStatsView() {
   const [raw, setRaw] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activityDays, setActivityDays] = useState(7);
+  const [sessionLimit, setSessionLimit] = useState(10);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [totalSessionCount, setTotalSessionCount] = useState(0);
 
   useEffect(() => { loadStats(); }, []);
 
-  async function loadStats() {
+  async function loadStats(limit = sessionLimit) {
     setLoading(true);
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
     const [
       { data: prompts },
       { data: profiles },
       { data: usage },
       { data: favorites },
       { data: sessions },
+      { count: sessionCount },
     ] = await Promise.all([
       supabase.from('prompts').select('id, title, usage_count, last_used_at, category, story_flow, assistant, industry, solutions, status, owner_id, created_at'),
       supabase.from('profiles').select('id, email, display_name, role, created_at'),
       supabase.from('usage_events').select('prompt_id, user_id, copied_at').order('copied_at', { ascending: true }),
       supabase.from('favorites').select('prompt_id, user_id'),
-      supabase.from('sessions').select('id, user_id, started_at, ended_at, duration_s').order('started_at', { ascending: false }).limit(100),
+      supabase.from('sessions').select('id, user_id, started_at, ended_at, duration_s')
+        .or(`ended_at.not.is.null,started_at.gte.${twoHoursAgo}`)
+        .order('started_at', { ascending: false }).limit(limit),
+      supabase.from('sessions').select('id', { count: 'exact', head: true })
+        .or(`ended_at.not.is.null,started_at.gte.${twoHoursAgo}`),
     ]);
 
     const now = new Date();
@@ -172,6 +181,13 @@ export default function AdminStatsView() {
     const appCreatedAt = [earliestUsage, earliestPrompt].filter(Boolean)
       .reduce((min, d) => (min === null || d < min ? d : min), null);
 
+    // Assistant KPIs
+    const assistantsInUse = [...new Set(prompts?.filter(p => p.assistant).map(p => p.assistant) || [])];
+    const topAssistantEntry = Object.entries(
+      (prompts || []).reduce((acc, p) => { if (p.assistant) acc[p.assistant] = (acc[p.assistant] || 0) + (p.usage_count || 0); return acc; }, {})
+    ).sort((a, b) => b[1] - a[1])[0];
+
+    setTotalSessionCount(sessionCount || 0);
     setRaw({
       totalPrompts, totalUsage, usedPrompts, draftCount, publishedCount, archivedCount, noStatusCount,
       topPrompts, categoryBreakdown, assistantBreakdown, industryBreakdown,
@@ -180,8 +196,18 @@ export default function AdminStatsView() {
       recentSessions, avgDuration,
       allUsage: usage || [],
       appCreatedAt,
+      assistantsInUse: assistantsInUse.length,
+      topAssistant: topAssistantEntry ? topAssistantEntry[0] : null,
     });
     setLoading(false);
+  }
+
+  async function loadMore() {
+    const newLimit = sessionLimit + 10;
+    setSessionLimit(newLimit);
+    setLoadingMore(true);
+    await loadStats(newLimit);
+    setLoadingMore(false);
   }
 
   const { points: activityPoints, maxCount: activityMax } = useMemo(() => {
@@ -208,6 +234,7 @@ export default function AdminStatsView() {
           <StatCard label="Prompts used" value={s.usedPrompts} sub={`${Math.round(s.usedPrompts / Math.max(s.totalPrompts, 1) * 100)}% of library`} color="#34D399" />
           <StatCard label="Total users" value={s.totalUsers} sub={`${s.newUsersThisWeek} new this week`} color="#F59E0B" />
           <StatCard label="Avg session" value={s.avgDuration != null ? fmtDuration(s.avgDuration) : '—'} sub="completed sessions" color="#F472B6" />
+          <StatCard label="AI Assistants" value={s.assistantsInUse} sub={s.topAssistant ? `Top: ${s.topAssistant}` : 'none yet'} color="#818CF8" />
         </div>
       </div>
 
@@ -364,10 +391,11 @@ export default function AdminStatsView() {
 
       {/* Recent connections */}
       <div className="view-card">
-        <h2>Recent connections</h2>
+        <h2>Recent connections <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--pm-text3)' }}>({s.recentSessions.length} of {totalSessionCount})</span></h2>
         {s.recentSessions.length === 0 ? (
           <p style={{ color: 'var(--pm-text3)', fontSize: 12 }}>No sessions recorded yet. Make sure the sessions table is created in Supabase.</p>
         ) : (
+          <>
           <table className="stats-table stats-sessions-table">
             <thead>
               <tr>
@@ -395,11 +423,19 @@ export default function AdminStatsView() {
               ))}
             </tbody>
           </table>
+          {s.recentSessions.length < totalSessionCount && (
+            <div style={{ textAlign: 'center', marginTop: 12 }}>
+              <button className="action-btn" onClick={loadMore} disabled={loadingMore}>
+                {loadingMore ? 'Loading…' : `Load more (${totalSessionCount - s.recentSessions.length} remaining)`}
+              </button>
+            </div>
+          )}
+          </>
         )}
       </div>
 
       <div style={{ textAlign: 'right' }}>
-        <button className="action-btn" onClick={loadStats}>↻ Refresh</button>
+        <button className="action-btn" onClick={() => { setSessionLimit(10); loadStats(10); }}>↻ Refresh</button>
       </div>
     </div>
   );

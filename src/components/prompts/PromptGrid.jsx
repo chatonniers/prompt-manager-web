@@ -413,13 +413,27 @@ function DropZone({ className, style, onDrop, children, blockRef }) {
 function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, onToggleSelect, onDrop, hideLabel, groupingMode, assistants }) {
   const effectiveMode = groupingMode || 'flow';
 
+  const ASSISTANT_COLORS = [
+    { border: '#818CF8', bg: 'rgba(99,102,241,0.10)', text: '#818CF8' },
+    { border: '#34D399', bg: 'rgba(52,211,153,0.10)', text: '#059669' },
+    { border: '#F59E0B', bg: 'rgba(245,158,11,0.10)', text: '#D97706' },
+    { border: '#F472B6', bg: 'rgba(244,114,182,0.10)', text: '#DB2777' },
+    { border: '#60A5FA', bg: 'rgba(96,165,250,0.10)', text: '#2563EB' },
+    { border: '#A78BFA', bg: 'rgba(167,139,250,0.10)', text: '#7C3AED' },
+    { border: '#4ADE80', bg: 'rgba(74,222,128,0.10)', text: '#16A34A' },
+    { border: '#FB923C', bg: 'rgba(251,146,60,0.10)', text: '#EA580C' },
+  ];
+
   let columns;
   if (effectiveMode === 'assistant') {
     const domainAssistants = (assistants || []).filter(a => !a.domain || a.domain === catKey);
     const usedAssistants = domainAssistants.filter(a => prompts.some(p => p.assistant === a.name));
     const noAssistant = prompts.filter(p => !p.assistant);
     columns = [
-      ...usedAssistants.map(a => ({ key: a.id, label: a.name, prompts: prompts.filter(p => p.assistant === a.name), isAssistant: true })),
+      ...usedAssistants.map(a => {
+        const globalIdx = (assistants || []).findIndex(x => x.id === a.id);
+        return { key: a.id, label: a.name, prompts: prompts.filter(p => p.assistant === a.name), isAssistant: true, colorIdx: globalIdx >= 0 ? globalIdx : 0 };
+      }),
       ...(noAssistant.length > 0 ? [{ key: '__none__', label: '—', prompts: noAssistant, isAssistant: false }] : []),
     ];
   } else {
@@ -452,6 +466,7 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
       <div className="category-flow-columns">
         {columns.map(col => {
           const isAssistantCol = effectiveMode === 'assistant' && col.isAssistant;
+          const assistantColor = isAssistantCol ? ASSISTANT_COLORS[col.colorIdx % ASSISTANT_COLORS.length] : null;
           const color = (!isAssistantCol && col.key !== '__none__') ? getFlowColor(col.label) : null;
           const dropTarget = effectiveMode === 'assistant'
             ? { category: catKey }
@@ -466,7 +481,7 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
                 className="flow-column-label"
                 style={
                   isAssistantCol
-                    ? { borderLeftColor: '#818CF8', background: 'rgba(99,102,241,0.08)', color: '#818CF8' }
+                    ? { borderLeftColor: assistantColor.border, background: assistantColor.bg, color: assistantColor.text }
                     : (color ? { borderLeftColor: color.border, background: color.bg, color: color.text } : {})
                 }
               >
