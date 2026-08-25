@@ -269,6 +269,11 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
             ? <span className="pill flow" style={flowColor ? { background: flowColor.bg, color: flowColor.text } : {}}>{p.storyFlow}</span>
             : <span className="pt-td-dim">—</span>}
         </td>
+        <td className="pt-td">
+          {p.assistant
+            ? <span className="pill assistant-pill">{p.assistant}</span>
+            : <span className="pt-td-dim">—</span>}
+        </td>
         <td className="pt-td pt-td-pills">
           {(p.solutions || []).slice(0, 3).map(s => <span key={s} className="pill">{s}</span>)}
           {(p.solutions || []).length > 3 && <span className="pt-more">+{p.solutions.length - 3}</span>}
@@ -311,6 +316,7 @@ function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen, publishRequ
     else if (sort.col === 'category') { av = a.category || ''; bv = b.category || ''; }
     else if (sort.col === 'flow')     { av = a.storyFlow || ''; bv = b.storyFlow || ''; }
     else if (sort.col === 'used')     { av = a.usageCount || 0; bv = b.usageCount || 0; return (bv - av) * sort.dir; }
+    else if (sort.col === 'assistant') { av = a.assistant || ''; bv = b.assistant || ''; }
     else if (sort.col === 'updated')  { av = a.updatedAt || ''; bv = b.updatedAt || ''; }
     else { av = ''; bv = ''; }
     return av.localeCompare(bv) * sort.dir;
@@ -337,6 +343,7 @@ function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen, publishRequ
             <th className="pt-th">Request</th>
             <Th col="category" label="Category" />
             <Th col="flow" label="Flow" />
+            <Th col="assistant" label="Assistant" />
             <th className="pt-th">Solutions</th>
             <Th col="used" label="Used" />
             <Th col="updated" label="Updated" />
