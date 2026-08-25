@@ -463,7 +463,7 @@ function SingleSelectDropdown({ options, value, onChange, placeholder }) {
               <div className="field-col">
                 <label>{t('category', lang)}</label>
                 <SingleSelectDropdown
-                  options={catalog.categories || []}
+                  options={[...(catalog.categories || [])].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))}
                   value={category}
                   onChange={v => { setCategory(v); setAssistant(''); }}
                   placeholder={`— ${t('noCategory', lang)} —`}
@@ -472,7 +472,7 @@ function SingleSelectDropdown({ options, value, onChange, placeholder }) {
               <div className="field-col">
                 <label>{t('storyFlow', lang)}</label>
                 <SingleSelectDropdown
-                  options={catalog.storyFlows || []}
+                  options={[...(catalog.storyFlows || [])].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))}
                   value={storyFlow}
                   onChange={setStoryFlow}
                   placeholder={t('selectFlowNone', lang)}
@@ -487,7 +487,7 @@ function SingleSelectDropdown({ options, value, onChange, placeholder }) {
                   <div className="field-col">
                     <label>AI Assistant</label>
                     <SingleSelectDropdown
-                      options={filteredAssistants.map(a => a.name)}
+                      options={[...filteredAssistants].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })).map(a => a.name)}
                       value={assistant}
                       onChange={setAssistant}
                       placeholder="— None —"
@@ -498,7 +498,7 @@ function SingleSelectDropdown({ options, value, onChange, placeholder }) {
                   <div className="field-col">
                     <label>Industry</label>
                     <SingleSelectDropdown
-                      options={catalog.industries || []}
+                      options={[...(catalog.industries || [])].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))}
                       value={industry}
                       onChange={setIndustry}
                       placeholder="— None —"
