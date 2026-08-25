@@ -13,7 +13,7 @@ function fmtSize(bytes) {
 }
 
 function makeItem(body = '', body_fr = '') {
-  return { id: crypto.randomUUID(), label: '', body, body_fr };
+  return { id: crypto.randomUUID(), label: '', label_fr: '', body, body_fr };
 }
 
 function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
@@ -112,6 +112,13 @@ export default function PromptModal() {
   const isPendingRequest = myRequest?.status === 'pending';
 
   const [activeTab, setActiveTab] = useState('content');
+  const [historyNames, setHistoryNames] = useState({});
+
+  useEffect(() => {
+    if (!existing) return;
+    const ids = [existing.ownerId, existing.updatedById].filter(Boolean);
+    if (ids.length) StorageAPI.getProfileNames(ids).then(setHistoryNames);
+  }, [existing?.id]);
   const [title, setTitle] = useState('');
   const [promptItems, setPromptItems] = useState([makeItem()]);
   const [activeItemIdx, setActiveItemIdx] = useState(0);
@@ -331,6 +338,7 @@ export default function PromptModal() {
     const finalItems = validItems.map((item, idx) => ({
       ...item,
       label: item.label.trim() || (validItems.length === 1 ? title.trim() : `Part ${idx + 1}`),
+      label_fr: item.label_fr?.trim() || null,
       body: item.body.trim(),
       body_fr: item.body_fr?.trim() || null,
     }));
@@ -382,6 +390,7 @@ export default function PromptModal() {
           <div className="modal-tabs">
             <button className={`modal-tab${activeTab === 'content' ? ' active' : ''}`} onClick={() => setActiveTab('content')}>Content</button>
             <button className={`modal-tab${activeTab === 'details' ? ' active' : ''}`} onClick={() => setActiveTab('details')}>Details</button>
+            {!isNew && <button className={`modal-tab${activeTab === 'history' ? ' active' : ''}`} onClick={() => setActiveTab('history')}>History</button>}
           </div>
           <button className="modal-close-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
@@ -398,6 +407,18 @@ export default function PromptModal() {
               <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('titlePlaceholder', lang)} maxLength={120} className={errors.title ? 'input-error' : ''} />
               {errors.title && <span className="field-error">{errors.title}</span>}
             </div>
+
+            {filteredAssistants.length > 0 && (
+              <div className="field-row">
+                <label>AI Assistant</label>
+                <SingleSelectDropdown
+                  options={[...filteredAssistants].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })).map(a => a.name)}
+                  value={assistant}
+                  onChange={setAssistant}
+                  placeholder="— None —"
+                />
+              </div>
+            )}
 
             <div className="field-row">
               <label>{t('personasLabel', lang)}</label>
@@ -437,12 +458,14 @@ export default function PromptModal() {
               </div>
               {activeItem && (
                 <div className="modal-item-editor">
-                  <input type="text" className="modal-item-label-input" value={activeItem.label}
-                    onChange={e => updateItem(activeItem.id, 'label', e.target.value)} placeholder={t('promptItemLabel', lang)} />
                   <div className="modal-lang-tabs">
                     <button className={`modal-lang-btn${itemLang === 'en' ? ' active' : ''}`} onClick={() => setItemTab(activeItem.id, 'en')}>EN</button>
                     <button className={`modal-lang-btn${itemLang === 'fr' ? ' active' : ''}`} onClick={() => setItemTab(activeItem.id, 'fr')}>FR</button>
                   </div>
+                  <input type="text" className="modal-item-label-input"
+                    value={itemLang === 'en' ? activeItem.label : (activeItem.label_fr || '')}
+                    onChange={e => updateItem(activeItem.id, itemLang === 'en' ? 'label' : 'label_fr', e.target.value)}
+                    placeholder={itemLang === 'en' ? t('promptItemLabel', lang) : (t('promptItemLabel', lang) + ' (FR)')} />
                   {itemLang === 'en' ? (
                     <textarea value={activeItem.body} onChange={e => updateItem(activeItem.id, 'body', e.target.value)}
                       placeholder={t('bodyEnPlaceholder', lang)} rows={7} />
@@ -481,31 +504,16 @@ export default function PromptModal() {
               </div>
             </div>
 
-            {/* Assistant + Industry */}
-            {(filteredAssistants.length > 0 || (catalog.industries || []).length > 0) && (
-              <div className="field-row-2col">
-                {filteredAssistants.length > 0 && (
-                  <div className="field-col">
-                    <label>AI Assistant</label>
-                    <SingleSelectDropdown
-                      options={[...filteredAssistants].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })).map(a => a.name)}
-                      value={assistant}
-                      onChange={setAssistant}
-                      placeholder="— None —"
-                    />
-                  </div>
-                )}
-                {(catalog.industries || []).length > 0 && (
-                  <div className="field-col">
-                    <label>Industry</label>
-                    <SingleSelectDropdown
-                      options={[...(catalog.industries || [])].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))}
-                      value={industry}
-                      onChange={setIndustry}
-                      placeholder="— None —"
-                    />
-                  </div>
-                )}
+            {/* Industry */}
+            {(catalog.industries || []).length > 0 && (
+              <div className="field-row">
+                <label>Industry</label>
+                <SingleSelectDropdown
+                  options={[...(catalog.industries || [])].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))}
+                  value={industry}
+                  onChange={setIndustry}
+                  placeholder="— None —"
+                />
               </div>
             )}
 
@@ -650,6 +658,28 @@ export default function PromptModal() {
               </div>
             </div>
           </>}
+
+          {/* ── HISTORY TAB ─────────────────────────────────────── */}
+          {activeTab === 'history' && (
+            <div className="card-edit-body card-history-tab">
+              <div className="card-history-row">
+                <span className="card-history-label">Created by</span>
+                <span className="card-history-user">{historyNames[existing?.ownerId] || '—'}</span>
+                {existing?.createdAt && (
+                  <span className="card-history-date">{new Date(existing.createdAt).toLocaleString('en', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                )}
+              </div>
+              {(existing?.updatedById || existing?.updatedAt) && (
+                <div className="card-history-row">
+                  <span className="card-history-label">Last saved by</span>
+                  <span className="card-history-user">{existing?.updatedById ? (historyNames[existing.updatedById] || '…') : '—'}</span>
+                  {existing?.updatedAt && (
+                    <span className="card-history-date">{new Date(existing.updatedAt).toLocaleString('en', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div id="modal-footer">
@@ -661,8 +691,8 @@ export default function PromptModal() {
               {isPendingRequest ? 'Cancel request' : t('requestPublish', lang) || 'Request publish'}
             </button>
           )}
-          {canEdit && <button className="card-edit-save-btn" onClick={handleSave} disabled={saving}>{saving ? t('savingLabel', lang) : t('save', lang)}</button>}
           {canEdit && <button className="card-edit-cancel-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>{t('cancel', lang)}</button>}
+          {canEdit && <button className="card-edit-save-btn" onClick={handleSave} disabled={saving}>{saving ? t('savingLabel', lang) : t('save', lang)}</button>}
           {!canEdit && <button className="card-edit-cancel-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>Close</button>}
         </div>
       </div>

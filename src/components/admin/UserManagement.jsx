@@ -220,6 +220,12 @@ export default function UserManagement() {
     return () => clearInterval(interval);
   }, [myProfile?.id]);
 
+  async function approveUser(userId) {
+    const { error } = await supabase.from('profiles').update({ role: 'viewer' }).eq('id', userId);
+    if (error) { console.error(error); return; }
+    setUsers(u => u.map(p => p.id === userId ? { ...p, role: 'viewer' } : p));
+  }
+
   async function loadUsers() {
     setLoading(true);
     const { data } = await supabase.from('profiles').select('*').order('created_at');
@@ -257,7 +263,7 @@ export default function UserManagement() {
   }
 
   async function deleteUser(userId) {
-    const { error } = await supabase.from('profiles').delete().eq('id', userId);
+    const { error } = await supabase.rpc('delete_user', { user_id: userId });
     if (error) { console.error(error); return; }
     setUsers(u => u.filter(p => p.id !== userId));
     setSelected(s => { const n = new Set(s); n.delete(userId); return n; });
@@ -299,7 +305,7 @@ export default function UserManagement() {
       await Promise.all(ids.map(id => supabase.from('profiles').update({ role: 'viewer' }).eq('id', id)));
       setUsers(u => u.map(p => ids.includes(p.id) ? { ...p, role: 'viewer' } : p));
     } else if (bulkAction === 'delete') {
-      await Promise.all(ids.map(id => supabase.from('profiles').delete().eq('id', id)));
+      await Promise.all(ids.map(id => supabase.rpc('delete_user', { user_id: id })));
       setUsers(u => u.filter(p => !ids.includes(p.id)));
     }
     setSelected(new Set());
@@ -322,7 +328,8 @@ export default function UserManagement() {
 
   if (loading) return <div className="admin-loading">Loading users…</div>;
 
-  const othersCount = users.filter(u => u.id !== myProfile?.id).length;
+  const pendingUsers = users.filter(u => u.role === 'pending');
+  const othersCount = users.filter(u => u.id !== myProfile?.id && u.role !== 'pending').length;
 
   return (
     <div className="user-mgmt">
@@ -348,6 +355,34 @@ export default function UserManagement() {
       </div>
 
       <h3 className="admin-section-title" style={{ marginTop: 20 }}>Team members</h3>
+
+      {pendingUsers.length > 0 && (
+        <div style={{ marginBottom: 16, padding: '12px 14px', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.3)', borderRadius: 10 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#FBBF24', marginBottom: 10 }}>
+            ⏳ Pending approval ({pendingUsers.length})
+          </div>
+          {pendingUsers.map(u => (
+            <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderTop: '1px solid rgba(251,191,36,0.1)' }}>
+              <span style={{ flex: 1, fontSize: 13, color: 'var(--pm-text)' }}>{u.email}</span>
+              {u.display_name && <span style={{ fontSize: 12, color: 'var(--pm-text3)' }}>{u.display_name}</span>}
+              <span style={{ fontSize: 11, color: 'var(--pm-text3)' }}>{new Date(u.created_at).toLocaleDateString()}</span>
+              <button
+                className="user-action-btn user-action-save"
+                onClick={() => approveUser(u.id)}
+                style={{ background: 'rgba(52,211,153,0.15)', borderColor: 'rgba(52,211,153,0.4)', color: '#34D399' }}
+              >
+                Approve
+              </button>
+              <button
+                className="user-action-btn user-action-block"
+                onClick={() => blockUser(u.id, true)}
+              >
+                Block
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {selected.size > 0 && (
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10, padding: '8px 10px', background: 'rgba(99,102,241,0.08)', borderRadius: 8, border: '1px solid rgba(99,102,241,0.2)' }}>
@@ -396,7 +431,7 @@ export default function UserManagement() {
           </tr>
         </thead>
         <tbody>
-          {users.map(u => (
+          {users.filter(u => u.role !== 'pending').map(u => (
             <UserRow
               key={u.id}
               u={u}

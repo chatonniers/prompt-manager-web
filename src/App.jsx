@@ -76,8 +76,26 @@ function AppInner() {
   )
 }
 
+function PendingApprovalScreen({ onSignOut }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: 16, color: 'var(--pm-text)', fontFamily: 'var(--pm-font)', textAlign: 'center', padding: '0 24px' }}>
+      <div style={{ fontSize: 40 }}>⏳</div>
+      <h2 style={{ margin: 0, fontWeight: 700, fontSize: 20 }}>Account pending approval</h2>
+      <p style={{ margin: 0, color: 'var(--pm-text3)', maxWidth: 380, fontSize: 14, lineHeight: 1.6 }}>
+        Your account has been created and is awaiting admin approval. You will receive access once an administrator approves your registration.
+      </p>
+      <button
+        style={{ marginTop: 8, padding: '7px 20px', borderRadius: 8, border: '1px solid var(--pm-border)', background: 'transparent', color: 'var(--pm-text3)', cursor: 'pointer', fontSize: 13 }}
+        onClick={onSignOut}
+      >
+        Sign out
+      </button>
+    </div>
+  );
+}
+
 function AuthGate() {
-  const { session, loading, isPasswordRecovery } = useAuth()
+  const { session, profile, loading, isPasswordRecovery, signOut } = useAuth()
 
   if (loading) {
     return (
@@ -90,6 +108,15 @@ function AuthGate() {
   if (isPasswordRecovery) return <ResetPasswordPage />
 
   if (!session) return <LoginPage />
+
+  if (profile?._pending) return <PendingApprovalScreen onSignOut={signOut} />
+
+  // Still loading profile (session exists but profile not yet fetched)
+  if (profile === null) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--pm-text3)', fontFamily: 'var(--pm-font)' }}>
+      Loading…
+    </div>
+  )
 
   return (
     <AppProvider>

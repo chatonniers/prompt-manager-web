@@ -158,9 +158,22 @@
   padding: 8px 14px;
   border-radius: var(--pm-radius-sm);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   border-left: 4px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.flow-column-count {
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.7;
+  background: rgba(0,0,0,0.1);
+  border-radius: 20px;
+  padding: 1px 6px;
+  letter-spacing: 0;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 /* ── Card flip wrapper ────────────────────────────────────────────────── */
@@ -272,14 +285,13 @@
 
 .personas-nav {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 0;
+  bottom: 0;
   z-index: 2;
-  background: var(--pm-surface);
-  border: 1px solid var(--pm-border2);
-  border-radius: 50%;
-  width: 18px;
-  height: 18px;
+  background: linear-gradient(to right, var(--pm-surface) 60%, transparent);
+  border: none;
+  border-radius: 0;
+  width: 22px;
   font-size: 12px;
   line-height: 1;
   display: flex;
@@ -288,10 +300,10 @@
   cursor: pointer;
   color: var(--pm-text2);
   padding: 0;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  transform: none;
 }
-.personas-nav-left  { left: 0; }
-.personas-nav-right { right: 0; }
+.personas-nav-left  { left: 0; background: linear-gradient(to right, var(--pm-surface) 60%, transparent); }
+.personas-nav-right { right: 0; background: linear-gradient(to left, var(--pm-surface) 60%, transparent); }
 
 .pill.persona {
   display: inline-flex;
@@ -306,6 +318,40 @@
 }
 
 .card-header-category { flex-shrink: 0; align-self: flex-start; margin-top: 2px; }
+
+.prompt-card-header-pills {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 1px;
+}
+
+.prompt-card-header-pills .pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  border: none;
+  white-space: nowrap;
+}
+
+.prompt-card-header-pills .pill.category {
+  background: rgba(99,102,241,0.18);
+  color: #818CF8;
+}
+
+.prompt-card-header-pills .assistant-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  border: none;
+  white-space: nowrap;
+}
 
 /* ── Notes ───────────────────────────────────────────────────────────── */
 .prompt-card-notes {
@@ -341,34 +387,22 @@
 .assistant-pill { background: rgba(99,102,241,0.15); color: #818CF8; border: 1px solid rgba(99,102,241,0.3); }
 .industry-pill  { background: rgba(16,185,129,0.12); color: #34d399; }
 
-/* ── Grouping flip button ─────────────────────────────────────────────── */
+/* ── Grouping flip button — colors driven by inline style from workspace ── */
 .grouping-flip-btn {
   flex-shrink: 0;
   margin-left: 10px;
   padding: 4px 12px;
   border-radius: 6px;
-  border: 1px solid var(--pm-border);
-  border-left: 3px solid var(--pm-border);
-  background: var(--pm-surface);
-  color: var(--pm-text2);
+  border: 1px solid;
+  border-left-width: 3px;
   font-size: 11px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s, border-left-color 0.15s, color 0.15s;
+  transition: opacity 0.15s;
 }
-.grouping-flip-btn:hover {
-  background: var(--pm-accent-bg);
-  border-left-color: var(--pm-accent);
-  color: var(--pm-accent);
-}
-.grouping-flip-btn.active {
-  background: rgba(99,102,241,0.1);
-  border-left-color: #818CF8;
-  border-color: rgba(99,102,241,0.25);
-  color: #818CF8;
-}
+.grouping-flip-btn:hover { opacity: 0.75; }
 
 /* ── Admin assistant domain badge ────────────────────────────────────── */
 .admin-assistant-domain-badge {
@@ -1050,7 +1084,16 @@
   gap: 6px;
   text-align: left;
   cursor: pointer;
+  padding: 7px 9px;
   padding-right: 10px;
+  border: 1.5px solid var(--pm-border2);
+  border-radius: var(--pm-radius-sm);
+  background: var(--pm-bg);
+  color: var(--pm-text1);
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
 }
 .ms-placeholder { color: var(--pm-text3); }
 .ms-value { color: var(--pm-text); font-weight: 500; }
@@ -1183,7 +1226,7 @@
 }
 
 .card-edit-cancel-btn {
-  flex: 1;
+  flex: 0 0 120px;
   background: var(--pm-bg);
   border: 1.5px solid var(--pm-border);
   border-radius: var(--pm-radius-sm);
@@ -1213,7 +1256,7 @@
 .card-edit-del-btn:hover { background: rgba(220,38,38,0.2); border-color: rgba(220,38,38,0.6); }
 
 .card-edit-save-btn {
-  flex: 2;
+  flex: 0 0 120px;
   background: var(--pm-accent);
   border: none;
   border-radius: var(--pm-radius-sm);

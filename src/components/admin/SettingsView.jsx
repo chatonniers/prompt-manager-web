@@ -1,7 +1,6 @@
 import { useRef, useState, useMemo, useEffect } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { StorageAPI } from '../../lib/storage.js';
 import { supabase } from '../../lib/supabase.js';
 import { t } from '../../lib/i18n.js';
 import AdminCatalogCard from './AdminCatalogCard.jsx';
@@ -9,7 +8,6 @@ import AdminCategoriesCard from './AdminCategoriesCard.jsx';
 import AdminSystemsCard from './AdminSystemsCard.jsx';
 import AdminAssistantsCard from './AdminAssistantsCard.jsx';
 import AdminVisibilityCard from './AdminVisibilityCard.jsx';
-import ImportModeModal from '../shared/ImportModeModal.jsx';
 import UserManagement from './UserManagement.jsx';
 import AdminStatsView from './AdminStatsView.jsx';
 
@@ -21,10 +19,6 @@ const FUNCTIONAL_SECTIONS = [
   { id: 'personas',   labelKey: 'personasAdmin' },
   { id: 'solutions',  labelKey: 'solutionsAdmin' },
   { id: 'systems',    labelKey: 'systemsAdmin' },
-];
-
-const TECHNICAL_SECTIONS = [
-  { id: 'import-export', labelKey: 'importExport' },
 ];
 
 const ADMIN_TECHNICAL_SECTIONS = [
@@ -86,7 +80,6 @@ export default function SettingsView() {
 
   const allSections = [
     ...FUNCTIONAL_SECTIONS,
-    ...TECHNICAL_SECTIONS,
     ...(isAdmin ? ADMIN_TECHNICAL_SECTIONS : []),
     ...(isAdmin ? STATS_SECTIONS : []),
   ];
@@ -99,51 +92,6 @@ export default function SettingsView() {
       return label.toLowerCase().includes(q);
     });
   }, [navSearch, lang, isAdmin]);
-
-  const fileRef = useRef(null);
-  const [importData, setImportData] = useState(null);
-  const [importStatus, setImportStatus] = useState(null);
-
-  function handleExport() {
-    StorageAPI.exportAll().then(data => {
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'prompts.json'; a.click();
-      URL.revokeObjectURL(url);
-    });
-  }
-
-  function handleImportFile(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      try {
-        const data = JSON.parse(ev.target.result);
-        setImportData(data);
-      } catch {
-        setImportStatus({ ok: false, msg: 'Import failed — invalid file.' });
-      }
-      e.target.value = '';
-    };
-    reader.readAsText(file);
-  }
-
-  async function handleImportConfirm(data, mode) {
-    try {
-      const result = await StorageAPI.importAll(data, mode);
-      const prompts = await StorageAPI.getAllPrompts();
-      const catalog = await StorageAPI.getCatalog();
-      dispatch({ type: 'SET_PROMPTS', payload: prompts });
-      dispatch({ type: 'SET_CATALOG', payload: catalog });
-      const msg = t('importOk', lang, result.imported, result.skipped);
-      setImportStatus({ ok: true, msg });
-      dispatch({ type: 'SHOW_TOAST', payload: msg });
-    } catch {
-      setImportStatus({ ok: false, msg: 'Import failed — invalid file.' });
-    }
-    setImportData(null);
-  }
 
   function NavSection({ sections, label }) {
     const visible = filteredSections
@@ -205,8 +153,6 @@ export default function SettingsView() {
             )}
           </div>
           <NavSection sections={FUNCTIONAL_SECTIONS} label={navSearch ? null : 'Functional Parameters'} />
-          <div className="settings-nav-divider" />
-          <NavSection sections={TECHNICAL_SECTIONS} label={navSearch ? null : 'Data'} />
           {isAdmin && (
             <>
               <div className="settings-nav-divider" />
@@ -221,36 +167,6 @@ export default function SettingsView() {
         <div className="settings-panel">
 
           {activeSection === 'categories' && <AdminCategoriesCard />}
-
-          {activeSection === 'import-export' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div className="view-card">
-                <h2>{t('exportTitle', lang)}</h2>
-                <p>{t('exportDesc', lang)}</p>
-                <button className="action-btn primary" onClick={handleExport}>{t('exportBtn', lang)}</button>
-              </div>
-              <div className="view-card">
-                <h2>{t('importTitle', lang)}</h2>
-                <p>{t('importDesc', lang)}</p>
-                <button className="action-btn" onClick={() => fileRef.current?.click()}>{t('importBtn', lang)}</button>
-                <input type="file" ref={fileRef} accept=".json" style={{ display: 'none' }} onChange={handleImportFile} />
-                {importStatus && (
-                  <div className={`import-status${importStatus.ok ? '' : ' import-error'}`} style={{ marginTop: 12 }}>
-                    {importStatus.msg}
-                  </div>
-                )}
-              </div>
-              {importData && (
-                <ImportModeModal
-                  data={importData}
-                  existingCount={state.prompts.length}
-                  lang={lang}
-                  onConfirm={handleImportConfirm}
-                  onClose={() => setImportData(null)}
-                />
-              )}
-            </div>
-          )}
 
           {activeSection === 'personas' && (
             <AdminCatalogCard

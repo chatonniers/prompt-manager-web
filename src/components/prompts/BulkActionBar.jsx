@@ -74,6 +74,22 @@ export default function BulkActionBar({ visibleIds }) {
     dispatch({ type: 'SHOW_TOAST', payload: `Moved ${count} prompt${count !== 1 ? 's' : ''} to ${flow || 'No flow'}` });
   }
 
+  async function moveToIndustry(industry) {
+    const selected = prompts.filter(p => selectedIds.has(p.id));
+    await Promise.all(selected.map(p => StorageAPI.upsertPrompt({ ...p, industry: industry || null })));
+    dispatch({ type: 'SET_PROMPTS', payload: await StorageAPI.getAllPrompts() });
+    dispatch({ type: 'CLEAR_SELECT' });
+    dispatch({ type: 'SHOW_TOAST', payload: `Set industry to ${industry || 'None'} for ${count} prompt${count !== 1 ? 's' : ''}` });
+  }
+
+  async function moveToAssistant(assistant) {
+    const selected = prompts.filter(p => selectedIds.has(p.id));
+    await Promise.all(selected.map(p => StorageAPI.upsertPrompt({ ...p, assistant: assistant || null })));
+    dispatch({ type: 'SET_PROMPTS', payload: await StorageAPI.getAllPrompts() });
+    dispatch({ type: 'CLEAR_SELECT' });
+    dispatch({ type: 'SHOW_TOAST', payload: `Set assistant to ${assistant || 'None'} for ${count} prompt${count !== 1 ? 's' : ''}` });
+  }
+
   async function archiveSelected() {
     const selected = prompts.filter(p => selectedIds.has(p.id));
     await Promise.all(selected.map(p => StorageAPI.upsertPrompt({ ...p, status: 'archived' })));
@@ -102,6 +118,14 @@ export default function BulkActionBar({ visibleIds }) {
     { value: '__none__', label: `— ${t('selectNone', lang)} —` },
     ...(catalog.storyFlows || []).map(f => ({ value: f, label: f })),
   ];
+  const industryOptions = [
+    { value: '__none__', label: '— None —' },
+    ...(catalog.industries || []).map(i => ({ value: i, label: i })),
+  ];
+  const assistantOptions = [
+    { value: '__none__', label: '— None —' },
+    ...(catalog.assistants || []).map(a => ({ value: a.name, label: a.name })),
+  ];
 
   return createPortal(
     <div className="bulk-action-bar">
@@ -109,7 +133,6 @@ export default function BulkActionBar({ visibleIds }) {
       <button className="bulk-action-btn" onClick={selectAll}>{t('bulkSelectAll', lang)}</button>
       <button className="bulk-action-btn" onClick={clearAll}>{t('bulkClear', lang)}</button>
       <div className="bulk-divider" />
-      <button className="bulk-action-btn" onClick={exportSelected}>{t('bulkExport', lang)}</button>
       <BulkDropdown
         label={t('bulkMoveCategory', lang)}
         options={categoryOptions}
@@ -120,6 +143,20 @@ export default function BulkActionBar({ visibleIds }) {
         options={flowOptions}
         onSelect={v => moveToFlow(v === '__none__' ? '' : v)}
       />
+      {(catalog.assistants || []).length > 0 && (
+        <BulkDropdown
+          label="Move to Assistant"
+          options={assistantOptions}
+          onSelect={v => moveToAssistant(v === '__none__' ? '' : v)}
+        />
+      )}
+      {(catalog.industries || []).length > 0 && (
+        <BulkDropdown
+          label="Move to Industry"
+          options={industryOptions}
+          onSelect={v => moveToIndustry(v === '__none__' ? '' : v)}
+        />
+      )}
       <div className="bulk-divider" />
       {isAdmin && (
         <button className="bulk-action-btn bulk-action-archive" onClick={archiveSelected}>Archive</button>

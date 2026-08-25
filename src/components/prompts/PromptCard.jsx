@@ -396,7 +396,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
             <div className="dupe-popover">
               <span className="dupe-popover-label">Copy to:</span>
               <button className="dupe-popover-btn library" onClick={() => onDuplicate('library')}>Library</button>
-              <button className="dupe-popover-btn mine" onClick={() => onDuplicate('mine')}>Mine</button>
+              <button className="dupe-popover-btn mine" onClick={() => onDuplicate('mine')}>My Prompts</button>
               <button className="dupe-popover-cancel" onClick={() => setDupeTarget(false)}>✕</button>
             </div>
           ) : (
@@ -422,6 +422,19 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
             <label className="card-edit-label">{t('titleLabel', lang)}</label>
             <input className="card-edit-input" type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('titlePlaceholder', lang)} maxLength={120} />
           </div>
+
+          {(catalog.assistants || []).length > 0 && (
+            <div className="card-edit-field">
+              <label className="card-edit-label">AI Assistant</label>
+              <select className="card-edit-select" value={assistant} onChange={e => setAssistant(e.target.value)}>
+                <option value="">— None —</option>
+                {(catalog.assistants || [])
+                  .filter(a => !a.domain || a.domain === category || !category)
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
+              </select>
+            </div>
+          )}
 
           <div className="card-edit-field">
             <label className="card-edit-label">{t('personasLabel', lang)}</label>
@@ -494,17 +507,6 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
           </div>
 
           <div className="card-edit-2col">
-            {(catalog.assistants || []).length > 0 && (
-              <div className="card-edit-field">
-                <label className="card-edit-label">AI Assistant</label>
-                <select className="card-edit-select" value={assistant} onChange={e => setAssistant(e.target.value)}>
-                  <option value="">— None —</option>
-                  {(catalog.assistants || [])
-                    .filter(a => !a.domain || a.domain === category || !category)
-                    .map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
-                </select>
-              </div>
-            )}
             {(catalog.industries || []).length > 0 && (
               <div className="card-edit-field">
                 <label className="card-edit-label">Industry</label>
@@ -707,6 +709,8 @@ function PersonasScroll({ personas }) {
 }
 
 function NotesPreview({ notes, compact }) {
+  const ref = useRef(null);
+  const [popover, setPopover] = useState(null);
 
   function showPopover() {
     if (!ref.current) return;
@@ -817,14 +821,11 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
   // Request button: viewer, Mine workspace, own draft, public, and not already approved
   const showRequestBtn = workspace === 'mine' && !canPublish && p.status === 'draft' && p.ownerId === profile?.id && p.isPrivate === false && !isApprovedRequest;
 
-  const [flipped, setFlipped] = useState(false);
-  const [flashSaved, setFlashSaved] = useState(false);
   const [substItem, setSubstItem] = useState(null);
-  const [dupeTarget, setDupeTarget] = useState(false); // shows copy-to popover
-  // Per-item copy state: itemId → 'copied' | null
+  const [dupeTarget, setDupeTarget] = useState(false);
   const [copiedItemId, setCopiedItemId] = useState(null);
   const [ctaCopied, setCtaCopied] = useState(false);
-  const [jouleModal, setJouleModal] = useState(null); // { skillName, skillContent }
+  const [jouleModal, setJouleModal] = useState(null);
 
   const promptItems = p.promptItems?.length
     ? p.promptItems
@@ -934,16 +935,6 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
     dispatch({ type: 'SHOW_TOAST', payload: t('promptCreated', lang) });
   }
 
-  async function handleEditSave(freshPrompts, freshCatalog, freshRequests) {
-    dispatch({ type: 'SET_PROMPTS', payload: freshPrompts });
-    dispatch({ type: 'SET_CATALOG', payload: freshCatalog });
-    if (freshRequests) dispatch({ type: 'SET_PUBLISH_REQUESTS', payload: freshRequests });
-    dispatch({ type: 'SHOW_TOAST', payload: t('promptUpdated', lang) });
-    setFlipped(false);
-    setFlashSaved(true);
-    setTimeout(() => setFlashSaved(false), 800);
-  }
-
   function handleDelete() {
     dispatch({ type: 'OPEN_CONFIRM', payload: p.id });
   }
@@ -958,7 +949,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
   const hasJouleSkill = (p.attachments || []).some(a => a.isJouleSkill);
 
   return (
-    <div className={`prompt-card-flip-wrapper${flipped ? ' flipped' : ''}${flashSaved ? ' card--flash-saved' : ''}${compact ? ' prompt-card-compact' : ''}`}>
+    <div className={`prompt-card-flip-wrapper${compact ? ' prompt-card-compact' : ''}`}>
       {/* Front face */}
       <div
         className={`prompt-card prompt-card-face prompt-card-front${isSingle ? ' prompt-card-single' : ''}${isDragging ? ' is-dragging' : ''}`}
@@ -967,8 +958,8 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
         draggable={true}
         onDragStart={e => { e.dataTransfer.setData('promptId', p.id); dispatch({ type: 'SET_DRAGGING', payload: p.id }); }}
         onDragEnd={() => dispatch({ type: 'SET_DRAGGING', payload: null })}
-        onClick={() => canEdit && setFlipped(true)}
-        onKeyDown={e => { if (e.key === 'Enter' && canEdit) setFlipped(true); }}
+        onClick={() => canEdit && dispatch({ type: 'OPEN_EDIT', payload: p.id })}
+        onKeyDown={e => { if (e.key === 'Enter' && canEdit) dispatch({ type: 'OPEN_EDIT', payload: p.id }); }}
       >
         {onToggleSelect && (
           <input
@@ -1004,7 +995,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
             <div className="prompt-items-list">
               {promptItems.map((item, idx) => {
                 const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;
-                const label = item.label || (isSingle ? t('copy', lang) : `Prompt ${idx + 1}`);
+                const label = (lang === 'fr' && item.label_fr) ? item.label_fr : (item.label || (isSingle ? t('copy', lang) : `Prompt ${idx + 1}`));
                 return (
                   <PromptItemRow key={item.id} item={item} idx={idx} label={label} body={body}
                     isCopied={copiedItemId === item.id} lang={lang}
@@ -1015,7 +1006,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
           </>
         ) : (
           <>
-            {/* Header: fav | title + personas | category pill */}
+            {/* Header: fav | title | assistant + category pills */}
             <div className="prompt-card-header">
               <button className={`prompt-card-fav${p.isFavorite ? ' active' : ''}`} title={p.isFavorite ? t('removeFromFav', lang) : t('addToFav', lang)} onClick={e => { e.stopPropagation(); handleToggleFav(); }}>
                 <svg width="14" height="14" viewBox="0 0 16 16" fill={p.isFavorite ? 'currentColor' : 'none'} xmlns="http://www.w3.org/2000/svg">
@@ -1024,12 +1015,17 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
               </button>
               <div className="prompt-card-title-area">
                 <div className="prompt-card-title">{p.title}</div>
-                {(p.personas || []).length > 0 && (
-                  <PersonasScroll personas={p.personas} />
-                )}
               </div>
-              {p.category && <span className="pill category card-header-category">{p.category}</span>}
+              <div className="prompt-card-header-pills">
+                {p.assistant && (() => { const ac = getAssistantColor(p.assistant, catalog.assistants); return <span className="pill assistant-pill" style={{ background: ac.bg, color: ac.text, borderColor: ac.border }}>{p.assistant}</span>; })()}
+                {p.category && <span className="pill category card-header-category">{p.category}</span>}
+              </div>
             </div>
+
+            {/* Personas */}
+            {(p.personas || []).length > 0 && (
+              <PersonasScroll personas={p.personas} />
+            )}
 
             {/* Notes */}
             {p.notes && <NotesPreview notes={p.notes} />}
@@ -1038,7 +1034,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
             <div className="prompt-items-list">
               {promptItems.map((item, idx) => {
                 const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;
-                const label = item.label || (isSingle ? t('copy', lang) : `Prompt ${idx + 1}`);
+                const label = (lang === 'fr' && item.label_fr) ? item.label_fr : (item.label || (isSingle ? t('copy', lang) : `Prompt ${idx + 1}`));
                 const isCopied = copiedItemId === item.id;
                 return (
                   <PromptItemRow key={item.id} item={item} idx={idx} label={label} body={body}
@@ -1051,7 +1047,6 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
             {/* Meta pills */}
             <div className="prompt-card-meta">
               {(p.solutions || []).map(s => <span key={s} className="pill">{s}</span>)}
-              {p.assistant && (() => { const ac = getAssistantColor(p.assistant, catalog.assistants); return <span className="pill assistant-pill" style={{ background: ac.bg, color: ac.text, borderColor: ac.border }}>{p.assistant}</span>; })()}
               {p.industry  && <span className="pill industry-pill">{p.industry}</span>}
               {p.storyFlow && (() => { const c = getFlowColor(p.storyFlow); return <span className="pill flow" style={{ background: c.bg, color: c.text }}>{p.storyFlow}</span>; })()}
               {p.status && <span className={`pill status-${p.status}`}>{p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span>}
@@ -1134,26 +1129,6 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
         )}
 
       </div>
-
-      {/* Back face — edit form */}
-      {flipped && canEdit && (
-        <div className="prompt-card prompt-card-face prompt-card-back" onKeyDown={e => { if (e.key === 'Escape') setFlipped(false); }}>
-          <CardEditBack
-            prompt={p}
-            catalog={catalog}
-            lang={lang}
-            onSave={handleEditSave}
-            onCancel={() => setFlipped(false)}
-            onDuplicate={target => { setFlipped(false); handleDuplicate(target); }}
-            onDelete={canPublish || (p.isPrivate !== false && p.status === 'draft' && p.ownerId === profile?.id) ? handleDelete : undefined}
-            dupeTarget={dupeTarget}
-            setDupeTarget={setDupeTarget}
-            canPublish={canPublish}
-            canEdit={canEdit}
-            approvedRequest={isApprovedRequest ? myRequest : null}
-          />
-        </div>
-      )}
 
       {substItem && (
         <SubstituteModal

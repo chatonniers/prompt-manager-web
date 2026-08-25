@@ -230,14 +230,15 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
           <div className="pt-item-tabs">
             {items.map((item, idx) => {
               const label = item.label?.trim() || (items.length === 1 ? t('copy', lang) : `#${idx + 1}`);
+              const displayLabel = (lang === 'fr' && item.label_fr?.trim()) ? item.label_fr.trim() : label;
               return (
                 <button
                   key={item.id || idx}
                   className={`pt-item-tab${activeItem === idx ? ' active' : ''}${copiedIdx === idx ? ' copied' : ''}`}
                   onClick={e => { e.stopPropagation(); setActiveItem(idx); handleCopy(idx); }}
-                  title={item.label?.trim() || `Copy prompt ${idx + 1}`}
+                  title={displayLabel}
                 >
-                  {copiedIdx === idx ? '✓' : label}
+                  {copiedIdx === idx ? '✓' : displayLabel}
                 </button>
               );
             })}
@@ -499,6 +500,7 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
                   }
                 >
                   {col.label}
+                  <span className="flow-column-count">{col.prompts.length}</span>
                 </div>
                 {col.prompts.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
               </DropZone>
@@ -788,11 +790,15 @@ export default function PromptGrid() {
             </div>
 
             <button
-              className={`grouping-flip-btn${groupingMode === 'assistant' ? ' active' : ''}`}
+              className="grouping-flip-btn"
+              style={workspace === 'mine'
+                ? { background: 'rgba(5,150,105,0.1)', borderColor: 'rgba(5,150,105,0.25)', borderLeftColor: '#059669', color: '#059669' }
+                : { background: 'rgba(99,102,241,0.1)', borderColor: 'rgba(99,102,241,0.25)', borderLeftColor: '#818CF8', color: '#818CF8' }
+              }
               title={groupingMode === 'assistant' ? 'Switch to Story Flow grouping' : 'Switch to AI Assistant grouping'}
               onClick={() => dispatch({ type: 'SET_GROUPING_MODE', payload: groupingMode === 'assistant' ? 'flow' : 'assistant' })}
             >
-              {groupingMode === 'assistant' ? '⊞ Assistant' : '⊞ Flow'}
+              {groupingMode === 'assistant' ? 'Assistant' : 'Flow'}
             </button>
           </div>
 

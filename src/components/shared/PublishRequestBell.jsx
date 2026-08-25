@@ -72,6 +72,9 @@ export default function PublishRequestBell() {
     ? newUsers.filter(u => !seenUserIds.includes(u.id))
     : [];
 
+  const pendingNewUsers = unseenUsers.filter(u => u.role === 'pending');
+  const regularNewUsers = unseenUsers.filter(u => u.role !== 'pending');
+
   const badge = isReviewer
     ? requests.filter(r => r.status === 'pending').length + unseenUsers.length
     : (() => {
@@ -82,11 +85,20 @@ export default function PublishRequestBell() {
   useEffect(() => {
     if (!open) return;
     function handler(e) {
-      if (panelRef.current && !panelRef.current.contains(e.target)) setOpen(false);
+      if (panelRef.current && !panelRef.current.contains(e.target)) {
+        // Mark seen on close
+        if (isAdmin) {
+          const allIds = newUsers.map(u => u.id);
+          const merged = [...new Set([...seenUserIds, ...allIds])];
+          localStorage.setItem(SEEN_USERS_KEY, JSON.stringify(merged));
+          setSeenUserIds(merged);
+        }
+        setOpen(false);
+      }
     }
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
+  }, [open, isAdmin, newUsers, seenUserIds]);
 
   function markSeen() {
     const seen = JSON.parse(sessionStorage.getItem(SEEN_KEY) || '[]');
@@ -95,9 +107,11 @@ export default function PublishRequestBell() {
   }
 
   function handleOpen() {
+    const opening = !open;
     setOpen(o => !o);
     if (!isReviewer) markSeen();
-    if (isAdmin && !open) {
+    if (isAdmin && !opening) {
+      // Mark seen on close, not open
       const allIds = newUsers.map(u => u.id);
       const merged = [...new Set([...seenUserIds, ...allIds])];
       localStorage.setItem(SEEN_USERS_KEY, JSON.stringify(merged));
@@ -204,20 +218,42 @@ export default function PublishRequestBell() {
 
           {isAdmin && unseenUsers.length > 0 && (
             <>
-              <div className="tb-bell-section-label">New Users</div>
-              {unseenUsers.map(u => (
-                <div key={u.id} className="tb-bell-item tb-bell-item--unseen">
-                  <div className="tb-bell-item-title">{u.email}</div>
-                  <div className="tb-bell-item-meta">
-                    {u.display_name && <span>{u.display_name} · </span>}
-                    <span className="tb-bell-item-role">{u.role}</span>
-                    <span> · {timeAgo(u.created_at)}</span>
-                  </div>
-                </div>
-              ))}
-              <button className="tb-bell-goto-users" onClick={() => { dispatch({ type: 'SET_VIEW', payload: { view: 'settings', settingsSection: 'users' } }); setOpen(false); }}>
-                Go to Users ↗
-              </button>
+              {pendingNewUsers.length > 0 && (
+                <>
+                  <div className="tb-bell-section-label" style={{ color: '#FBBF24' }}>⏳ Pending Approval</div>
+                  {pendingNewUsers.map(u => (
+                    <div key={u.id} className="tb-bell-item tb-bell-item--unseen" style={{ borderLeft: '3px solid rgba(251,191,36,0.5)' }}>
+                      <div className="tb-bell-item-title">{u.email}</div>
+                      <div className="tb-bell-item-meta">
+                        {u.display_name && <span>{u.display_name} · </span>}
+                        <span style={{ color: '#FBBF24', fontWeight: 600 }}>pending</span>
+                        <span> · {timeAgo(u.created_at)}</span>
+                      </div>
+                    </div>
+                  ))}
+                  <button className="tb-bell-goto-users" onClick={() => { dispatch({ type: 'SET_VIEW', payload: { view: 'settings', settingsSection: 'users' } }); setOpen(false); }}>
+                    Approve in Users ↗
+                  </button>
+                </>
+              )}
+              {regularNewUsers.length > 0 && (
+                <>
+                  <div className="tb-bell-section-label">New Users</div>
+                  {regularNewUsers.map(u => (
+                    <div key={u.id} className="tb-bell-item tb-bell-item--unseen">
+                      <div className="tb-bell-item-title">{u.email}</div>
+                      <div className="tb-bell-item-meta">
+                        {u.display_name && <span>{u.display_name} · </span>}
+                        <span className="tb-bell-item-role">{u.role}</span>
+                        <span> · {timeAgo(u.created_at)}</span>
+                      </div>
+                    </div>
+                  ))}
+                  <button className="tb-bell-goto-users" onClick={() => { dispatch({ type: 'SET_VIEW', payload: { view: 'settings', settingsSection: 'users' } }); setOpen(false); }}>
+                    Go to Users ↗
+                  </button>
+                </>
+              )}
             </>
           )}
         </div>

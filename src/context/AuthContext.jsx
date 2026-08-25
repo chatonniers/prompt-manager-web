@@ -122,6 +122,12 @@ export function AuthProvider({ children }) {
       await supabase.auth.signOut();
       return true;
     }
+    if (data?.role === 'pending') {
+      // Profile updated to pending (shouldn't happen post-login but guard anyway)
+      sessionStorage.setItem('pm-auth-error', 'Your account is awaiting admin approval.');
+      await supabase.auth.signOut();
+      return true;
+    }
     return false;
   }
 
@@ -130,6 +136,10 @@ export function AuthProvider({ children }) {
     const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
     if (data?.role === 'blocked') {
       await supabase.auth.signOut();
+      return;
+    }
+    if (data?.role === 'pending') {
+      setProfile({ ...data, _pending: true });
       return;
     }
     setProfile(data);

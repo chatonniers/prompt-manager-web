@@ -562,12 +562,13 @@
   font-weight: 800;
   letter-spacing: 0.9px;
   text-transform: uppercase;
-  color: var(--pm-text3);
+  color: var(--pm-text2);
   cursor: pointer;
   font-family: inherit;
   transition: background 0.15s, border-left-color 0.15s, color 0.15s;
   white-space: nowrap;
 }
+[data-theme="light"] .category-tab { color: rgba(10,15,30,0.55); }
 .category-tab:hover {
   background: var(--pm-accent-bg);
   border-left-color: var(--pm-accent);
@@ -1272,3 +1273,33 @@
 @media (min-width: 768px) and (max-width: 1023px) {
   .tb-stat-pill { display: none; }
 }
+
+/* ── Workspace switch confirmation popover ────────────────────────────── */
+.ws-switch-popover {
+  position: fixed;
+  z-index: 2000;
+  background: #1a1f35;
+  border: 1px solid rgba(99,102,241,0.4);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  padding: 14px 16px 12px;
+  width: 230px;
+  transform: translateX(-50%);
+}
+[data-theme="light"] .ws-switch-popover { background: #f5f7ff; border-color: rgba(79,70,229,0.3); box-shadow: 0 8px 32px rgba(79,70,229,0.12); }
+.ws-switch-popover::before {
+  content: '';
+  position: absolute;
+  top: -5px; left: 50%;
+  width: 9px; height: 9px;
+  background: #1a1f35;
+  border-left: 1px solid rgba(99,102,241,0.4);
+  border-top: 1px solid rgba(99,102,241,0.4);
+  transform: translateX(-50%) rotate(45deg);
+}
+[data-theme="light"] .ws-switch-popover::before { background: #f5f7ff; border-color: rgba(79,70,229,0.3); }
+.ws-switch-popover-title { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.9); margin-bottom: 5px; }
+[data-theme="light"] .ws-switch-popover-title { color: #0A0F1E; }
+.ws-switch-popover-desc { font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.5; margin-bottom: 12px; }
+[data-theme="light"] .ws-switch-popover-desc { color: rgba(10,15,30,0.55); }
+.ws-switch-popover-actions { display: flex; gap: 6px; justify-content: flex-end; }

@@ -226,26 +226,77 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  width: 270px;
-  background: var(--pm-surface);
-  border: 1.5px solid var(--pm-border);
+  width: 290px;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  background: #1a1f35;
+  border: 1px solid rgba(99,102,241,0.35);
   border-radius: 12px;
-  box-shadow: var(--pm-shadow-lg);
-  padding: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+  padding: 14px 16px 16px;
   z-index: 200;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  color: rgba(255,255,255,0.85);
 }
+[data-theme="light"] .tb-profile-panel {
+  background: #f5f7ff;
+  border-color: rgba(79,70,229,0.25);
+  box-shadow: 0 8px 32px rgba(79,70,229,0.12);
+  color: #0A0F1E;
+}
+
+.tb-profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.tb-profile-logout {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+.tb-profile-logout:hover { color: #F87171; border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.08); }
+[data-theme="light"] .tb-profile-logout { border-color: rgba(10,15,30,0.15); color: rgba(10,15,30,0.45); }
+
+.tb-profile-domain-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 4px 0;
+}
+.tb-profile-pref-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: rgba(255,255,255,0.35);
+  margin-bottom: 2px;
+  padding: 0 2px;
+}
+[data-theme="light"] .tb-profile-pref-title { color: rgba(10,15,30,0.4); }
 
 .tb-profile-title {
   font-size: 11px;
   font-weight: 800;
-  color: var(--pm-text1);
+  color: rgba(255,255,255,0.9);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: 2px;
 }
+[data-theme="light"] .tb-profile-title { color: #0A0F1E; }
 
 .tb-profile-field {
   display: flex;
@@ -256,21 +307,23 @@
 .tb-profile-label {
   font-size: 11px;
   font-weight: 600;
-  color: var(--pm-text3);
+  color: rgba(255,255,255,0.5);
 }
+[data-theme="light"] .tb-profile-label { color: rgba(10,15,30,0.55); }
 
 .tb-profile-input {
   width: 100%;
-  background: var(--pm-bg);
-  border: 1.5px solid var(--pm-border2);
+  background: rgba(255,255,255,0.07);
+  border: 1.5px solid rgba(255,255,255,0.12);
   border-radius: 7px;
   padding: 7px 10px;
   font-size: 12px;
-  color: var(--pm-text1);
+  color: rgba(255,255,255,0.9);
   font-family: inherit;
   box-sizing: border-box;
 }
 .tb-profile-input:focus { outline: none; border-color: var(--pm-accent); }
+[data-theme="light"] .tb-profile-input { background: #fff; border-color: #DDE1F0; color: #0A0F1E; }
 
 .tb-profile-chips {
   display: flex;
@@ -543,32 +596,29 @@
 }
 
 .domain-pill {
-  background: var(--pm-bg);
-  border: 1.5px solid var(--pm-border);
+  background: rgba(255,255,255,0.07);
+  border: 1.5px solid rgba(255,255,255,0.12);
   border-radius: 20px;
   padding: 3px 9px;
   font-size: 10px;
   font-weight: 600;
   font-family: inherit;
-  color: var(--pm-text2);
+  color: rgba(255,255,255,0.5);
   cursor: pointer;
   transition: background 0.12s, color 0.12s, border-color 0.12s;
   white-space: nowrap;
 }
-
-.domain-pill:hover:not(:disabled) {
-  border-color: var(--pm-accent);
-  color: var(--pm-accent);
-}
-
+.domain-pill:hover:not(:disabled) { border-color: var(--pm-accent); color: #A5B4FC; }
 .domain-pill.active {
-  background: var(--pm-accent-bg);
-  border-color: var(--pm-accent);
-  color: var(--pm-accent);
+  background: rgba(99,102,241,0.25);
+  border-color: rgba(99,102,241,0.5);
+  color: #A5B4FC;
   font-weight: 700;
 }
-
 .domain-pill:disabled { opacity: 0.4; cursor: default; }
+[data-theme="light"] .domain-pill { background: var(--pm-bg); border-color: var(--pm-border); color: var(--pm-text2); }
+[data-theme="light"] .domain-pill:hover:not(:disabled) { border-color: var(--pm-accent); color: var(--pm-accent); }
+[data-theme="light"] .domain-pill.active { background: var(--pm-accent-bg); border-color: var(--pm-accent); color: var(--pm-accent); }
 
 .invite-msg {
   margin: 8px 0 0;
