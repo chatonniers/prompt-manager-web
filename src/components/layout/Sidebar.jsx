@@ -26,7 +26,7 @@ export default function Sidebar({ collapsed, onToggle, mobileNavOpen, onMobileNa
   const sidebarRef = useRef(null);
   const resizerRef = useSidebarResize(sidebarRef, collapsed);
 
-  const [openSections, setOpenSections] = useState({ categories: true, assistants: true, flows: false, solutions: false });
+  const [openSections, setOpenSections] = useState({ categories: false, assistants: false, flows: false, solutions: false });
 
   function toggleSection(key) {
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
