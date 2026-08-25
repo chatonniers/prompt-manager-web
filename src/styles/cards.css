@@ -15,8 +15,8 @@
 .favs-row::-webkit-scrollbar { display: none; }
 
 .favs-row-item {
-  flex: 0 0 360px;
-  width: 360px;
+  flex: 0 0 260px;
+  width: 260px;
   scroll-snap-align: start;
 }
 

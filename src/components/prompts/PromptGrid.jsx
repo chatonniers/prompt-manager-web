@@ -530,7 +530,7 @@ function FavoritesRow({ favs, lang, selectedIds, onToggleSelect, onDrop, onHeigh
           <div className="favs-row" ref={scrollRef}>
             {favs.map(p => (
               <div key={p.id} className="favs-row-item">
-                <PromptCard prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />
+                <PromptCard prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} compact />
               </div>
             ))}
           </div>

@@ -760,7 +760,7 @@ function PromptItemRow({ item, idx, label, body, isCopied, lang, onCopy }) {
   );
 }
 
-export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
+export default function PromptCard({ prompt: p, isSelected, onToggleSelect, compact }) {
   const { state, dispatch } = useApp();
   const { isAdmin, isEditor, profile } = useAuth();
   const workspace = state.workspace ?? 'library';
@@ -942,114 +942,142 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect }) {
         )}
         <div className="prompt-card-body">
 
-        {/* Header: fav | title + personas | category pill */}
-        <div className="prompt-card-header">
-          <button className={`prompt-card-fav${p.isFavorite ? ' active' : ''}`} title={p.isFavorite ? t('removeFromFav', lang) : t('addToFav', lang)} onClick={e => { e.stopPropagation(); handleToggleFav(); }}>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill={p.isFavorite ? 'currentColor' : 'none'} xmlns="http://www.w3.org/2000/svg">
-              <path d="M8 1.5l1.8 3.6 4 .58-2.9 2.83.68 3.99L8 10.35l-3.58 1.88.68-3.99L2.2 5.68l4-.58L8 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
-            </svg>
-          </button>
-          <div className="prompt-card-title-area">
-            <div className="prompt-card-title">{p.title}</div>
-            {(p.personas || []).length > 0 && (
-              <div className="prompt-card-personas">
-                {p.personas.map(persona => <span key={persona} className="pill persona">{persona}</span>)}
+        {compact ? (
+          <>
+            {/* Compact front: title + fav, assistant pill, notes, prompts only */}
+            <div className="prompt-card-header">
+              <button className={`prompt-card-fav${p.isFavorite ? ' active' : ''}`} title={p.isFavorite ? t('removeFromFav', lang) : t('addToFav', lang)} onClick={e => { e.stopPropagation(); handleToggleFav(); }}>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill={p.isFavorite ? 'currentColor' : 'none'} xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8 1.5l1.8 3.6 4 .58-2.9 2.83.68 3.99L8 10.35l-3.58 1.88.68-3.99L2.2 5.68l4-.58L8 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              <div className="prompt-card-title-area">
+                <div className="prompt-card-title">{p.title}</div>
+              </div>
+            </div>
+            {p.assistant && (
+              <div className="prompt-card-meta" style={{ marginBottom: 4 }}>
+                <span className="pill assistant-pill">{p.assistant}</span>
               </div>
             )}
-          </div>
-          {p.category && <span className="pill category card-header-category">{p.category}</span>}
-        </div>
-
-        {/* Notes */}
-        {p.notes && <NotesPreview notes={p.notes} />}
-
-        {/* Prompt items */}
-        <div className="prompt-items-list">
-          {promptItems.map((item, idx) => {
-            const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;
-            const label = item.label || (isSingle ? t('copy', lang) : `Prompt ${idx + 1}`);
-            const isCopied = copiedItemId === item.id;
-            return (
-              <PromptItemRow
-                key={item.id}
-                item={item}
-                idx={idx}
-                label={label}
-                body={body}
-                isCopied={isCopied}
-                lang={lang}
-                onCopy={e => { e.stopPropagation(); handleCopyItem(item, false); }}
-              />
-            );
-          })}
-        </div>
-
-        {/* Meta pills */}
-        <div className="prompt-card-meta">
-          {(p.solutions || []).map(s => <span key={s} className="pill">{s}</span>)}
-          {p.assistant && <span className="pill assistant-pill">{p.assistant}</span>}
-          {p.industry  && <span className="pill industry-pill">{p.industry}</span>}
-          {p.storyFlow && (() => { const c = getFlowColor(p.storyFlow); return <span className="pill flow" style={{ background: c.bg, color: c.text }}>{p.storyFlow}</span>; })()}
-          {p.status && <span className={`pill status-${p.status}`}>{p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span>}
-          {langBadge}
-          {p.usageCount > 0 && <span className="usage-hint" style={{ marginLeft: 'auto' }}>Used {t('usedCount', lang, p.usageCount)}{p.lastUsedAt ? ` · ${relTime(p.lastUsedAt, lang)}` : ''}</span>}
-        </div>
-
-        {/* Request publish button (viewers, Mine workspace) */}
-        {isPendingRequest && workspace === 'mine' && !canPublish && p.ownerId === profile?.id && (
-          <div className="card-request-pending">
-            <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.4"/><path d="M6 3.5v3l1.5 1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
-            {t('requestedPublish', lang)}
-          </div>
-        )}
-        {showRequestBtn && (
-          <div style={{ marginTop: 6 }}>
-            <button
-              className={`card-request-btn${isPendingRequest ? ' requested' : ''}`}
-              disabled={isPendingRequest}
-              onClick={async e => {
-                e.stopPropagation();
-                try {
-                  await StorageAPI.createPublishRequest(p.id);
-                  const reqs = await StorageAPI.getPublishRequests();
-                  dispatch({ type: 'SET_PUBLISH_REQUESTS', payload: reqs });
-                  dispatch({ type: 'SHOW_TOAST', payload: t('publishRequestSent', lang) });
-                } catch (err) {
-                  dispatch({ type: 'SHOW_TOAST', payload: `Error: ${err.message}` });
-                }
-              }}
-            >
-              {isPendingRequest ? t('requestedPublish', lang) : t('requestPublish', lang)}
-            </button>
-          </div>
-        )}
-
-        {/* Joule Skill badge */}
-        {hasJouleSkill && (
-          <div className="card-joule-badge">
-            <JouleDiamond size={18} />
-            <span>Joule Skill</span>
-          </div>
-        )}
-
-        {/* Systems */}
-        {systems.length > 0 && (
-          <div className="card-systems-list">
-            {systems.map(sys => <SystemChip key={sys.id} sys={sys} lang={lang} onCopied={handleCopied} />)}
-          </div>
-        )}
-
-        {/* Demo links */}
-        {(p.demoLinks || []).filter(l => l.url).length > 0 && (
-          <>
-            <div className="card-section-label">Demo link(s)</div>
-            <div className="card-demo-links">
-              {p.demoLinks.filter(l => l.url).map(link => (
-                <a key={link.id} className="card-demo-link" href={link.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>
-                  {link.desc || link.url}
-                </a>
-              ))}
+            {p.notes && <NotesPreview notes={p.notes} />}
+            <div className="prompt-items-list">
+              {promptItems.map((item, idx) => {
+                const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;
+                const label = item.label || (isSingle ? t('copy', lang) : `Prompt ${idx + 1}`);
+                return (
+                  <PromptItemRow key={item.id} item={item} idx={idx} label={label} body={body}
+                    isCopied={copiedItemId === item.id} lang={lang}
+                    onCopy={e => { e.stopPropagation(); handleCopyItem(item, false); }} />
+                );
+              })}
             </div>
+          </>
+        ) : (
+          <>
+            {/* Header: fav | title + personas | category pill */}
+            <div className="prompt-card-header">
+              <button className={`prompt-card-fav${p.isFavorite ? ' active' : ''}`} title={p.isFavorite ? t('removeFromFav', lang) : t('addToFav', lang)} onClick={e => { e.stopPropagation(); handleToggleFav(); }}>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill={p.isFavorite ? 'currentColor' : 'none'} xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8 1.5l1.8 3.6 4 .58-2.9 2.83.68 3.99L8 10.35l-3.58 1.88.68-3.99L2.2 5.68l4-.58L8 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              <div className="prompt-card-title-area">
+                <div className="prompt-card-title">{p.title}</div>
+                {(p.personas || []).length > 0 && (
+                  <div className="prompt-card-personas">
+                    {p.personas.map(persona => <span key={persona} className="pill persona">{persona}</span>)}
+                  </div>
+                )}
+              </div>
+              {p.category && <span className="pill category card-header-category">{p.category}</span>}
+            </div>
+
+            {/* Notes */}
+            {p.notes && <NotesPreview notes={p.notes} />}
+
+            {/* Prompt items */}
+            <div className="prompt-items-list">
+              {promptItems.map((item, idx) => {
+                const body = (lang === 'fr' && item.body_fr) ? item.body_fr : item.body;
+                const label = item.label || (isSingle ? t('copy', lang) : `Prompt ${idx + 1}`);
+                const isCopied = copiedItemId === item.id;
+                return (
+                  <PromptItemRow key={item.id} item={item} idx={idx} label={label} body={body}
+                    isCopied={isCopied} lang={lang}
+                    onCopy={e => { e.stopPropagation(); handleCopyItem(item, false); }} />
+                );
+              })}
+            </div>
+
+            {/* Meta pills */}
+            <div className="prompt-card-meta">
+              {(p.solutions || []).map(s => <span key={s} className="pill">{s}</span>)}
+              {p.assistant && <span className="pill assistant-pill">{p.assistant}</span>}
+              {p.industry  && <span className="pill industry-pill">{p.industry}</span>}
+              {p.storyFlow && (() => { const c = getFlowColor(p.storyFlow); return <span className="pill flow" style={{ background: c.bg, color: c.text }}>{p.storyFlow}</span>; })()}
+              {p.status && <span className={`pill status-${p.status}`}>{p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span>}
+              {langBadge}
+              {p.usageCount > 0 && <span className="usage-hint" style={{ marginLeft: 'auto' }}>Used {t('usedCount', lang, p.usageCount)}{p.lastUsedAt ? ` · ${relTime(p.lastUsedAt, lang)}` : ''}</span>}
+            </div>
+
+            {/* Request publish button (viewers, Mine workspace) */}
+            {isPendingRequest && workspace === 'mine' && !canPublish && p.ownerId === profile?.id && (
+              <div className="card-request-pending">
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.4"/><path d="M6 3.5v3l1.5 1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                {t('requestedPublish', lang)}
+              </div>
+            )}
+            {showRequestBtn && (
+              <div style={{ marginTop: 6 }}>
+                <button
+                  className={`card-request-btn${isPendingRequest ? ' requested' : ''}`}
+                  disabled={isPendingRequest}
+                  onClick={async e => {
+                    e.stopPropagation();
+                    try {
+                      await StorageAPI.createPublishRequest(p.id);
+                      const reqs = await StorageAPI.getPublishRequests();
+                      dispatch({ type: 'SET_PUBLISH_REQUESTS', payload: reqs });
+                      dispatch({ type: 'SHOW_TOAST', payload: t('publishRequestSent', lang) });
+                    } catch (err) {
+                      dispatch({ type: 'SHOW_TOAST', payload: `Error: ${err.message}` });
+                    }
+                  }}
+                >
+                  {isPendingRequest ? t('requestedPublish', lang) : t('requestPublish', lang)}
+                </button>
+              </div>
+            )}
+
+            {/* Joule Skill badge */}
+            {hasJouleSkill && (
+              <div className="card-joule-badge">
+                <JouleDiamond size={18} />
+                <span>Joule Skill</span>
+              </div>
+            )}
+
+            {/* Systems */}
+            {systems.length > 0 && (
+              <div className="card-systems-list">
+                {systems.map(sys => <SystemChip key={sys.id} sys={sys} lang={lang} onCopied={handleCopied} />)}
+              </div>
+            )}
+
+            {/* Demo links */}
+            {(p.demoLinks || []).filter(l => l.url).length > 0 && (
+              <>
+                <div className="card-section-label">Demo link(s)</div>
+                <div className="card-demo-links">
+                  {p.demoLinks.filter(l => l.url).map(link => (
+                    <a key={link.id} className="card-demo-link" href={link.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>
+                      {link.desc || link.url}
+                    </a>
+                  ))}
+                </div>
+              </>
+            )}
           </>
         )}
 
