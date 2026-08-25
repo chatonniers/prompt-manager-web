@@ -750,12 +750,11 @@ export default function PromptGrid() {
             <div className="category-tabs">
               {allTabs.map((block, idx) => {
                   const isActive = tabKey === block.key;
-                  const color = CATEGORY_COLORS[idx % CATEGORY_COLORS.length];
+                  const colorIdx = idx % CATEGORY_COLORS.length;
                   return (
                 <button
                   key={block.key}
-                  className={`category-tab${isActive ? ' category-tab-active' : ''}${block.prompts.length === 0 ? ' category-tab-empty' : ''}`}
-                  style={isActive ? { background: color.bg, borderLeftColor: color.border, color: color.text, boxShadow: `0 1px 6px ${color.bg}` } : {}}
+                  className={`category-tab category-tab-c${colorIdx}${isActive ? ' category-tab-active' : ''}${block.prompts.length === 0 ? ' category-tab-empty' : ''}`}
                   onClick={() => setActiveTab(block.key)}
                   onDragEnter={() => { if (draggingId) { dragTabRef.current = block.key; setActiveTab(block.key); } }}
                   onDragOver={e => handleTabDragOver(e, block.key)}
@@ -770,7 +769,7 @@ export default function PromptGrid() {
                   }}
                 >
                   {block.label}
-                  <span className="category-tab-count" style={isActive ? { background: color.bg, color: color.text } : {}}>{block.prompts.length}</span>
+                  <span className="category-tab-count">{block.prompts.length}</span>
                 </button>
                   );
                 })}
