@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
@@ -13,13 +13,13 @@ import UserManagement from './UserManagement.jsx';
 import AdminStatsView from './AdminStatsView.jsx';
 
 const FUNCTIONAL_SECTIONS = [
+  { id: 'assistants', labelKey: 'assistantsAdmin' },
   { id: 'categories', labelKey: 'categoriesAdmin' },
   { id: 'flows',      labelKey: 'flowsAdmin' },
+  { id: 'industries', labelKey: 'industriesAdmin' },
   { id: 'personas',   labelKey: 'personasAdmin' },
   { id: 'solutions',  labelKey: 'solutionsAdmin' },
   { id: 'systems',    labelKey: 'systemsAdmin' },
-  { id: 'assistants', labelKey: 'assistantsAdmin' },
-  { id: 'industries', labelKey: 'industriesAdmin' },
 ];
 
 const TECHNICAL_SECTIONS = [
@@ -27,9 +27,9 @@ const TECHNICAL_SECTIONS = [
 ];
 
 const ADMIN_TECHNICAL_SECTIONS = [
+  { id: 'system',     labelKey: null, label: 'System' },
   { id: 'users',      labelKey: null, label: 'Users' },
   { id: 'visibility', labelKey: null, label: 'Visibility Rules' },
-  { id: 'system',     labelKey: null, label: 'System' },
 ];
 
 const STATS_SECTIONS = [
@@ -42,6 +42,8 @@ export default function SettingsView() {
   const lang = state.settings?.lang || 'en';
   const [activeSection, setActiveSection] = useState(state.settingsSection || 'categories');
   const [broadcastSent, setBroadcastSent] = useState(false);
+  const [navSearch, setNavSearch] = useState('');
+  const navSearchRef = useRef(null);
 
   const allSections = [
     ...FUNCTIONAL_SECTIONS,
@@ -49,6 +51,15 @@ export default function SettingsView() {
     ...(isAdmin ? ADMIN_TECHNICAL_SECTIONS : []),
     ...(isAdmin ? STATS_SECTIONS : []),
   ];
+
+  const filteredSections = useMemo(() => {
+    const q = navSearch.trim().toLowerCase();
+    if (!q) return null;
+    return allSections.filter(sec => {
+      const label = sec.labelKey ? t(sec.labelKey, lang) : sec.label;
+      return label.toLowerCase().includes(q);
+    });
+  }, [navSearch, lang, isAdmin]);
 
   const fileRef = useRef(null);
   const [importData, setImportData] = useState(null);
@@ -96,14 +107,18 @@ export default function SettingsView() {
   }
 
   function NavSection({ sections, label }) {
+    const visible = filteredSections
+      ? sections.filter(s => filteredSections.some(f => f.id === s.id))
+      : sections;
+    if (visible.length === 0) return null;
     return (
       <>
         {label && <div className="settings-nav-group-label">{label}</div>}
-        {sections.map(sec => (
+        {visible.map(sec => (
           <button
             key={sec.id}
             className={`settings-nav-item${activeSection === sec.id ? ' active' : ''}`}
-            onClick={() => setActiveSection(sec.id)}
+            onClick={() => { setActiveSection(sec.id); setNavSearch(''); }}
           >
             {sec.labelKey ? t(sec.labelKey, lang) : sec.label}
           </button>
@@ -118,15 +133,47 @@ export default function SettingsView() {
 
         {/* Left nav */}
         <nav className="settings-nav">
-          <NavSection sections={FUNCTIONAL_SECTIONS} label="Functional Parameters" />
+          <div className="settings-nav-search-wrap">
+            <input
+              ref={navSearchRef}
+              className="settings-nav-search"
+              type="text"
+              placeholder="Search settings…"
+              value={navSearch}
+              onChange={e => {
+                const val = e.target.value;
+                setNavSearch(val);
+                // Auto-navigate when exactly one result
+                const q = val.trim().toLowerCase();
+                if (q) {
+                  const matches = allSections.filter(sec => {
+                    const label = sec.labelKey ? t(sec.labelKey, lang) : sec.label;
+                    return label.toLowerCase().includes(q);
+                  });
+                  if (matches.length === 1) setActiveSection(matches[0].id);
+                }
+              }}
+              onKeyDown={e => {
+                if (e.key === 'Escape') { setNavSearch(''); navSearchRef.current?.blur(); }
+                if (e.key === 'Enter' && filteredSections?.length >= 1) {
+                  setActiveSection(filteredSections[0].id);
+                  setNavSearch('');
+                }
+              }}
+            />
+            {navSearch && (
+              <button className="settings-nav-search-clear" onClick={() => { setNavSearch(''); navSearchRef.current?.focus(); }}>×</button>
+            )}
+          </div>
+          <NavSection sections={FUNCTIONAL_SECTIONS} label={navSearch ? null : 'Functional Parameters'} />
           <div className="settings-nav-divider" />
-          <NavSection sections={TECHNICAL_SECTIONS} label="Data" />
+          <NavSection sections={TECHNICAL_SECTIONS} label={navSearch ? null : 'Data'} />
           {isAdmin && (
             <>
               <div className="settings-nav-divider" />
-              <NavSection sections={ADMIN_TECHNICAL_SECTIONS} label="Admin" />
+              <NavSection sections={ADMIN_TECHNICAL_SECTIONS} label={navSearch ? null : 'Admin'} />
               <div className="settings-nav-divider" />
-              <NavSection sections={STATS_SECTIONS} label="Analytics" />
+              <NavSection sections={STATS_SECTIONS} label={navSearch ? null : 'Analytics'} />
             </>
           )}
         </nav>

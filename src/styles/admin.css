@@ -479,6 +479,42 @@
 .stats-status-row strong { font-size: 14px; font-weight: 800; color: var(--pm-text); }
 
 /* ── Settings nav groups ─────────────────────────────────────────────── */
+.settings-nav-search-wrap {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.settings-nav-search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 28px 6px 10px;
+  border: 1px solid var(--pm-border);
+  border-radius: 6px;
+  background: var(--pm-surface);
+  color: var(--pm-text);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.settings-nav-search:focus { border-color: var(--pm-accent); }
+.settings-nav-search::placeholder { color: var(--pm-text3); }
+
+.settings-nav-search-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--pm-text3);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+.settings-nav-search-clear:hover { color: var(--pm-text); }
+
 .settings-nav-divider {
   height: 1px;
   background: var(--pm-border);
