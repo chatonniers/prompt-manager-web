@@ -126,19 +126,20 @@ export default function AdminAssistantsCard() {
           const color = domainColor(a.domain, categories);
           if (editingId === a.id) {
             return (
-              <div key={a.id} className="admin-item-row editing">
+              <div key={a.id} className="admin-row">
                 <input
                   className="admin-item-input"
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleRename(a.id); if (e.key === 'Escape') setEditingId(null); }}
                   autoFocus
+                  style={{ flex: 1 }}
                 />
                 <select
                   className="admin-item-input"
                   value={editDomain}
                   onChange={e => setEditDomain(e.target.value)}
-                  style={{ maxWidth: 160 }}
+                  style={{ maxWidth: 180 }}
                 >
                   <option value="">— Any domain —</option>
                   {categories.map(c => <option key={c} value={c}>{c}</option>)}
@@ -148,10 +149,21 @@ export default function AdminAssistantsCard() {
               </div>
             );
           }
+          if (confirmId === a.id) {
+            return (
+              <div key={a.id} className="admin-row">
+                <span className="admin-item-input" style={{ flex: 1, padding: '5px 8px', color: 'var(--pm-danger)', fontWeight: 600 }}>
+                  Delete "{a.name}"?
+                </span>
+                <button className="admin-save-btn" style={{ background: 'var(--pm-danger)' }} onClick={() => handleDelete(a.id)}>{t('del', lang)}</button>
+                <button className="admin-del-btn" onClick={() => setConfirmId(null)}>{t('cancel', lang)}</button>
+              </div>
+            );
+          }
           return (
             <div
               key={a.id}
-              className={`admin-item-row${dragOverId === a.id ? ' drag-over' : ''}`}
+              className={`admin-row${dragOverId === a.id ? ' drag-over' : ''}`}
               draggable
               onDragStart={() => handleDragStart(a.id)}
               onDragOver={e => handleDragOver(e, a.id)}
@@ -159,27 +171,22 @@ export default function AdminAssistantsCard() {
               onDrop={() => handleDrop(a.id)}
             >
               <span className="admin-drag-handle" title="Drag to reorder">⠿</span>
-              <span className="admin-item-name">{a.name}</span>
+              <span
+                className="admin-item-input"
+                style={{ flex: 1, padding: '5px 8px', cursor: 'pointer' }}
+                onClick={() => { setEditingId(a.id); setEditName(a.name); setEditDomain(a.domain || ''); }}
+              >
+                {a.name}
+              </span>
               {a.domain && (
                 <span className="admin-assistant-domain-badge" style={{ background: color + '22', color }}>
                   {a.domain}
                 </span>
               )}
-              {cnt > 0
-                ? <span className="admin-in-use has-uses">{t('usedBy', lang, cnt)}</span>
-                : <span className="admin-in-use">{t('unused', lang)}</span>
-              }
-              <button className="admin-rename-btn" onClick={() => { setEditingId(a.id); setEditName(a.name); setEditDomain(a.domain || ''); }}>
-                {t('renameBtn', lang)}
-              </button>
-              {confirmId === a.id ? (
-                <>
-                  <button className="admin-save-btn" style={{ background: 'var(--pm-danger)' }} onClick={() => handleDelete(a.id)}>{t('del', lang)}</button>
-                  <button className="admin-del-btn" onClick={() => setConfirmId(null)}>{t('cancel', lang)}</button>
-                </>
-              ) : (
-                <button className="admin-del-btn" onClick={() => setConfirmId(a.id)}>{t('del', lang)}</button>
-              )}
+              <span className={`admin-in-use${cnt > 0 ? ' has-uses' : ''}`}>
+                {cnt > 0 ? t('usedBy', lang, cnt) : t('unused', lang)}
+              </span>
+              <button className="admin-del-btn" onClick={() => setConfirmId(a.id)}>{t('del', lang)}</button>
             </div>
           );
         })}
