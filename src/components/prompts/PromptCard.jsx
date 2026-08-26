@@ -250,6 +250,17 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
   const [historyNames, setHistoryNames] = useState({});
 
   useEffect(() => {
+    setCategory(p.category || '');
+    setStoryFlow(p.storyFlow || '');
+    setStatus(p.status || '');
+    setPersonas(p.personas || []);
+    setNotes(p.notes || '');
+    setSolutions(p.solutions || []);
+    setAssistant(p.assistant || '');
+    setIndustry(p.industry || '');
+  }, [p.id, p.category, p.storyFlow, p.status, p.personas, p.notes, p.solutions, p.assistant, p.industry]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     if (!p.ownerId && !p.updatedById) return;
     StorageAPI.getProfileNames([p.ownerId, p.updatedById].filter(Boolean)).then(setHistoryNames);
   }, [p.ownerId, p.updatedById]);
