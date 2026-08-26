@@ -46,6 +46,9 @@
   margin-left: auto;
   margin-right: 10px;
 }
+/* Private = red, Public = green — override generic tb-display-seg active colour */
+.modal-header-visibility .tb-display-seg-btn:first-child.active  { background: rgba(239,68,68,0.35);  color: #FCA5A5; }
+.modal-header-visibility .tb-display-seg-btn:last-child.active   { background: rgba(16,185,129,0.35); color: #6EE7B7; }
 
 .modal-close-btn {
   background: rgba(255,255,255,0.1);
