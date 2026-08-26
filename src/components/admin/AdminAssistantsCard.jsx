@@ -19,6 +19,7 @@ export default function AdminAssistantsCard() {
   const assistants = state.catalog.assistants || [];
   const categories = state.catalog.categories || [];
 
+  const [filterDomain, setFilterDomain] = useState('');
   const [newName, setNewName] = useState('');
   const [newDomain, setNewDomain] = useState('');
   const [editingId, setEditingId] = useState(null);
@@ -41,12 +42,13 @@ export default function AdminAssistantsCard() {
 
   async function handleAdd() {
     const name = newName.trim();
+    const domain = newDomain || filterDomain || '';
     if (!name) return;
     if (assistants.some(a => a.name === name)) {
       dispatch({ type: 'SHOW_TOAST', payload: t('nameExists', lang) });
       return;
     }
-    const entry = { id: crypto.randomUUID(), name, domain: newDomain || '' };
+    const entry = { id: crypto.randomUUID(), name, domain };
     await saveCatalog([...assistants, entry]);
     dispatch({ type: 'SHOW_TOAST', payload: t('added', lang, name) });
     setNewName('');
@@ -62,7 +64,6 @@ export default function AdminAssistantsCard() {
       dispatch({ type: 'SHOW_TOAST', payload: t('nameExists', lang) });
       return;
     }
-    // Update prompts using old name
     if (old.name !== name) {
       const changed = state.prompts.filter(p => p.assistant === old.name);
       await Promise.all(changed.map(p => StorageAPI.upsertPrompt({ ...p, assistant: name })));
@@ -79,7 +80,6 @@ export default function AdminAssistantsCard() {
   async function handleDelete(id) {
     const entry = assistants.find(a => a.id === id);
     if (!entry) return;
-    // Null out assistant on affected prompts
     const changed = state.prompts.filter(p => p.assistant === entry.name);
     await Promise.all(changed.map(p => StorageAPI.upsertPrompt({ ...p, assistant: null })));
     if (changed.length > 0) {
@@ -107,6 +107,53 @@ export default function AdminAssistantsCard() {
     await saveCatalog(reordered);
   }
 
+  // Group by domain
+  const usedDomains = [...new Set(assistants.map(a => a.domain || ''))];
+  const visibleDomains = filterDomain ? [filterDomain] : usedDomains;
+
+  function renderRow(a) {
+    const cnt = usageCount(a.name);
+    const color = domainColor(a.domain, categories);
+    if (editingId === a.id) {
+      return (
+        <div key={a.id} className="admin-row">
+          <input className="admin-item-input" value={editName} onChange={e => setEditName(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleRename(a.id); if (e.key === 'Escape') setEditingId(null); }}
+            autoFocus style={{ flex: 1 }} />
+          <select className="admin-item-input" value={editDomain} onChange={e => setEditDomain(e.target.value)} style={{ maxWidth: 180 }}>
+            <option value="">— Any domain —</option>
+            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <button className="admin-save-btn" onClick={() => handleRename(a.id)}>{t('saveBtn', lang)}</button>
+          <button className="admin-del-btn" onClick={() => setEditingId(null)}>{t('cancel', lang)}</button>
+        </div>
+      );
+    }
+    if (confirmId === a.id) {
+      return (
+        <div key={a.id} className="admin-row">
+          <span className="admin-item-input" style={{ flex: 1, padding: '5px 8px', color: 'var(--pm-danger)', fontWeight: 600 }}>Delete "{a.name}"?</span>
+          <button className="admin-save-btn" style={{ background: 'var(--pm-danger)' }} onClick={() => handleDelete(a.id)}>{t('del', lang)}</button>
+          <button className="admin-del-btn" onClick={() => setConfirmId(null)}>{t('cancel', lang)}</button>
+        </div>
+      );
+    }
+    return (
+      <div key={a.id} className={`admin-row${dragOverId === a.id ? ' drag-over' : ''}`}
+        draggable onDragStart={() => handleDragStart(a.id)}
+        onDragOver={e => handleDragOver(e, a.id)} onDragLeave={handleDragLeave} onDrop={() => handleDrop(a.id)}>
+        <span className="admin-drag-handle" title="Drag to reorder">⠿</span>
+        <span className="admin-item-input" style={{ flex: 1, padding: '5px 8px', cursor: 'pointer' }}
+          onClick={() => { setEditingId(a.id); setEditName(a.name); setEditDomain(a.domain || ''); }}>
+          {a.name}
+        </span>
+        {a.domain && <span className="admin-assistant-domain-badge" style={{ background: color + '22', color }}>{a.domain}</span>}
+        <span className={`admin-in-use${cnt > 0 ? ' has-uses' : ''}`}>{cnt > 0 ? t('usedBy', lang, cnt) : t('unused', lang)}</span>
+        <button className="admin-del-btn" onClick={() => setConfirmId(a.id)}>{t('del', lang)}</button>
+      </div>
+    );
+  }
+
   return (
     <div className="view-card admin-card">
       <div className="admin-card-header">
@@ -116,97 +163,44 @@ export default function AdminAssistantsCard() {
         </div>
       </div>
 
-      {assistants.length === 0 && (
-        <div className="admin-empty">{t('noItems', lang)}</div>
+      {/* Domain filter */}
+      {categories.length > 0 && (
+        <div className="admin-filter-row">
+          <span className="admin-filter-label">Filter by domain:</span>
+          <button className={`admin-filter-btn${!filterDomain ? ' active' : ''}`} onClick={() => setFilterDomain('')}>All</button>
+          {categories.map(c => (
+            <button key={c} className={`admin-filter-btn${filterDomain === c ? ' active' : ''}`} onClick={() => setFilterDomain(c)}>{c}</button>
+          ))}
+        </div>
       )}
 
+      {assistants.length === 0 && <div className="admin-empty">{t('noItems', lang)}</div>}
+
       <div className="admin-list">
-        {assistants.map(a => {
-          const cnt = usageCount(a.name);
-          const color = domainColor(a.domain, categories);
-          if (editingId === a.id) {
-            return (
-              <div key={a.id} className="admin-row">
-                <input
-                  className="admin-item-input"
-                  value={editName}
-                  onChange={e => setEditName(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') handleRename(a.id); if (e.key === 'Escape') setEditingId(null); }}
-                  autoFocus
-                  style={{ flex: 1 }}
-                />
-                <select
-                  className="admin-item-input"
-                  value={editDomain}
-                  onChange={e => setEditDomain(e.target.value)}
-                  style={{ maxWidth: 180 }}
-                >
-                  <option value="">— Any domain —</option>
-                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <button className="admin-save-btn" onClick={() => handleRename(a.id)}>{t('saveBtn', lang)}</button>
-                <button className="admin-del-btn" onClick={() => setEditingId(null)}>{t('cancel', lang)}</button>
-              </div>
-            );
-          }
-          if (confirmId === a.id) {
-            return (
-              <div key={a.id} className="admin-row">
-                <span className="admin-item-input" style={{ flex: 1, padding: '5px 8px', color: 'var(--pm-danger)', fontWeight: 600 }}>
-                  Delete "{a.name}"?
-                </span>
-                <button className="admin-save-btn" style={{ background: 'var(--pm-danger)' }} onClick={() => handleDelete(a.id)}>{t('del', lang)}</button>
-                <button className="admin-del-btn" onClick={() => setConfirmId(null)}>{t('cancel', lang)}</button>
-              </div>
-            );
-          }
+        {visibleDomains.map(domain => {
+          const group = assistants.filter(a => (a.domain || '') === domain);
+          if (group.length === 0) return null;
+          const color = domainColor(domain, categories);
           return (
-            <div
-              key={a.id}
-              className={`admin-row${dragOverId === a.id ? ' drag-over' : ''}`}
-              draggable
-              onDragStart={() => handleDragStart(a.id)}
-              onDragOver={e => handleDragOver(e, a.id)}
-              onDragLeave={handleDragLeave}
-              onDrop={() => handleDrop(a.id)}
-            >
-              <span className="admin-drag-handle" title="Drag to reorder">⠿</span>
-              <span
-                className="admin-item-input"
-                style={{ flex: 1, padding: '5px 8px', cursor: 'pointer' }}
-                onClick={() => { setEditingId(a.id); setEditName(a.name); setEditDomain(a.domain || ''); }}
-              >
-                {a.name}
-              </span>
-              {a.domain && (
-                <span className="admin-assistant-domain-badge" style={{ background: color + '22', color }}>
-                  {a.domain}
-                </span>
-              )}
-              <span className={`admin-in-use${cnt > 0 ? ' has-uses' : ''}`}>
-                {cnt > 0 ? t('usedBy', lang, cnt) : t('unused', lang)}
-              </span>
-              <button className="admin-del-btn" onClick={() => setConfirmId(a.id)}>{t('del', lang)}</button>
+            <div key={domain || '__none__'} className="admin-group">
+              <div className="admin-group-header" style={{ borderLeftColor: color }}>
+                {domain || '— No domain —'}
+                <span className="admin-group-count">{group.length}</span>
+              </div>
+              {group.map(renderRow)}
             </div>
           );
         })}
+        {/* Assistants with no domain that aren't in the used-domains list */}
+        {!filterDomain && assistants.filter(a => !usedDomains.includes(a.domain || '') || (a.domain || '') === '').length > 0 && null}
       </div>
 
       {/* Add form */}
       <div className="admin-add-row" style={{ marginTop: 12 }}>
-        <input
-          className="admin-item-input"
-          value={newName}
-          onChange={e => setNewName(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }}
-          placeholder="Assistant name…"
-        />
-        <select
-          className="admin-item-input"
-          value={newDomain}
-          onChange={e => setNewDomain(e.target.value)}
-          style={{ maxWidth: 160 }}
-        >
+        <input className="admin-item-input" value={newName} onChange={e => setNewName(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }} placeholder="Assistant name…" />
+        <select className="admin-item-input" value={newDomain || filterDomain}
+          onChange={e => setNewDomain(e.target.value)} style={{ maxWidth: 180 }}>
           <option value="">— Any domain —</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>

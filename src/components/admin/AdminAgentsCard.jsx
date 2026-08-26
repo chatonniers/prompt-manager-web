@@ -9,6 +9,7 @@ export default function AdminAgentsCard() {
   const agents = state.catalog.agents || [];
   const assistants = state.catalog.assistants || [];
 
+  const [filterAssistant, setFilterAssistant] = useState('');
   const [newName, setNewName] = useState('');
   const [newAssistant, setNewAssistant] = useState('');
   const [editingId, setEditingId] = useState(null);
@@ -31,12 +32,13 @@ export default function AdminAgentsCard() {
 
   async function handleAdd() {
     const name = newName.trim();
+    const assistant = newAssistant || filterAssistant || '';
     if (!name) return;
     if (agents.some(a => a.name === name)) {
       dispatch({ type: 'SHOW_TOAST', payload: t('nameExists', lang) });
       return;
     }
-    const entry = { id: crypto.randomUUID(), name, assistant: newAssistant || '' };
+    const entry = { id: crypto.randomUUID(), name, assistant };
     await saveCatalog([...agents, entry]);
     dispatch({ type: 'SHOW_TOAST', payload: t('added', lang, name) });
     setNewName('');
@@ -95,6 +97,54 @@ export default function AdminAgentsCard() {
     await saveCatalog(reordered);
   }
 
+  // Group by assistant
+  const usedAssistants = [...new Set(agents.map(a => a.assistant || ''))];
+  const visibleAssistants = filterAssistant ? [filterAssistant] : usedAssistants;
+
+  function renderRow(a) {
+    const cnt = usageCount(a.name);
+    if (editingId === a.id) {
+      return (
+        <div key={a.id} className="admin-row">
+          <input className="admin-item-input" value={editName} onChange={e => setEditName(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleRename(a.id); if (e.key === 'Escape') setEditingId(null); }}
+            autoFocus style={{ flex: 1 }} />
+          <select className="admin-item-input" value={editAssistant} onChange={e => setEditAssistant(e.target.value)} style={{ maxWidth: 200 }}>
+            <option value="">— Any assistant —</option>
+            {assistants.map(ast => <option key={ast.id} value={ast.name}>{ast.name}</option>)}
+          </select>
+          <button className="admin-save-btn" onClick={() => handleRename(a.id)}>{t('saveBtn', lang)}</button>
+          <button className="admin-del-btn" onClick={() => setEditingId(null)}>{t('cancel', lang)}</button>
+        </div>
+      );
+    }
+    if (confirmId === a.id) {
+      return (
+        <div key={a.id} className="admin-row">
+          <span className="admin-item-input" style={{ flex: 1, padding: '5px 8px', color: 'var(--pm-danger)', fontWeight: 600 }}>Delete "{a.name}"?</span>
+          <button className="admin-save-btn" style={{ background: 'var(--pm-danger)' }} onClick={() => handleDelete(a.id)}>{t('del', lang)}</button>
+          <button className="admin-del-btn" onClick={() => setConfirmId(null)}>{t('cancel', lang)}</button>
+        </div>
+      );
+    }
+    return (
+      <div key={a.id} className={`admin-row${dragOverId === a.id ? ' drag-over' : ''}`}
+        draggable onDragStart={() => handleDragStart(a.id)}
+        onDragOver={e => handleDragOver(e, a.id)} onDragLeave={handleDragLeave} onDrop={() => handleDrop(a.id)}>
+        <span className="admin-drag-handle" title="Drag to reorder">⠿</span>
+        <span className="admin-item-input" style={{ flex: 1, padding: '5px 8px', cursor: 'pointer' }}
+          onClick={() => { setEditingId(a.id); setEditName(a.name); setEditAssistant(a.assistant || ''); }}>
+          {a.name}
+        </span>
+        {a.assistant && (
+          <span className="admin-assistant-domain-badge" style={{ background: 'rgba(99,102,241,0.15)', color: '#818CF8' }}>{a.assistant}</span>
+        )}
+        <span className={`admin-in-use${cnt > 0 ? ' has-uses' : ''}`}>{cnt > 0 ? t('usedBy', lang, cnt) : t('unused', lang)}</span>
+        <button className="admin-del-btn" onClick={() => setConfirmId(a.id)}>{t('del', lang)}</button>
+      </div>
+    );
+  }
+
   return (
     <div className="view-card admin-card">
       <div className="admin-card-header">
@@ -104,76 +154,31 @@ export default function AdminAgentsCard() {
         </div>
       </div>
 
-      {agents.length === 0 && (
-        <div className="admin-empty">{t('noItems', lang)}</div>
+      {/* Assistant filter */}
+      {assistants.length > 0 && (
+        <div className="admin-filter-row">
+          <span className="admin-filter-label">Filter by assistant:</span>
+          <button className={`admin-filter-btn${!filterAssistant ? ' active' : ''}`} onClick={() => setFilterAssistant('')}>All</button>
+          {assistants.map(ast => (
+            <button key={ast.id} className={`admin-filter-btn${filterAssistant === ast.name ? ' active' : ''}`}
+              onClick={() => setFilterAssistant(ast.name)}>{ast.name}</button>
+          ))}
+        </div>
       )}
 
+      {agents.length === 0 && <div className="admin-empty">{t('noItems', lang)}</div>}
+
       <div className="admin-list">
-        {agents.map(a => {
-          const cnt = usageCount(a.name);
-          if (editingId === a.id) {
-            return (
-              <div key={a.id} className="admin-row">
-                <input
-                  className="admin-item-input"
-                  value={editName}
-                  onChange={e => setEditName(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') handleRename(a.id); if (e.key === 'Escape') setEditingId(null); }}
-                  autoFocus
-                  style={{ flex: 1 }}
-                />
-                <select
-                  className="admin-item-input"
-                  value={editAssistant}
-                  onChange={e => setEditAssistant(e.target.value)}
-                  style={{ maxWidth: 200 }}
-                >
-                  <option value="">— Any assistant —</option>
-                  {assistants.map(ast => <option key={ast.id} value={ast.name}>{ast.name}</option>)}
-                </select>
-                <button className="admin-save-btn" onClick={() => handleRename(a.id)}>{t('saveBtn', lang)}</button>
-                <button className="admin-del-btn" onClick={() => setEditingId(null)}>{t('cancel', lang)}</button>
-              </div>
-            );
-          }
-          if (confirmId === a.id) {
-            return (
-              <div key={a.id} className="admin-row">
-                <span className="admin-item-input" style={{ flex: 1, padding: '5px 8px', color: 'var(--pm-danger)', fontWeight: 600 }}>
-                  Delete "{a.name}"?
-                </span>
-                <button className="admin-save-btn" style={{ background: 'var(--pm-danger)' }} onClick={() => handleDelete(a.id)}>{t('del', lang)}</button>
-                <button className="admin-del-btn" onClick={() => setConfirmId(null)}>{t('cancel', lang)}</button>
-              </div>
-            );
-          }
+        {visibleAssistants.map(astName => {
+          const group = agents.filter(a => (a.assistant || '') === astName);
+          if (group.length === 0) return null;
           return (
-            <div
-              key={a.id}
-              className={`admin-row${dragOverId === a.id ? ' drag-over' : ''}`}
-              draggable
-              onDragStart={() => handleDragStart(a.id)}
-              onDragOver={e => handleDragOver(e, a.id)}
-              onDragLeave={handleDragLeave}
-              onDrop={() => handleDrop(a.id)}
-            >
-              <span className="admin-drag-handle" title="Drag to reorder">⠿</span>
-              <span
-                className="admin-item-input"
-                style={{ flex: 1, padding: '5px 8px', cursor: 'pointer' }}
-                onClick={() => { setEditingId(a.id); setEditName(a.name); setEditAssistant(a.assistant || ''); }}
-              >
-                {a.name}
-              </span>
-              {a.assistant && (
-                <span className="admin-assistant-domain-badge" style={{ background: 'rgba(99,102,241,0.15)', color: '#818CF8' }}>
-                  {a.assistant}
-                </span>
-              )}
-              <span className={`admin-in-use${cnt > 0 ? ' has-uses' : ''}`}>
-                {cnt > 0 ? t('usedBy', lang, cnt) : t('unused', lang)}
-              </span>
-              <button className="admin-del-btn" onClick={() => setConfirmId(a.id)}>{t('del', lang)}</button>
+            <div key={astName || '__none__'} className="admin-group">
+              <div className="admin-group-header" style={{ borderLeftColor: '#818CF8' }}>
+                {astName || '— No assistant —'}
+                <span className="admin-group-count">{group.length}</span>
+              </div>
+              {group.map(renderRow)}
             </div>
           );
         })}
@@ -181,19 +186,10 @@ export default function AdminAgentsCard() {
 
       {/* Add form */}
       <div className="admin-add-row" style={{ marginTop: 12 }}>
-        <input
-          className="admin-item-input"
-          value={newName}
-          onChange={e => setNewName(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }}
-          placeholder="Agent name…"
-        />
-        <select
-          className="admin-item-input"
-          value={newAssistant}
-          onChange={e => setNewAssistant(e.target.value)}
-          style={{ maxWidth: 200 }}
-        >
+        <input className="admin-item-input" value={newName} onChange={e => setNewName(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }} placeholder="Agent name…" />
+        <select className="admin-item-input" value={newAssistant || filterAssistant}
+          onChange={e => setNewAssistant(e.target.value)} style={{ maxWidth: 200 }}>
           <option value="">— Any assistant —</option>
           {assistants.map(ast => <option key={ast.id} value={ast.name}>{ast.name}</option>)}
         </select>
