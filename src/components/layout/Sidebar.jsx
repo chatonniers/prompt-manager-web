@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useSidebarResize } from '../../hooks/useSidebarResize.js';
-import { t } from '../../lib/i18n.js';
+import { t, tl } from '../../lib/i18n.js';
 import { getFlowColor } from '../../lib/flowColors.js';
 import { ASSISTANT_COLORS } from '../../lib/assistantColors.js';
 
@@ -78,7 +78,7 @@ export default function Sidebar({ collapsed, onToggle, mobileNavOpen, onMobileNa
             className={`nav-item${isActive('archived') ? ' active' : ''}`}
             onClick={() => dispatch({ type: 'SET_STATUS_FILTER', payload: 'archived' })}
           >
-            <span style={{ flex: 1 }}>Archived</span>
+            <span style={{ flex: 1 }}>{t('archived', lang)}</span>
             <span className="nav-badge">{archivedCount}</span>
           </button>
         )}
@@ -91,11 +91,12 @@ export default function Sidebar({ collapsed, onToggle, mobileNavOpen, onMobileNa
         {openSections.categories && (
           <div id="nav-categories">
             {categories.map(cat => {
-              const cnt = prompts.filter(p => p.category === cat).length;
+              const enKey = typeof cat === 'object' ? cat.en : cat;
+              const cnt = prompts.filter(p => p.category === enKey).length;
               return (
-                <button key={cat} className={`nav-item${isActive('category', cat) ? ' active' : ''}`}
-                  onClick={() => setView('category', { storyFlow: null, solution: null, category: cat, assistant: null })}>
-                  <span style={{ flex: 1 }}>{cat}</span>
+                <button key={enKey} className={`nav-item${isActive('category', enKey) ? ' active' : ''}`}
+                  onClick={() => setView('category', { storyFlow: null, solution: null, category: enKey, assistant: null })}>
+                  <span style={{ flex: 1 }}>{tl(cat, lang)}</span>
                   <span className="nav-badge">{cnt}</span>
                 </button>
               );
@@ -107,7 +108,7 @@ export default function Sidebar({ collapsed, onToggle, mobileNavOpen, onMobileNa
         {assistants.length > 0 && (
           <>
             <button className="nav-section-label nav-section-toggle" onClick={() => toggleSection('assistants')}>
-              AI Assistants
+              {t('aiAssistants', lang)}
               <span className="nav-section-chevron">{openSections.assistants ? <IconChevronDown /> : <IconChevronRight />}</span>
             </button>
             {openSections.assistants && (
@@ -140,16 +141,17 @@ export default function Sidebar({ collapsed, onToggle, mobileNavOpen, onMobileNa
         {openSections.flows && (
           <div id="nav-flows">
             {catalog.storyFlows.map(flow => {
-              const cnt = prompts.filter(p => p.storyFlow === flow).length;
-              const active = isActive('flow', flow);
-              const color = getFlowColor(flow);
+              const enKey = typeof flow === 'object' ? flow.en : flow;
+              const cnt = prompts.filter(p => p.storyFlow === enKey).length;
+              const active = isActive('flow', enKey);
+              const color = getFlowColor(enKey);
               return (
-                <button key={flow}
+                <button key={enKey}
                   className={`nav-item nav-item-flow${active ? ' active' : ''}`}
                   style={active ? { background: color.bg, borderLeftColor: color.border, color: color.text } : {}}
-                  onClick={() => setView('flow', { storyFlow: flow, solution: null, category: null, assistant: null })}>
+                  onClick={() => setView('flow', { storyFlow: enKey, solution: null, category: null, assistant: null })}>
                   <span className="nav-flow-dot" style={{ background: color.border }} />
-                  <span style={{ flex: 1 }}>{flow}</span>
+                  <span style={{ flex: 1 }}>{tl(flow, lang)}</span>
                   <span className="nav-badge" style={active ? { background: color.bg, color: color.text } : {}}>{cnt}</span>
                 </button>
               );
@@ -165,12 +167,13 @@ export default function Sidebar({ collapsed, onToggle, mobileNavOpen, onMobileNa
         {openSections.solutions && (
           <div id="nav-solutions">
             {catalog.solutions.map(sol => {
-              const cnt = prompts.filter(p => (p.solutions || []).includes(sol)).length;
+              const enKey = typeof sol === 'object' ? sol.en : sol;
+              const cnt = prompts.filter(p => (p.solutions || []).includes(enKey)).length;
               return (
-                <button key={sol}
-                  className={`nav-item${isActive('solution', sol) ? ' active' : ''}`}
-                  onClick={() => setView('solution', { storyFlow: null, solution: sol, category: null, assistant: null })}>
-                  <span style={{ flex: 1 }}>{sol}</span>
+                <button key={enKey}
+                  className={`nav-item${isActive('solution', enKey) ? ' active' : ''}`}
+                  onClick={() => setView('solution', { storyFlow: null, solution: enKey, category: null, assistant: null })}>
+                  <span style={{ flex: 1 }}>{tl(sol, lang)}</span>
                   <span className="nav-badge">{cnt}</span>
                 </button>
               );

@@ -1,83 +1,8 @@
-/* ── Favorites horizontal row ────────────────────────────────────────── */
-.favs-row-wrap {
-  position: relative;
-}
-
-.favs-row {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  overflow-y: visible;
-  scroll-snap-type: x mandatory;
-  padding-bottom: 4px;
-  scrollbar-width: none;
-}
-.favs-row::-webkit-scrollbar { display: none; }
-
-.favs-row-item {
-  flex: 0 0 260px;
-  width: 260px;
-  scroll-snap-align: start;
-}
-
-.favs-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: #fff;
-  border: 1.5px solid var(--pm-border2);
-  box-shadow: var(--pm-shadow-md);
-  color: var(--pm-text2);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
-}
-.favs-nav:hover {
-  background: var(--pm-accent);
-  border-color: var(--pm-accent);
-  color: #fff;
-  transform: translateY(-50%) scale(1.1);
-}
-.favs-nav-left  { left: -15px; }
-.favs-nav-right { right: -15px; }
-
-/* ── Favorites drop zone wrapper ─────────────────────────────────────── */
-.favs-block {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  border-radius: var(--pm-radius);
-  border: 2px dashed transparent;
-  padding: 6px 8px 10px;
-  box-sizing: border-box;
-  transition: border-color 0.15s, background 0.15s;
-  overflow: visible;
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: var(--pm-bg);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-}
-.is-drag-active .favs-block {
-  border-color: rgba(99,102,241,0.25);
-  background: rgba(99,102,241,0.02);
-}
-.favs-block.dz-over {
-  border-color: var(--pm-accent) !important;
-  background: rgba(79,70,229,0.07) !important;
-}
-
 /* ── Prompt grid ──────────────────────────────────────────────────────── */
 #prompt-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
 }
 
 #prompt-grid-outer {
@@ -198,7 +123,7 @@
 /* Card hover lift */
 .prompt-card {
   background: #ffffff;
-  border-radius: var(--pm-radius);
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -211,7 +136,7 @@
   cursor: grab;
   border: 1px solid var(--pm-border);
   border-left: 4px solid var(--card-accent-color, var(--pm-border2));
-  border-radius: var(--pm-radius);
+  border-radius: 6px;
   transition: box-shadow 0.22s ease, transform 0.22s ease, border-left-color 0.22s ease;
 }
 
@@ -236,10 +161,10 @@
 
 /* Card body */
 .prompt-card-body {
-  padding: 18px 18px 16px 16px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 7px;
   flex: 1;
 }
 
@@ -358,7 +283,7 @@
   font-size: 12px;
   color: var(--pm-text3);
   line-height: 1.55;
-  padding: 8px 12px;
+  padding: 5px 10px;
   background: var(--pm-bg);
   border-left: 3px solid var(--pm-border2);
   border-radius: 0 var(--pm-radius-xs) var(--pm-radius-xs) 0;
@@ -458,7 +383,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
+  padding: 6px 10px;
   border-bottom: 1px solid var(--pm-border);
   background: #ffffff;
   cursor: pointer;

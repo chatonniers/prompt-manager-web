@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI, uploadSkillFile, deleteSkillFile } from '../../lib/storage.js';
 import { AttachmentsDB } from '../../lib/attachments.js';
-import { t } from '../../lib/i18n.js';
+import { t, tl } from '../../lib/i18n.js';
 import JouleDiamond from '../shared/JouleDiamond.jsx';
 
 function fmtSize(bytes) {
@@ -16,7 +16,7 @@ function makeItem(body = '', body_fr = '') {
   return { id: crypto.randomUUID(), label: '', label_fr: '', body, body_fr };
 }
 
-function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
+function MultiSelectDropdown({ options, selected, onChange, placeholder, lang = 'en' }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
@@ -24,11 +24,13 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
     if (open) document.addEventListener('mousedown', onOutside);
     return () => document.removeEventListener('mousedown', onOutside);
   }, [open]);
+  // Normalize options to { value, label } — value is always the EN key
+  const normalized = options.map(o => typeof o === 'object' ? { value: o.en, label: tl(o, lang) } : { value: o, label: o });
   function toggle(val) {
     onChange(selected.includes(val) ? selected.filter(x => x !== val) : [...selected, val]);
   }
   const label = selected.length === 0 ? placeholder
-    : selected.length === 1 ? selected[0] : `${selected.length} selected`;
+    : selected.length === 1 ? (normalized.find(o => o.value === selected[0])?.label ?? selected[0]) : `${selected.length} selected`;
   return (
     <div className="ms-dropdown" ref={ref}>
       <button type="button" className={`ms-trigger${open ? ' open' : ''}`} onClick={() => setOpen(v => !v)}>
@@ -37,23 +39,23 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
       </button>
       {open && (
         <div className="ms-menu">
-          {options.map(opt => {
-            const isSel = selected.includes(opt);
+          {normalized.map(({ value, label: lbl }) => {
+            const isSel = selected.includes(value);
             return (
-              <label key={opt} className={`ms-option${isSel ? ' ms-selected' : ''}`}>
-                <input type="checkbox" checked={isSel} onChange={() => toggle(opt)} />
-                {opt}
+              <label key={value} className={`ms-option${isSel ? ' ms-selected' : ''}`}>
+                <input type="checkbox" checked={isSel} onChange={() => toggle(value)} />
+                {lbl}
               </label>
             );
           })}
-          {options.length === 0 && <div className="ms-empty">No options</div>}
+          {normalized.length === 0 && <div className="ms-empty">No options</div>}
         </div>
       )}
       {selected.length > 0 && (
         <div className="card-edit-selected-pills">
           {selected.map(val => (
             <span key={val} className="card-edit-sys-chip selected">
-              · {val}
+              · {normalized.find(o => o.value === val)?.label ?? val}
               <button type="button" className="card-edit-tag-del" onClick={() => onChange(selected.filter(x => x !== val))}>×</button>
             </span>
           ))}
@@ -63,7 +65,7 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
   );
 }
 
-function SingleSelectDropdown({ options, value, onChange, placeholder }) {
+function SingleSelectDropdown({ options, value, onChange, placeholder, lang = 'en' }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
@@ -71,11 +73,12 @@ function SingleSelectDropdown({ options, value, onChange, placeholder }) {
     if (open) document.addEventListener('mousedown', onOutside);
     return () => document.removeEventListener('mousedown', onOutside);
   }, [open]);
-  const label = value || '';
+  const normalized = options.map(o => typeof o === 'object' ? { value: o.en, label: tl(o, lang) } : { value: o, label: o });
+  const displayLabel = normalized.find(o => o.value === value)?.label ?? value ?? '';
   return (
     <div className="ms-dropdown" ref={ref}>
       <button type="button" className={`ms-trigger${open ? ' open' : ''}`} onClick={() => setOpen(v => !v)}>
-        <span className={!value ? 'ms-placeholder' : 'ms-value'}>{label || placeholder}</span>
+        <span className={!value ? 'ms-placeholder' : 'ms-value'}>{displayLabel || placeholder}</span>
         <span className="ms-arrow">{open ? '▲' : '▼'}</span>
       </button>
       {open && (
@@ -83,12 +86,12 @@ function SingleSelectDropdown({ options, value, onChange, placeholder }) {
           <label className={`ms-option${!value ? ' ms-selected' : ''}`} onClick={() => { onChange(''); setOpen(false); }}>
             <span style={{ opacity: 0.5 }}>{placeholder}</span>
           </label>
-          {options.map(opt => (
-            <label key={opt} className={`ms-option${value === opt ? ' ms-selected' : ''}`} onClick={() => { onChange(opt); setOpen(false); }}>
-              {opt}
+          {normalized.map(({ value: v, label: lbl }) => (
+            <label key={v} className={`ms-option${value === v ? ' ms-selected' : ''}`} onClick={() => { onChange(v); setOpen(false); }}>
+              {lbl}
             </label>
           ))}
-          {options.length === 0 && <div className="ms-empty">No options</div>}
+          {normalized.length === 0 && <div className="ms-empty">No options</div>}
         </div>
       )}
     </div>
@@ -388,9 +391,9 @@ export default function PromptModal() {
         <div id="modal-header">
           <h2 id="modal-title">{isNew ? t('newPrompt', lang) : t('edit', lang)}</h2>
           <div className="modal-tabs">
-            <button className={`modal-tab${activeTab === 'content' ? ' active' : ''}`} onClick={() => setActiveTab('content')}>Content</button>
-            <button className={`modal-tab${activeTab === 'details' ? ' active' : ''}`} onClick={() => setActiveTab('details')}>Details</button>
-            {!isNew && <button className={`modal-tab${activeTab === 'history' ? ' active' : ''}`} onClick={() => setActiveTab('history')}>History</button>}
+            <button className={`modal-tab${activeTab === 'content' ? ' active' : ''}`} onClick={() => setActiveTab('content')}>{t('tabContent', lang)}</button>
+            <button className={`modal-tab${activeTab === 'details' ? ' active' : ''}`} onClick={() => setActiveTab('details')}>{t('tabDetails', lang)}</button>
+            {!isNew && <button className={`modal-tab${activeTab === 'history' ? ' active' : ''}`} onClick={() => setActiveTab('history')}>{t('tabHistory', lang)}</button>}
           </div>
           <button className="modal-close-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
@@ -410,12 +413,12 @@ export default function PromptModal() {
 
             {filteredAssistants.length > 0 && (
               <div className="field-row">
-                <label>AI Assistant</label>
+                <label>{t('aiAssistantLabel', lang)}</label>
                 <SingleSelectDropdown
                   options={[...filteredAssistants].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })).map(a => a.name)}
                   value={assistant}
                   onChange={setAssistant}
-                  placeholder="— None —"
+                  placeholder={t('selectNone', lang)}
                 />
               </div>
             )}
@@ -427,7 +430,8 @@ export default function PromptModal() {
                   options={catalog.personas || []}
                   selected={personas}
                   onChange={setPersonas}
-                  placeholder="— Select personas —"
+                  placeholder={t('selectPersonas', lang)}
+                  lang={lang}
                 />
               ) : (
                 <p className="hint" style={{ fontSize: 12, margin: '4px 0 0' }}>{t('noPersonasYet', lang)}</p>
@@ -487,19 +491,21 @@ export default function PromptModal() {
               <div className="field-col">
                 <label>{t('category', lang)}</label>
                 <SingleSelectDropdown
-                  options={[...(catalog.categories || [])].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))}
+                  options={[...(catalog.categories || [])].sort((a, b) => (typeof a === 'object' ? a.en : a).localeCompare(typeof b === 'object' ? b.en : b, undefined, { sensitivity: 'base' }))}
                   value={category}
                   onChange={v => { setCategory(v); setAssistant(''); }}
                   placeholder={`— ${t('noCategory', lang)} —`}
+                  lang={lang}
                 />
               </div>
               <div className="field-col">
                 <label>{t('storyFlow', lang)}</label>
                 <SingleSelectDropdown
-                  options={[...(catalog.storyFlows || [])].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))}
+                  options={[...(catalog.storyFlows || [])].sort((a, b) => (typeof a === 'object' ? a.en : a).localeCompare(typeof b === 'object' ? b.en : b, undefined, { sensitivity: 'base' }))}
                   value={storyFlow}
                   onChange={setStoryFlow}
                   placeholder={t('selectFlowNone', lang)}
+                  lang={lang}
                 />
               </div>
             </div>
@@ -507,12 +513,13 @@ export default function PromptModal() {
             {/* Industry */}
             {(catalog.industries || []).length > 0 && (
               <div className="field-row">
-                <label>Industry</label>
+                <label>{t('industryLabel', lang)}</label>
                 <SingleSelectDropdown
-                  options={[...(catalog.industries || [])].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))}
+                  options={[...(catalog.industries || [])].sort((a, b) => (typeof a === 'object' ? a.en : a).localeCompare(typeof b === 'object' ? b.en : b, undefined, { sensitivity: 'base' }))}
                   value={industry}
                   onChange={setIndustry}
-                  placeholder="— None —"
+                  placeholder={t('selectNone', lang)}
+                  lang={lang}
                 />
               </div>
             )}
@@ -525,7 +532,8 @@ export default function PromptModal() {
                   options={catalog.solutions || []}
                   selected={selectedSolutions}
                   onChange={setSelectedSolutions}
-                  placeholder="— Select solutions —"
+                  placeholder={t('selectSolutions', lang)}
+                  lang={lang}
                 />
               </div>
             )}
@@ -533,13 +541,13 @@ export default function PromptModal() {
             {/* Status + Favorite */}
             <div className="field-row-2col">
               <div className="field-col">
-                <label>Status</label>
+                <label>{t('statusLabel', lang)}</label>
                 <div className="card-status-btns">
                   {(canPublish ? ['draft', 'published', 'archived'] : ['draft']).map(s => (
                     <button key={s} type="button"
                       className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`}
                       onClick={() => setStatus(s)} disabled={!canPublish && s !== 'draft'}>
-                      {s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'}
+                      {s ? t(`status${s.charAt(0).toUpperCase() + s.slice(1)}`, lang) : '—'}
                     </button>
                   ))}
                 </div>
@@ -556,7 +564,7 @@ export default function PromptModal() {
             {/* Visibility */}
             {canEdit && (
               <div className="field-row">
-                <label>{t('visibilityLabel', lang) || 'Visibility'}</label>
+                <label>{t('visibilityLabel', lang)}</label>
                 <div className="card-privacy-btns">
                   <button type="button" className={`card-privacy-btn${isPrivate !== false ? ' active private' : ''}`} onClick={() => setIsPrivate(true)}>
                     {t('visibilityPrivate', lang)}
@@ -663,7 +671,7 @@ export default function PromptModal() {
           {activeTab === 'history' && (
             <div className="card-edit-body card-history-tab">
               <div className="card-history-row">
-                <span className="card-history-label">Created by</span>
+                <span className="card-history-label">{t('createdBy', lang)}</span>
                 <span className="card-history-user">{historyNames[existing?.ownerId] || '—'}</span>
                 {existing?.createdAt && (
                   <span className="card-history-date">{new Date(existing.createdAt).toLocaleString('en', { dateStyle: 'medium', timeStyle: 'short' })}</span>
@@ -671,7 +679,7 @@ export default function PromptModal() {
               </div>
               {(existing?.updatedById || existing?.updatedAt) && (
                 <div className="card-history-row">
-                  <span className="card-history-label">Last saved by</span>
+                  <span className="card-history-label">{t('lastSavedBy', lang)}</span>
                   <span className="card-history-user">{existing?.updatedById ? (historyNames[existing.updatedById] || '…') : '—'}</span>
                   {existing?.updatedAt && (
                     <span className="card-history-date">{new Date(existing.updatedAt).toLocaleString('en', { dateStyle: 'medium', timeStyle: 'short' })}</span>
@@ -684,16 +692,16 @@ export default function PromptModal() {
 
         <div id="modal-footer">
           {!isNew && (canPublish || (isOwner && existing?.isPrivate !== false && existing?.status === 'draft')) && (
-            <button className="card-edit-del-btn" onClick={handleDelete}>{t('del', lang) || 'Delete'}</button>
+            <button className="card-edit-del-btn" onClick={handleDelete}>{t('del', lang)}</button>
           )}
           {!isNew && !canPublish && isOwner && existing?.status === 'draft' && isPrivate === false && !isApprovedRequest && (
             <button className="card-request-btn" onClick={handlePublishRequest}>
-              {isPendingRequest ? 'Cancel request' : t('requestPublish', lang) || 'Request publish'}
+              {isPendingRequest ? t('cancelRequest', lang) : t('requestPublish', lang)}
             </button>
           )}
           {canEdit && <button className="card-edit-cancel-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>{t('cancel', lang)}</button>}
           {canEdit && <button className="card-edit-save-btn" onClick={handleSave} disabled={saving}>{saving ? t('savingLabel', lang) : t('save', lang)}</button>}
-          {!canEdit && <button className="card-edit-cancel-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>Close</button>}
+          {!canEdit && <button className="card-edit-cancel-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>{t('close', lang)}</button>}
         </div>
       </div>
     </div>

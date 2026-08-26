@@ -5,7 +5,7 @@ import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI, uploadSkillFile, deleteSkillFile } from '../../lib/storage.js';
 import { AttachmentsDB } from '../../lib/attachments.js';
-import { t } from '../../lib/i18n.js';
+import { t, tl } from '../../lib/i18n.js';
 import { getFlowColor } from '../../lib/flowColors.js';
 import { getAssistantColor } from '../../lib/assistantColors.js';
 import { extractVars } from '../../lib/substitution.js';
@@ -394,9 +394,9 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           {dupeTarget ? (
             <div className="dupe-popover">
-              <span className="dupe-popover-label">Copy to:</span>
-              <button className="dupe-popover-btn library" onClick={() => onDuplicate('library')}>Library</button>
-              <button className="dupe-popover-btn mine" onClick={() => onDuplicate('mine')}>My Prompts</button>
+              <span className="dupe-popover-label">{t('dupeCopyTo', lang)}</span>
+              <button className="dupe-popover-btn library" onClick={() => onDuplicate('library')}>{t('dupeLibrary', lang)}</button>
+              <button className="dupe-popover-btn mine" onClick={() => onDuplicate('mine')}>{t('dupeMine', lang)}</button>
               <button className="dupe-popover-cancel" onClick={() => setDupeTarget(false)}>✕</button>
             </div>
           ) : (
@@ -411,9 +411,9 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
       </div>
 
       <div className="card-edit-back-tabs">
-        <button className={`card-edit-back-tab${backTab === 'content' ? ' active' : ''}`} onClick={() => setBackTab('content')}>Content</button>
-        <button className={`card-edit-back-tab${backTab === 'details' ? ' active' : ''}`} onClick={() => setBackTab('details')}>Details</button>
-        <button className={`card-edit-back-tab${backTab === 'history' ? ' active' : ''}`} onClick={() => setBackTab('history')}>History</button>
+        <button className={`card-edit-back-tab${backTab === 'content' ? ' active' : ''}`} onClick={() => setBackTab('content')}>{t('tabContent', lang)}</button>
+        <button className={`card-edit-back-tab${backTab === 'details' ? ' active' : ''}`} onClick={() => setBackTab('details')}>{t('tabDetails', lang)}</button>
+        <button className={`card-edit-back-tab${backTab === 'history' ? ' active' : ''}`} onClick={() => setBackTab('history')}>{t('tabHistory', lang)}</button>
       </div>
 
       {backTab === 'content' && (
@@ -425,9 +425,9 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
 
           {(catalog.assistants || []).length > 0 && (
             <div className="card-edit-field">
-              <label className="card-edit-label">AI Assistant</label>
+              <label className="card-edit-label">{t('aiAssistantLabel', lang)}</label>
               <select className="card-edit-select" value={assistant} onChange={e => setAssistant(e.target.value)}>
-                <option value="">— None —</option>
+                <option value="">{t('selectNone', lang)}</option>
                 {(catalog.assistants || [])
                   .filter(a => !a.domain || a.domain === category || !category)
                   .sort((a, b) => a.name.localeCompare(b.name))
@@ -494,14 +494,14 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
               <label className="card-edit-label">{t('category', lang)}</label>
               <select className="card-edit-select" value={category} onChange={e => setCategory(e.target.value)}>
                 <option value="">{t('selectNone', lang)}</option>
-                {(catalog.categories || []).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                {(catalog.categories || []).map(cat => { const k = typeof cat === 'object' ? cat.en : cat; return <option key={k} value={k}>{tl(cat, lang)}</option>; })}
               </select>
             </div>
             <div className="card-edit-field">
               <label className="card-edit-label">{t('flowLabel', lang)}</label>
               <select className="card-edit-select" value={storyFlow} onChange={e => setStoryFlow(e.target.value)}>
                 <option value="">{t('selectNone', lang)}</option>
-                {(catalog.storyFlows || []).map(f => <option key={f} value={f}>{f}</option>)}
+                {(catalog.storyFlows || []).map(f => { const k = typeof f === 'object' ? f.en : f; return <option key={k} value={k}>{tl(f, lang)}</option>; })}
               </select>
             </div>
           </div>
@@ -509,10 +509,10 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
           <div className="card-edit-2col">
             {(catalog.industries || []).length > 0 && (
               <div className="card-edit-field">
-                <label className="card-edit-label">Industry</label>
+                <label className="card-edit-label">{t('industryLabel', lang)}</label>
                 <select className="card-edit-select" value={industry} onChange={e => setIndustry(e.target.value)}>
-                  <option value="">— None —</option>
-                  {(catalog.industries || []).map(ind => <option key={ind} value={ind}>{ind}</option>)}
+                  <option value="">{t('selectNone', lang)}</option>
+                  {(catalog.industries || []).map(ind => { const k = typeof ind === 'object' ? ind.en : ind; return <option key={k} value={k}>{tl(ind, lang)}</option>; })}
                 </select>
               </div>
             )}
@@ -525,7 +525,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
                 options={catalog.solutions || []}
                 selected={solutions}
                 onChange={setSolutions}
-                placeholder="— Select solutions —"
+                placeholder={t('selectSolutions', lang)}
                 catalogOptions={catalog.solutions || []}
               />
             </div>
@@ -536,7 +536,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
             <div className="card-status-btns">
               {(canPublish ? ['draft', 'published', 'archived'] : ['draft']).map(s => (
                 <button key={s} type="button" className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`} onClick={() => setStatus(s)}>
-                  {s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'}
+                  {s ? t(`status${s.charAt(0).toUpperCase() + s.slice(1)}`, lang) : '—'}
                 </button>
               ))}
             </div>
@@ -573,7 +573,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
                 </span>
               ))}
               {(catalog.systems || []).length === 0 && systems.length === 0 && (
-                <span style={{ fontSize: 12, color: 'var(--pm-text3)', fontStyle: 'italic' }}>No systems configured in settings</span>
+                <span style={{ fontSize: 12, color: 'var(--pm-text3)', fontStyle: 'italic' }}>{t('noSystemsConfigured', lang)}</span>
               )}
             </div>
           </div>
@@ -619,7 +619,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
       {backTab === 'history' && (
         <div className="card-edit-body card-history-tab">
           <div className="card-history-row">
-            <span className="card-history-label">Created by</span>
+            <span className="card-history-label">{t('createdBy', lang)}</span>
             <span className="card-history-user">{historyNames[p.ownerId] || '—'}</span>
             {p.createdAt && (
               <span className="card-history-date">{new Date(p.createdAt).toLocaleString('en', { dateStyle: 'medium', timeStyle: 'short' })}</span>
@@ -627,7 +627,7 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
           </div>
           {(p.updatedById || p.updatedAt) && (
             <div className="card-history-row">
-              <span className="card-history-label">Last saved by</span>
+              <span className="card-history-label">{t('lastSavedBy', lang)}</span>
               <span className="card-history-user">
                 {p.updatedById ? (historyNames[p.updatedById] || '…') : '—'}
               </span>
@@ -867,7 +867,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
     }
     if (jouleAtt && profile?.joule_integration && profile?.joule_connected) {
       if (p.status !== 'published') {
-        dispatch({ type: 'SHOW_TOAST', payload: 'Joule Desktop integration is only available for published prompts. Prompt copied.' });
+        dispatch({ type: 'SHOW_TOAST', payload: t('joulePublishedOnly', lang) });
         return;
       }
       const allAtts = await AttachmentsDB.getForPrompt(p.id);
@@ -1018,7 +1018,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
               </div>
               <div className="prompt-card-header-pills">
                 {p.assistant && (() => { const ac = getAssistantColor(p.assistant, catalog.assistants); return <span className="pill assistant-pill" style={{ background: ac.bg, color: ac.text, borderColor: ac.border }}>{p.assistant}</span>; })()}
-                {p.category && <span className="pill category card-header-category">{p.category}</span>}
+                {p.category && (() => { const catObj = (catalog.categories || []).find(c => (typeof c === 'object' ? c.en : c) === p.category); return <span className="pill category card-header-category">{tl(catObj || p.category, lang)}</span>; })()}
               </div>
             </div>
 
@@ -1044,12 +1044,9 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
               })}
             </div>
 
-            {/* Meta pills */}
+            {/* Meta pills — status, language badge, usage count */}
             <div className="prompt-card-meta">
-              {(p.solutions || []).map(s => <span key={s} className="pill">{s}</span>)}
-              {p.industry  && <span className="pill industry-pill">{p.industry}</span>}
-              {p.storyFlow && (() => { const c = getFlowColor(p.storyFlow); return <span className="pill flow" style={{ background: c.bg, color: c.text }}>{p.storyFlow}</span>; })()}
-              {p.status && <span className={`pill status-${p.status}`}>{p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span>}
+              {p.status && <span className={`pill status-${p.status}`}>{t(`status${p.status.charAt(0).toUpperCase() + p.status.slice(1)}`, lang)}</span>}
               {langBadge}
               {p.usageCount > 0 && <span className="usage-hint" style={{ marginLeft: 'auto' }}>Used {t('usedCount', lang, p.usageCount)}{p.lastUsedAt ? ` · ${relTime(p.lastUsedAt, lang)}` : ''}</span>}
             </div>
@@ -1087,7 +1084,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
             {hasJouleSkill && (
               <div className="card-joule-badge">
                 <JouleDiamond size={18} />
-                <span>Joule Skill</span>
+                <span>{t('jouleSkillLabel', lang)}</span>
               </div>
             )}
 
@@ -1101,7 +1098,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
             {/* Demo links */}
             {(p.demoLinks || []).filter(l => l.url).length > 0 && (
               <>
-                <div className="card-section-label">Demo link(s)</div>
+                <div className="card-section-label">{t('demoLinks', lang)}</div>
                 <div className="card-demo-links">
                   {p.demoLinks.filter(l => l.url).map(link => (
                     <a key={link.id} className="card-demo-link" href={link.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>

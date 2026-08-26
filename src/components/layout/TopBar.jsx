@@ -4,7 +4,7 @@ import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { supabase } from '../../lib/supabase.js';
-import { t } from '../../lib/i18n.js';
+import { t, tl } from '../../lib/i18n.js';
 import { JouleAgent } from '../../lib/jouleAgent.js';
 import PublishRequestBell from '../shared/PublishRequestBell.jsx';
 import JouleDiamond from '../shared/JouleDiamond.jsx';
@@ -25,7 +25,7 @@ function LogoMark() {
   );
 }
 
-function WorkspaceSwitchPopover({ target, anchor, onConfirm, onCancel }) {
+function WorkspaceSwitchPopover({ target, anchor, onConfirm, onCancel, lang }) {
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape') onCancel(); }
     function onDown(e) { if (!e.target.closest('.ws-switch-popover')) onCancel(); }
@@ -34,17 +34,15 @@ function WorkspaceSwitchPopover({ target, anchor, onConfirm, onCancel }) {
     return () => { document.removeEventListener('keydown', onKey); document.removeEventListener('mousedown', onDown); };
   }, [onCancel]);
   const isLibrary = target === 'library';
-  const title = isLibrary ? 'Switch to Library?' : 'Switch to My Prompts?';
-  const desc = isLibrary
-    ? 'Shared workspace. Published prompts visible to all users in your organisation.'
-    : 'Your personal workspace. Prompts you own or created, visible only to you unless switched to public and approved by editors or admins to be published into the organisation library.';
+  const title = isLibrary ? t('wsSwitchToLibraryTitle', lang) : t('wsSwitchToMineTitle', lang);
+  const desc  = isLibrary ? t('wsSwitchToLibraryDesc',  lang) : t('wsSwitchToMineDesc',  lang);
   return createPortal(
     <div className="ws-switch-popover" style={{ left: anchor.x, top: anchor.y }}>
       <div className="ws-switch-popover-title">{title}</div>
       <div className="ws-switch-popover-desc">{desc}</div>
       <div className="ws-switch-popover-actions">
-        <button className="action-btn" onClick={onCancel}>No</button>
-        <button className="action-btn primary" onClick={onConfirm}>Yes</button>
+        <button className="action-btn" onClick={onCancel}>{t('wsSwitchNo', lang)}</button>
+        <button className="action-btn primary" onClick={onConfirm}>{t('wsSwitchYes', lang)}</button>
       </div>
     </div>,
     document.body
@@ -97,66 +95,69 @@ function UserProfileMenu({ profile, onSignOut, refreshProfile, solutions, theme,
         <div className="tb-profile-panel">
           {/* Header with sign-out */}
           <div className="tb-profile-header">
-            <span className="tb-profile-title">Edit Profile</span>
-            <button className="tb-profile-logout" onClick={onSignOut} title="Sign out">
+            <span className="tb-profile-title">{t('editProfile', lang)}</span>
+            <button className="tb-profile-logout" onClick={onSignOut} title={t('signOut', lang)}>
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3M10 11l3-3-3-3M13 8H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Sign out
+              {t('signOut', lang)}
             </button>
           </div>
 
           {/* Display name — auto-save on blur */}
           <div className="tb-profile-field">
-            <label className="tb-profile-label">Display name</label>
+            <label className="tb-profile-label">{t('displayName', lang)}</label>
             <input
               className="tb-profile-input"
               value={name}
               onChange={e => setName(e.target.value)}
               onBlur={saveName}
               onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}
-              placeholder="Your name"
+              placeholder={t('yourName', lang)}
             />
           </div>
 
           {/* Domain expertise — pills, auto-save on toggle */}
           <div className="tb-profile-field">
-            <label className="tb-profile-label">Domain expertise</label>
+            <label className="tb-profile-label">{t('domainExpertise', lang)}</label>
             {solutions.length > 0 ? (
               <div className="tb-profile-domain-pills">
-                {solutions.map(sol => (
-                  <button
-                    key={sol}
-                    className={`domain-pill${domains.includes(sol) ? ' active' : ''}`}
-                    onClick={() => handleDomainToggle(sol)}
-                  >
-                    {sol}
-                  </button>
-                ))}
+                {solutions.map(sol => {
+                  const solKey = typeof sol === 'object' ? sol.en : sol;
+                  return (
+                    <button
+                      key={solKey}
+                      className={`domain-pill${domains.includes(solKey) ? ' active' : ''}`}
+                      onClick={() => handleDomainToggle(solKey)}
+                    >
+                      {tl(sol, lang)}
+                    </button>
+                  );
+                })}
               </div>
             ) : (
-              <span className="tb-profile-sol-empty">No domains configured yet</span>
+              <span className="tb-profile-sol-empty">{t('noDomainsYet', lang)}</span>
             )}
           </div>
 
           {/* Preferences */}
           <div className="tb-display-divider" style={{ margin: '10px 0' }} />
-          <div className="tb-profile-pref-title">Preferences</div>
+          <div className="tb-profile-pref-title">{t('preferences', lang)}</div>
 
           <div className="tb-display-row">
-            <span className="tb-display-label">Theme</span>
+            <span className="tb-display-label">{t('themeLabel', lang)}</span>
             <div className="tb-display-seg">
               <button className={`tb-display-seg-btn${theme === 'dark' ? ' active' : ''}`} onClick={() => onTheme('dark')}>
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M13.5 10A6 6 0 0 1 6 2.5a6 6 0 1 0 7.5 7.5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                Dark
+                {t('themeDark', lang)}
               </button>
               <button className={`tb-display-seg-btn${theme === 'light' ? ' active' : ''}`} onClick={() => onTheme('light')}>
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.4"/><line x1="8" y1="1" x2="8" y2="2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><line x1="8" y1="13.5" x2="8" y2="15" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><line x1="1" y1="8" x2="2.5" y2="8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><line x1="13.5" y1="8" x2="15" y2="8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><line x1="3.1" y1="3.1" x2="4.2" y2="4.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><line x1="11.8" y1="11.8" x2="12.9" y2="12.9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><line x1="12.9" y1="3.1" x2="11.8" y2="4.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><line x1="4.2" y1="11.8" x2="3.1" y2="12.9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
-                Light
+                {t('themeLight', lang)}
               </button>
             </div>
           </div>
 
           <div className="tb-display-row">
-            <span className="tb-display-label">Language</span>
+            <span className="tb-display-label">{t('languageLabel', lang)}</span>
             <div className="tb-display-seg">
               <button className={`tb-display-seg-btn${lang === 'en' ? ' active' : ''}`} onClick={() => onLang('en')}>EN</button>
               <button className={`tb-display-seg-btn${lang === 'fr' ? ' active' : ''}`} onClick={() => onLang('fr')}>FR</button>
@@ -164,7 +165,7 @@ function UserProfileMenu({ profile, onSignOut, refreshProfile, solutions, theme,
           </div>
 
           <div className="tb-display-row">
-            <span className="tb-display-label">Zoom</span>
+            <span className="tb-display-label">{t('zoomLabel', lang)}</span>
             <div className="tb-display-zoom">
               <button className="tb-display-zoom-btn" onClick={() => onZoom(zoom - STEP)} disabled={zoom <= 0.5}>−</button>
               <button className="tb-display-zoom-val" onClick={() => onZoom(1)}>{zoomPct}%</button>
@@ -173,36 +174,36 @@ function UserProfileMenu({ profile, onSignOut, refreshProfile, solutions, theme,
           </div>
 
           <div className="tb-display-row">
-            <span className="tb-display-label">View</span>
+            <span className="tb-display-label">{t('viewLabel', lang)}</span>
             <div className="tb-display-seg">
               <button className={`tb-display-seg-btn${displayMode === 'cards' ? ' active' : ''}`} onClick={() => onDisplayMode('cards')}>
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.4"/><rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.4"/><rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.4"/><rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.4"/></svg>
-                Cards
+                {t('viewCards', lang)}
               </button>
               <button className={`tb-display-seg-btn${displayMode === 'table' ? ' active' : ''}`} onClick={() => onDisplayMode('table')}>
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><line x1="1" y1="4" x2="15" y2="4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><line x1="1" y1="8" x2="15" y2="8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><line x1="1" y1="12" x2="15" y2="12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
-                Table
+                {t('viewTable', lang)}
               </button>
             </div>
           </div>
 
           <div className="tb-display-row">
-            <span className="tb-display-label">Space warning</span>
+            <span className="tb-display-label">{t('spaceWarning', lang)}</span>
             <button
               className={`tb-display-seg-btn${settings?.warnOnWorkspaceSwitch !== false ? ' active' : ''}`}
               onClick={() => onSettingsChange({ warnOnWorkspaceSwitch: !(settings?.warnOnWorkspaceSwitch !== false) })}
             >
-              {settings?.warnOnWorkspaceSwitch !== false ? 'On' : 'Off'}
+              {settings?.warnOnWorkspaceSwitch !== false ? t('spaceWarningOn', lang) : t('spaceWarningOff', lang)}
             </button>
           </div>
 
           {/* Additional */}
           <div className="tb-display-divider" style={{ margin: '10px 0' }} />
-          <div className="tb-profile-pref-title">Additional</div>
+          <div className="tb-profile-pref-title">{t('additional', lang)}</div>
 
           <button className="tb-display-help-btn" onClick={() => { onHelp(); setOpen(false); }}>
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M6.2 6.2c0-1 .8-1.7 1.8-1.7s1.8.7 1.8 1.7c0 .8-.5 1.3-1.2 1.7-.4.2-.6.5-.6.9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><circle cx="8" cy="11" r="0.7" fill="currentColor"/></svg>
-            Help & guide
+            {t('helpGuide', lang)}
           </button>
 
           {jouleIntegration && (
@@ -211,17 +212,17 @@ function UserProfileMenu({ profile, onSignOut, refreshProfile, solutions, theme,
                 <svg width="13" height="13" viewBox="526 513 997 922" xmlns="http://www.w3.org/2000/svg">
                   <path fill="rgb(109,40,217)" d="M 1000.05 513.879 C 1014.25 513.687 1029.4 514.204 1043.27 513.82 L 1238.35 513.952 C 1272.98 513.966 1309.42 513.392 1343.82 514.153 C 1354.31 517.46 1357.73 520.221 1364.26 529.563 C 1403.94 583.338 1441.45 639.282 1481.23 693.071 C 1492.33 708.089 1505.89 725.77 1515.8 741.387 C 1521.5 751.464 1522.96 756.801 1517.41 767.824 C 1509.05 780.949 1495.32 798.09 1485.6 811.392 L 1422.62 897.905 L 1238.16 1151.03 L 1094.85 1347.5 C 1082.51 1364.22 1070.32 1381.06 1058.28 1397.99 C 1053.74 1404.35 1043.51 1419.58 1038.73 1425.11 C 1037.85 1426.54 1035.58 1429.13 1034.29 1430.18 C 1030.34 1433.48 1025.15 1434.87 1020.08 1434.01 C 1011.29 1432.6 1007.1 1427.8 1002.35 1421.1 C 993.664 1410.86 978.546 1388.93 970.26 1377.62 L 901.008 1282.12 L 724.522 1040.01 L 588.844 854.034 L 549.259 800.138 C 541.805 790.016 532.73 778.524 526.301 767.975 C 522.411 757.891 522.616 750.772 527.711 741.387 C 575.944 671.294 629.184 600.336 678.602 530.269 C 685.984 520.85 688.914 517.888 700.211 514.182 C 734.74 512.965 774.86 513.934 809.772 513.929 L 1000.05 513.879 z"/>
                 </svg>
-                Launch Joule Desktop
+                {t('launchJoule', lang)}
               </button>
               <div className="tb-display-mcp-block" style={{ marginTop: 8 }}>
                 <div className="tb-display-mcp-title">
                   <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M5 8h6M8 5v6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
-                  PromptDeck MCP
+                  {t('promptDeckMcp', lang)}
                 </div>
-                <div className="tb-display-mcp-desc">Add to Joule Desktop → Connectors</div>
+                <div className="tb-display-mcp-desc">{t('mcpConnectors', lang)}</div>
                 <div className="tb-display-mcp-url" title={MCP_URL}>
                   <code>{MCP_URL}</code>
-                  <button className="tb-display-mcp-copy" title="Copy MCP URL" onClick={() => { navigator.clipboard.writeText(MCP_URL); }}>
+                  <button className="tb-display-mcp-copy" title={t('copyMcpUrl', lang)} onClick={() => { navigator.clipboard.writeText(MCP_URL); }}>
                     <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><rect x="5" y="1" width="10" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.4"/><path d="M3 4H2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
                   </button>
                 </div>
@@ -354,10 +355,13 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
     }
   }
 
-  function handleLangSet(newLang) {
+  async function handleLangSet(newLang) {
     const updated = { ...state.settings, lang: newLang };
     StorageAPI.saveSettings(updated);
     dispatch({ type: 'SET_SETTINGS', payload: updated });
+    if (authProfile?.id) {
+      await supabase.from('profiles').update({ lang: newLang }).eq('id', authProfile.id);
+    }
   }
 
   function handleThemeSet(newTheme) {
@@ -429,13 +433,13 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
           {allowedKpis.includes('users') && canAdmin && (
             <div className="tb-stat-pill">
               <span className="tb-stat-dot" style={{ background: '#F59E0B', boxShadow: '0 0 6px #F59E0B' }} />
-              {onlineCount} users
+              {onlineCount} {t('visibilityPublic', lang).toLowerCase()}
             </div>
           )}
           {allowedKpis.includes('published') && (
             <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'published' ? ' active' : ''}`} onClick={() => handleKpiClick('published', 'library')}>
               <span className="tb-stat-dot" style={{ background: '#4ADE80', boxShadow: '0 0 6px #4ADE80' }} />
-              {publishedCount} published
+              {publishedCount} {t('statusPublished', lang).toLowerCase()}
             </button>
           )}
           {allowedKpis.includes('draft') && (
@@ -444,25 +448,25 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
               onClick={() => handleKpiClick('draft', canPublish ? 'library' : workspace === 'mine' ? 'mine' : 'library')}
             >
               <span className="tb-stat-dot" style={{ background: workspace === 'mine' && !canPublish ? '#34D399' : '#818CF8', boxShadow: `0 0 6px ${workspace === 'mine' && !canPublish ? '#34D399' : '#818CF8'}` }} />
-              {workspace === 'mine' && !canPublish ? mineDraftCount : draftCount} draft
+              {workspace === 'mine' && !canPublish ? mineDraftCount : draftCount} {t('statusDraft', lang).toLowerCase()}
             </button>
           )}
           {allowedKpis.includes('pending') && pendingCount > 0 && (
             <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'pending' ? ' active' : ''}`} onClick={() => handleKpiClick('pending', canPublish ? 'library' : 'mine')}>
               <span className="tb-stat-dot" style={{ background: '#D97706', boxShadow: '0 0 6px #D97706' }} />
-              {pendingCount} pending
+              {pendingCount} {t('reqPending', lang).toLowerCase()}
             </button>
           )}
           {allowedKpis.includes('approved') && approvedCount > 0 && (
             <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'approved' ? ' active' : ''}`} onClick={() => handleKpiClick('approved', canPublish ? 'library' : 'mine')}>
               <span className="tb-stat-dot" style={{ background: '#059669', boxShadow: '0 0 6px #059669' }} />
-              {approvedCount} approved
+              {approvedCount} {t('reqApproved', lang).toLowerCase()}
             </button>
           )}
           {allowedKpis.includes('rejected') && rejectedCount > 0 && (
             <button className={`tb-stat-pill tb-stat-pill-btn${statusFilter === 'rejected' ? ' active' : ''}`} onClick={() => handleKpiClick('rejected', canPublish ? 'library' : 'mine')}>
               <span className="tb-stat-dot" style={{ background: '#DC2626', boxShadow: '0 0 6px #DC2626' }} />
-              {rejectedCount} rejected
+              {rejectedCount} {t('reqRejected', lang).toLowerCase()}
             </button>
           )}
         </div>
@@ -470,7 +474,7 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
         {/* Center — search + zoom + new */}
         {showSearch && (
           <div id="top-bar-center">
-            <span className="tb-beta-badge">BETA RELEASE</span>
+            <span className="tb-beta-badge">{t('betaBadge', lang)}</span>
             <div id="tb-search-wrap">
               <svg id="tb-search-icon" width="15" height="15" viewBox="0 0 16 16" fill="none">
                 <circle cx="6.5" cy="6.5" r="4.5" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5"/>
@@ -494,11 +498,11 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
               <button
                 className="workspace-seg-btn"
                 onClick={e => handleWorkspaceClick(e, 'library')}
-              >Library</button>
+              >{t('wsLibrary', lang)}</button>
               <button
                 className="workspace-seg-btn"
                 onClick={e => handleWorkspaceClick(e, 'mine')}
-              >My Prompts</button>
+              >{t('wsMyPrompts', lang)}</button>
             </div>
           </div>
         )}
@@ -590,6 +594,7 @@ export default function TopBar({ onHelp, onSignOut, profile, isAdmin, onHamburge
         <WorkspaceSwitchPopover
           target={switchTarget}
           anchor={switchAnchor}
+          lang={lang}
           onConfirm={() => doSwitchWorkspace(switchTarget)}
           onCancel={() => setSwitchTarget(null)}
         />

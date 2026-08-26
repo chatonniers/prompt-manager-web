@@ -5,7 +5,7 @@ export const AppContext = createContext(null);
 const initialState = {
   prompts: [],
   catalog: { solutions: [], storyFlows: [], categories: [], systems: [], personas: [], tags: [], assistants: [], industries: [] },
-  settings: { autoFilterEnabled: true, lang: 'en', theme: localStorage.getItem('pm-theme') || 'dark' },
+  settings: { autoFilterEnabled: true, lang: (() => { try { const s = localStorage.getItem('pm-settings'); return s ? (JSON.parse(s).lang || 'en') : 'en'; } catch { return 'en'; } })(), theme: localStorage.getItem('pm-theme') || 'dark' },
   currentView: 'all',
   currentFilter: null,
   searchQuery: '',

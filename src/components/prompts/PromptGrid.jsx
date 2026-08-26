@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
 import { AttachmentsDB } from '../../lib/attachments.js';
 import { filterAndRank } from '../../lib/search.js';
-import { t } from '../../lib/i18n.js';
+import { t, tl } from '../../lib/i18n.js';
 import { getFlowColor } from '../../lib/flowColors.js';
 import { ASSISTANT_COLORS as CATEGORY_COLORS } from '../../lib/assistantColors.js';
 import { extractVars } from '../../lib/substitution.js';
@@ -28,21 +28,21 @@ async function copyText(text) {
   }
 }
 
-function relTime(iso) {
+function relTime(iso, lang) {
   if (!iso) return '—';
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
-  if (m < 2) return 'just now';
-  if (m < 60) return `${m}m ago`;
+  if (m < 2) return t('justNow', lang);
+  if (m < 60) return t('mAgo', lang, m);
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
+  if (h < 24) return t('hAgo', lang, h);
+  return t('dAgo', lang, Math.floor(h / 24));
 }
 
 const REQ_ICONS = {
-  pending:  { label: 'Pending',  color: '#D97706' },
-  approved: { label: 'Approved', color: '#059669' },
-  rejected: { label: 'Rejected', color: '#DC2626' },
+  pending:  { labelKey: 'reqPending',  color: '#D97706' },
+  approved: { labelKey: 'reqApproved', color: '#059669' },
+  rejected: { labelKey: 'reqRejected', color: '#DC2626' },
 };
 
 function RowPreview({ p, mouseX, mouseY, lang }) {
@@ -126,7 +126,7 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
     // If Joule integration is enabled and this prompt has a Joule skill attachment
     if (jouleAtt && authProfile?.joule_integration && authProfile?.joule_connected) {
       if (p.status !== 'published') {
-        dispatch({ type: 'SHOW_TOAST', payload: 'Joule Desktop integration is only available for published prompts. Prompt copied.' });
+        dispatch({ type: 'SHOW_TOAST', payload: t('joulePublishedOnly', lang) });
         return;
       }
       const allAtts = await AttachmentsDB.getForPrompt(p.id);
@@ -250,25 +250,25 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
         </td>
         <td className="pt-td" style={{ textAlign: 'center' }}>
           {p.isPrivate
-            ? <span title="Private" style={{ color: '#D97706', fontWeight: 700, fontSize: 11 }}>Private</span>
-            : <span title="Public" style={{ color: '#059669', fontWeight: 700, fontSize: 11 }}>Public</span>}
+            ? <span title={t('privacyPrivate', lang)} style={{ color: '#D97706', fontWeight: 700, fontSize: 11 }}>{t('privacyPrivate', lang)}</span>
+            : <span title={t('privacyPublic', lang)} style={{ color: '#059669', fontWeight: 700, fontSize: 11 }}>{t('privacyPublic', lang)}</span>}
         </td>
         <td className="pt-td" style={{ textAlign: 'center' }}>
-          {reqInfo && <span style={{ color: reqInfo.color, fontWeight: 700, fontSize: 11 }}>{reqInfo.label}</span>}
+          {reqInfo && <span style={{ color: reqInfo.color, fontWeight: 700, fontSize: 11 }}>{t(reqInfo.labelKey, lang)}</span>}
           {showRequestBtn && (
             <button
               className="card-request-btn"
               style={{ fontSize: 10, padding: '2px 8px' }}
               onClick={handlePublishRequest}
             >
-              {isPendingRequest ? 'Cancel' : t('requestPublish', lang)}
+              {isPendingRequest ? t('reqCancel', lang) : t('requestPublish', lang)}
             </button>
           )}
         </td>
-        <td className="pt-td pt-td-dim">{p.category || '—'}</td>
+        <td className="pt-td pt-td-dim">{p.category ? tl((state.catalog?.categories || []).find(c => (typeof c === 'object' ? c.en : c) === p.category) || p.category, lang) : '—'}</td>
         <td className="pt-td">
           {p.storyFlow
-            ? <span className="pill flow" style={flowColor ? { background: flowColor.bg, color: flowColor.text } : {}}>{p.storyFlow}</span>
+            ? <span className="pill flow" style={flowColor ? { background: flowColor.bg, color: flowColor.text } : {}}>{tl((state.catalog?.storyFlows || []).find(f => (typeof f === 'object' ? f.en : f) === p.storyFlow) || p.storyFlow, lang)}</span>
             : <span className="pt-td-dim">—</span>}
         </td>
         <td className="pt-td">
@@ -277,11 +277,11 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
             : <span className="pt-td-dim">—</span>}
         </td>
         <td className="pt-td pt-td-pills">
-          {(p.solutions || []).slice(0, 3).map(s => <span key={s} className="pill">{s}</span>)}
+          {(p.solutions || []).slice(0, 3).map(s => { const obj = (state.catalog?.solutions || []).find(x => (typeof x === 'object' ? x.en : x) === s); return <span key={s} className="pill">{tl(obj || s, lang)}</span>; })}
           {(p.solutions || []).length > 3 && <span className="pt-more">+{p.solutions.length - 3}</span>}
         </td>
         <td className="pt-td pt-td-num">{p.usageCount > 0 ? p.usageCount : '—'}</td>
-        <td className="pt-td pt-td-dim">{relTime(p.updatedAt)}</td>
+        <td className="pt-td pt-td-dim">{relTime(p.updatedAt, lang)}</td>
       </tr>
       {substItem && (
         <SubstituteModal
@@ -339,16 +339,16 @@ function PromptTable({ prompts, selectedIds, onToggleSelect, onOpen, publishRequ
         <thead>
           <tr>
             <th className="pt-th pt-th-check" />
-            <Th col="title" label="Title / Copy" />
-            <Th col="status" label="Status" />
-            <th className="pt-th">Visibility</th>
-            <th className="pt-th">Request</th>
-            <Th col="category" label="Category" />
-            <Th col="flow" label="Flow" />
-            <Th col="assistant" label="Assistant" />
-            <th className="pt-th">Solutions</th>
-            <Th col="used" label="Used" />
-            <Th col="updated" label="Updated" />
+            <Th col="title" label={t('tableTitleCopy', lang)} />
+            <Th col="status" label={t('tableStatus', lang)} />
+            <th className="pt-th">{t('tableVisibility', lang)}</th>
+            <th className="pt-th">{t('tableRequest', lang)}</th>
+            <Th col="category" label={t('tableCategory', lang)} />
+            <Th col="flow" label={t('tableFlow', lang)} />
+            <Th col="assistant" label={t('tableAssistant', lang)} />
+            <th className="pt-th">{t('tableSolutions', lang)}</th>
+            <Th col="used" label={t('tableUsed', lang)} />
+            <Th col="updated" label={t('tableUpdated', lang)} />
           </tr>
         </thead>
         <tbody>
@@ -450,7 +450,7 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
         <DropZone className="category-block" onDrop={id => onDrop(id, { category: catKey, storyFlow: null })}>
           {!hideLabel && <div className="grid-section-label">{label}<span className="section-count">{prompts.length}</span></div>}
           {prompts.length === 0
-            ? <div className="category-block-empty-hint">Drop cards here</div>
+            ? <div className="category-block-empty-hint">{t('dropCardsHere', lang)}</div>
             : <div className="category-flat-grid">
                 {prompts.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
               </div>
@@ -517,73 +517,6 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
   );
 }
 
-function FavoritesRow({ favs, lang, selectedIds, onToggleSelect, onDrop, onHeightChange }) {
-  const scrollRef = useRef(null);
-  const blockRef = useRef(null);
-  const [hovered, setHovered] = useState(false);
-  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('pm-favs-collapsed') === 'true');
-
-  function toggleCollapse() {
-    setCollapsed(v => {
-      const next = !v;
-      localStorage.setItem('pm-favs-collapsed', next);
-      return next;
-    });
-  }
-
-  useEffect(() => {
-    if (!blockRef.current || !onHeightChange) return;
-    const el = blockRef.current;
-    const report = () => onHeightChange(el.getBoundingClientRect().height);
-    report();
-    const ro = new ResizeObserver(report);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [onHeightChange, collapsed]);
-
-  function scroll(dir) {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir * 400, behavior: 'smooth' });
-  }
-
-  return (
-    <DropZone className="favs-block" onDrop={id => onDrop(id, { isFavorite: true })} blockRef={blockRef}>
-      <div className="grid-section-label favs-section-label" style={{ cursor: 'pointer', userSelect: 'none' }} onClick={toggleCollapse}>
-        <span className="favs-collapse-chevron" style={{ marginRight: 5, fontSize: 10, opacity: 0.6, transition: 'transform 0.15s', display: 'inline-block', transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>▼</span>
-        {t('favorites', lang)}<span className="section-count">{favs.length}</span>
-      </div>
-      {!collapsed && (favs.length > 0 ? (
-        <div
-          className="favs-row-wrap"
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
-        >
-          {hovered && (
-            <button className="favs-nav favs-nav-left" onClick={() => scroll(-1)}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
-          )}
-          <div className="favs-row" ref={scrollRef}>
-            {favs.map(p => (
-              <div key={p.id} className="favs-row-item">
-                <PromptCard prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} compact />
-              </div>
-            ))}
-          </div>
-          {hovered && (
-            <button className="favs-nav favs-nav-right" onClick={() => scroll(1)}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
-          )}
-        </div>
-      ) : (
-        <p style={{ fontSize: 12, color: 'var(--pm-text3)', padding: '8px 2px', fontStyle: 'italic' }}>No favorites yet — drag a card here or click ★</p>
-      ))}
-    </DropZone>
-  );
-}
-
 export default function PromptGrid() {
   const { state, dispatch } = useApp();
   const { isAdmin, isEditor, profile } = useAuth();
@@ -626,7 +559,6 @@ export default function PromptGrid() {
   }
 
   const [activeTab, setActiveTab] = useState(null);
-  const gridOuterRef = useRef(null);
   const dragTabRef = useRef(null);
   const [undoState, setUndoState] = useState(null); // { prev, countdown }
   const undoTimerRef = useRef(null);
@@ -713,9 +645,9 @@ export default function PromptGrid() {
 
     // Always include all catalog categories (even empty), plus uncategorized if any
     const allTabs = categories.map(cat => ({
-      key: cat,
-      label: cat,
-      prompts: ranked.filter(p => p.category === cat),
+      key: typeof cat === 'object' ? cat.en : cat,
+      label: tl(cat, lang),
+      prompts: ranked.filter(p => p.category === (typeof cat === 'object' ? cat.en : cat)),
     }));
     const uncategorized = ranked.filter(p => !p.isFavorite && !p.category);
     if (uncategorized.length > 0) {
@@ -744,23 +676,15 @@ export default function PromptGrid() {
         <BulkActionBar visibleIds={visibleIds} />
         {undoState && (
           <div className="dnd-undo-bar">
-            <span>Card moved.</span>
+            <span>{t('cardMoved', lang)}</span>
             <button className="dnd-undo-btn" onClick={handleUndo}>
-              Undo <span className="dnd-undo-countdown">{undoState.countdown}s</span>
+              {t('undoBtn', lang)} <span className="dnd-undo-countdown">{undoState.countdown}s</span>
             </button>
           </div>
         )}
-        <div id="prompt-grid-outer" ref={gridOuterRef} className={draggingId ? 'is-drag-active' : ''}>
-          <FavoritesRow
-            favs={favs}
-            lang={lang}
-            selectedIds={selectedIds}
-            onToggleSelect={onToggleSelect}
-            onDrop={handleDrop}
-            onHeightChange={h => { if (gridOuterRef.current) gridOuterRef.current.style.setProperty('--favs-h', h + 'px'); }}
-          />
+        <div id="prompt-grid-outer" className={draggingId ? 'is-drag-active' : ''}>
 
-          <div className="category-tabs-wrap" style={{ position: 'sticky', top: `var(--favs-h, 0px)`, zIndex: 19, background: 'var(--pm-bg)', paddingBottom: 4, marginBottom: 6 }}>
+          <div className="category-tabs-wrap" style={{ position: 'sticky', top: 0, zIndex: 19, background: 'var(--pm-bg)', paddingBottom: 4, marginBottom: 6 }}>
             <div className="category-tabs">
               {allTabs.map((block, idx) => {
                   const isActive = tabKey === block.key;
@@ -795,10 +719,10 @@ export default function PromptGrid() {
                 ? { background: 'rgba(5,150,105,0.1)', borderColor: 'rgba(5,150,105,0.25)', borderLeftColor: '#059669', color: '#059669' }
                 : { background: 'rgba(99,102,241,0.1)', borderColor: 'rgba(99,102,241,0.25)', borderLeftColor: '#818CF8', color: '#818CF8' }
               }
-              title={groupingMode === 'assistant' ? 'Switch to Story Flow grouping' : 'Switch to AI Assistant grouping'}
+              title={groupingMode === 'assistant' ? t('byStoryFlow', lang) : t('bySolution', lang)}
               onClick={() => dispatch({ type: 'SET_GROUPING_MODE', payload: groupingMode === 'assistant' ? 'flow' : 'assistant' })}
             >
-              {groupingMode === 'assistant' ? 'Assistant' : 'Flow'}
+              {groupingMode === 'assistant' ? t('groupingAssistant', lang) : t('groupingFlow', lang)}
             </button>
           </div>
 

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI } from '../../lib/storage.js';
-import { t } from '../../lib/i18n.js';
+import { t, tl } from '../../lib/i18n.js';
 
 function BulkDropdown({ label, options, onSelect }) {
   const [open, setOpen] = useState(false);
@@ -63,7 +63,7 @@ export default function BulkActionBar({ visibleIds }) {
     await Promise.all(selected.map(p => StorageAPI.upsertPrompt({ ...p, category: category || null })));
     dispatch({ type: 'SET_PROMPTS', payload: await StorageAPI.getAllPrompts() });
     dispatch({ type: 'CLEAR_SELECT' });
-    dispatch({ type: 'SHOW_TOAST', payload: `Moved ${count} prompt${count !== 1 ? 's' : ''} to ${category || 'Uncategorized'}` });
+    dispatch({ type: 'SHOW_TOAST', payload: t('bulkMovedCategory', lang, count, category || t('noCategory', lang)) });
   }
 
   async function moveToFlow(flow) {
@@ -71,7 +71,7 @@ export default function BulkActionBar({ visibleIds }) {
     await Promise.all(selected.map(p => StorageAPI.upsertPrompt({ ...p, storyFlow: flow || '' })));
     dispatch({ type: 'SET_PROMPTS', payload: await StorageAPI.getAllPrompts() });
     dispatch({ type: 'CLEAR_SELECT' });
-    dispatch({ type: 'SHOW_TOAST', payload: `Moved ${count} prompt${count !== 1 ? 's' : ''} to ${flow || 'No flow'}` });
+    dispatch({ type: 'SHOW_TOAST', payload: t('bulkMovedFlow', lang, count, flow || t('noFlowNone', lang)) });
   }
 
   async function moveToIndustry(industry) {
@@ -79,7 +79,7 @@ export default function BulkActionBar({ visibleIds }) {
     await Promise.all(selected.map(p => StorageAPI.upsertPrompt({ ...p, industry: industry || null })));
     dispatch({ type: 'SET_PROMPTS', payload: await StorageAPI.getAllPrompts() });
     dispatch({ type: 'CLEAR_SELECT' });
-    dispatch({ type: 'SHOW_TOAST', payload: `Set industry to ${industry || 'None'} for ${count} prompt${count !== 1 ? 's' : ''}` });
+    dispatch({ type: 'SHOW_TOAST', payload: t('bulkMovedIndustry', lang, count, industry || t('noIndustry', lang)) });
   }
 
   async function moveToAssistant(assistant) {
@@ -87,7 +87,7 @@ export default function BulkActionBar({ visibleIds }) {
     await Promise.all(selected.map(p => StorageAPI.upsertPrompt({ ...p, assistant: assistant || null })));
     dispatch({ type: 'SET_PROMPTS', payload: await StorageAPI.getAllPrompts() });
     dispatch({ type: 'CLEAR_SELECT' });
-    dispatch({ type: 'SHOW_TOAST', payload: `Set assistant to ${assistant || 'None'} for ${count} prompt${count !== 1 ? 's' : ''}` });
+    dispatch({ type: 'SHOW_TOAST', payload: t('bulkMovedAssistant', lang, count, assistant || t('noAssistant', lang)) });
   }
 
   async function archiveSelected() {
@@ -95,7 +95,7 @@ export default function BulkActionBar({ visibleIds }) {
     await Promise.all(selected.map(p => StorageAPI.upsertPrompt({ ...p, status: 'archived' })));
     dispatch({ type: 'SET_PROMPTS', payload: await StorageAPI.getAllPrompts() });
     dispatch({ type: 'CLEAR_SELECT' });
-    dispatch({ type: 'SHOW_TOAST', payload: `${count} prompt${count !== 1 ? 's' : ''} archived` });
+    dispatch({ type: 'SHOW_TOAST', payload: t('bulkArchived', lang, count) });
   }
 
   async function deleteSelected() {
@@ -106,24 +106,24 @@ export default function BulkActionBar({ visibleIds }) {
     setConfirmDelete(false);
     let undone = false;
     const timer = setTimeout(async () => { if (!undone) await Promise.all(ids.map(id => StorageAPI.deletePrompt(id))); }, 10000);
-    dispatch({ type: 'SHOW_TOAST', payload: `${ids.length} prompt${ids.length !== 1 ? 's' : ''} deleted`,
+    dispatch({ type: 'SHOW_TOAST', payload: t('bulkDeleted', lang, ids.length),
       undo: () => { undone = true; clearTimeout(timer); dispatch({ type: 'SET_PROMPTS', payload: prompts }); } });
   }
 
   const categoryOptions = [
     { value: '__none__', label: `— ${t('noCategory', lang)} —` },
-    ...(catalog.categories || []).map(cat => ({ value: cat, label: cat })),
+    ...(catalog.categories || []).map(cat => ({ value: typeof cat === 'object' ? cat.en : cat, label: tl(cat, lang) })),
   ];
   const flowOptions = [
     { value: '__none__', label: `— ${t('selectNone', lang)} —` },
-    ...(catalog.storyFlows || []).map(f => ({ value: f, label: f })),
+    ...(catalog.storyFlows || []).map(f => ({ value: typeof f === 'object' ? f.en : f, label: tl(f, lang) })),
   ];
   const industryOptions = [
-    { value: '__none__', label: '— None —' },
-    ...(catalog.industries || []).map(i => ({ value: i, label: i })),
+    { value: '__none__', label: `— ${t('noIndustry', lang)} —` },
+    ...(catalog.industries || []).map(i => ({ value: typeof i === 'object' ? i.en : i, label: tl(i, lang) })),
   ];
   const assistantOptions = [
-    { value: '__none__', label: '— None —' },
+    { value: '__none__', label: `— ${t('noAssistant', lang)} —` },
     ...(catalog.assistants || []).map(a => ({ value: a.name, label: a.name })),
   ];
 
@@ -145,21 +145,21 @@ export default function BulkActionBar({ visibleIds }) {
       />
       {(catalog.assistants || []).length > 0 && (
         <BulkDropdown
-          label="Move to Assistant"
+          label={t('bulkMoveAssistant', lang)}
           options={assistantOptions}
           onSelect={v => moveToAssistant(v === '__none__' ? '' : v)}
         />
       )}
       {(catalog.industries || []).length > 0 && (
         <BulkDropdown
-          label="Move to Industry"
+          label={t('bulkMoveIndustry', lang)}
           options={industryOptions}
           onSelect={v => moveToIndustry(v === '__none__' ? '' : v)}
         />
       )}
       <div className="bulk-divider" />
       {isAdmin && (
-        <button className="bulk-action-btn bulk-action-archive" onClick={archiveSelected}>Archive</button>
+        <button className="bulk-action-btn bulk-action-archive" onClick={archiveSelected}>{t('archived', lang)}</button>
       )}
       {canEdit && (confirmDelete ? (
         <>

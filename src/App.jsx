@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react'
 import { AppProvider, useApp } from './context/AppContext.jsx'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import { useStorage } from './hooks/useStorage.js'
+import { supabase } from './lib/supabase.js'
 import { JouleAgent } from './lib/jouleAgent.js'
 import TopBar from './components/layout/TopBar.jsx'
 import Sidebar from './components/layout/Sidebar.jsx'
+import FavsPanel from './components/layout/FavsPanel.jsx'
 import MainContent from './components/layout/MainContent.jsx'
 import PromptModal from './components/editor/PromptModal.jsx'
 import ConfirmModal from './components/shared/ConfirmModal.jsx'
@@ -27,11 +29,20 @@ import './styles/auth.css'
 
 function AppInner() {
   useStorage()
-  const { state } = useApp()
+  const { state, dispatch } = useApp()
   const { profile, isAdmin, signOut, refreshBanner, setRefreshBanner, adminMessage, setAdminMessage } = useAuth()
   const [helpOpen, setHelpOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
+  const [favsPanelCollapsed, setFavsPanelCollapsed] = useState(
+    () => localStorage.getItem('pm-favs-panel-collapsed') === 'true'
+  )
   const zoom = state.zoom ?? 1
+
+  // Sync lang from profile (DB) — overrides localStorage default on login/profile load
+  useEffect(() => {
+    if (!profile?.lang) return;
+    dispatch({ type: 'SET_SETTINGS', payload: { ...state.settings, lang: profile.lang } });
+  }, [profile?.lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const handler = () => JouleAgent.shutdown();
@@ -67,6 +78,14 @@ function AppInner() {
         <main id="content" data-workspace={state.workspace ?? 'library'}>
           <MainContent />
         </main>
+        <FavsPanel
+          collapsed={favsPanelCollapsed}
+          onToggle={() => setFavsPanelCollapsed(v => {
+            const next = !v;
+            localStorage.setItem('pm-favs-panel-collapsed', next);
+            return next;
+          })}
+        />
       </div>
       {state.isModalOpen && <PromptModal />}
       {state.isConfirmOpen && <ConfirmModal />}
