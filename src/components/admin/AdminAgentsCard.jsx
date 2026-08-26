@@ -8,7 +8,9 @@ export default function AdminAgentsCard() {
   const lang = state.settings?.lang || 'en';
   const agents = state.catalog.agents || [];
   const assistants = state.catalog.assistants || [];
+  const categories = state.catalog.categories || [];
 
+  const [filterDomain, setFilterDomain] = useState('');
   const [filterAssistant, setFilterAssistant] = useState('');
   const [newName, setNewName] = useState('');
   const [newAssistant, setNewAssistant] = useState('');
@@ -154,15 +156,29 @@ export default function AdminAgentsCard() {
         </div>
       </div>
 
-      {/* Assistant filter */}
+      {/* Domain filter */}
+      {categories.length > 0 && (
+        <div className="admin-filter-row">
+          <span className="admin-filter-label">Filter by domain:</span>
+          <button className={`admin-filter-btn${!filterDomain ? ' active' : ''}`} onClick={() => { setFilterDomain(''); setFilterAssistant(''); }}>All</button>
+          {categories.map(c => (
+            <button key={c} className={`admin-filter-btn${filterDomain === c ? ' active' : ''}`}
+              onClick={() => { setFilterDomain(c); setFilterAssistant(''); }}>{c}</button>
+          ))}
+        </div>
+      )}
+
+      {/* Assistant filter — scoped to selected domain */}
       {assistants.length > 0 && (
         <div className="admin-filter-row">
           <span className="admin-filter-label">Filter by assistant:</span>
           <button className={`admin-filter-btn${!filterAssistant ? ' active' : ''}`} onClick={() => setFilterAssistant('')}>All</button>
-          {assistants.map(ast => (
-            <button key={ast.id} className={`admin-filter-btn${filterAssistant === ast.name ? ' active' : ''}`}
-              onClick={() => setFilterAssistant(ast.name)}>{ast.name}</button>
-          ))}
+          {assistants
+            .filter(ast => !filterDomain || ast.domain === filterDomain)
+            .map(ast => (
+              <button key={ast.id} className={`admin-filter-btn${filterAssistant === ast.name ? ' active' : ''}`}
+                onClick={() => setFilterAssistant(ast.name)}>{ast.name}</button>
+            ))}
         </div>
       )}
 
