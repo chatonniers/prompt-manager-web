@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import JouleDiamond from './JouleDiamond.jsx';
 import { JouleAgent } from '../../lib/jouleAgent.js';
 
@@ -88,7 +89,7 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
 
   useEffect(() => { go(); }, [go]);
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box joule-skill-modal" onClick={e => e.stopPropagation()}>
         <div className="jsm-header">
@@ -237,7 +238,8 @@ export default function JouleSkillModal({ skillName, skillContent, promptText, s
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
