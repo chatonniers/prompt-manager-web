@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { StorageAPI, uploadSkillFile, deleteSkillFile } from '../../lib/storage.js';
@@ -63,6 +63,17 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder, lang = 
       )}
     </div>
   );
+}
+
+function useAutoResize(value) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }, [value]);
+  return ref;
 }
 
 function SingleSelectDropdown({ options, value, onChange, placeholder, lang = 'en' }) {
@@ -146,6 +157,7 @@ export default function PromptModal() {
   const [errors, setErrors] = useState({});
   const dropRef = useRef(null);
   const fileInputRef = useRef(null);
+  const notesRef = useAutoResize(notes);
 
   useEffect(() => {
     setActiveTab('content');
@@ -386,7 +398,9 @@ export default function PromptModal() {
 
   const activeItem = promptItems[activeItemIdx] || promptItems[0];
   const itemLang = activeItem ? getItemTab(activeItem.id) : 'en';
-  const filteredAssistants = catalog.assistants || [];
+  const filteredAssistants = category
+    ? (catalog.assistants || []).filter(a => !a.domain || a.domain === category)
+    : (catalog.assistants || []);
   // Agents filtered to those attached to the selected assistant (or all if none selected)
   const filteredAgents = (catalog.agents || []).filter(ag => !ag.assistant || !assistant || ag.assistant === assistant);
 
@@ -425,6 +439,19 @@ export default function PromptModal() {
               <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('titlePlaceholder', lang)} maxLength={120} className={errors.title ? 'input-error' : ''} />
               {errors.title && <span className="field-error">{errors.title}</span>}
             </div>
+
+            {(catalog.categories || []).length > 0 && (
+              <div className="field-row">
+                <label>{t('category', lang)}</label>
+                <SingleSelectDropdown
+                  options={[...(catalog.categories || [])].sort((a, b) => (typeof a === 'object' ? a.en : a).localeCompare(typeof b === 'object' ? b.en : b, undefined, { sensitivity: 'base' }))}
+                  value={category}
+                  onChange={v => { setCategory(v); setAssistant(''); setAgent(''); }}
+                  placeholder={`— ${t('noCategory', lang)} —`}
+                  lang={lang}
+                />
+              </div>
+            )}
 
             {filteredAssistants.length > 0 && (
               <div className="field-row">
@@ -467,7 +494,7 @@ export default function PromptModal() {
 
             <div className="field-row">
               <label>{t('notes', lang)} <span className="hint">({t('notesHintModal', lang)})</span></label>
-              <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={t('notesPlaceholder', lang)} rows={2} />
+              <textarea ref={notesRef} value={notes} onChange={e => setNotes(e.target.value)} placeholder={t('notesPlaceholder', lang)} rows={2} style={{ resize: 'vertical', overflowY: 'hidden' }} />
             </div>
 
             <div className="field-row">
@@ -499,10 +526,14 @@ export default function PromptModal() {
                     placeholder={itemLang === 'en' ? t('promptItemLabel', lang) : (t('promptItemLabel', lang) + ' (FR)')} />
                   {itemLang === 'en' ? (
                     <textarea value={activeItem.body} onChange={e => updateItem(activeItem.id, 'body', e.target.value)}
-                      placeholder={t('bodyEnPlaceholder', lang)} rows={7} />
+                      placeholder={t('bodyEnPlaceholder', lang)} rows={7}
+                      ref={el => { if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } }}
+                      style={{ resize: 'vertical', overflowY: 'hidden' }} />
                   ) : (
                     <textarea value={activeItem.body_fr || ''} onChange={e => updateItem(activeItem.id, 'body_fr', e.target.value)}
-                      placeholder={t('bodyFrPlaceholder', lang)} rows={7} />
+                      placeholder={t('bodyFrPlaceholder', lang)} rows={7}
+                      ref={el => { if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } }}
+                      style={{ resize: 'vertical', overflowY: 'hidden' }} />
                   )}
                   <span className="char-count">{t('charCount', lang, (itemLang === 'en' ? activeItem.body : activeItem.body_fr || '').length)}</span>
                 </div>
@@ -533,28 +564,16 @@ export default function PromptModal() {
           {/* ── DETAILS TAB ─────────────────────────────────────── */}
           {activeTab === 'details' && <>
 
-            {/* Category + Flow */}
-            <div className="field-row-2col">
-              <div className="field-col">
-                <label>{t('category', lang)}</label>
-                <SingleSelectDropdown
-                  options={[...(catalog.categories || [])].sort((a, b) => (typeof a === 'object' ? a.en : a).localeCompare(typeof b === 'object' ? b.en : b, undefined, { sensitivity: 'base' }))}
-                  value={category}
-                  onChange={v => { setCategory(v); setAssistant(''); }}
-                  placeholder={`— ${t('noCategory', lang)} —`}
-                  lang={lang}
-                />
-              </div>
-              <div className="field-col">
-                <label>{t('storyFlow', lang)}</label>
-                <SingleSelectDropdown
-                  options={[...(catalog.storyFlows || [])].sort((a, b) => (typeof a === 'object' ? a.en : a).localeCompare(typeof b === 'object' ? b.en : b, undefined, { sensitivity: 'base' }))}
-                  value={storyFlow}
-                  onChange={setStoryFlow}
-                  placeholder={t('selectFlowNone', lang)}
-                  lang={lang}
-                />
-              </div>
+            {/* Flow */}
+            <div className="field-row">
+              <label>{t('storyFlow', lang)}</label>
+              <SingleSelectDropdown
+                options={[...(catalog.storyFlows || [])].sort((a, b) => (typeof a === 'object' ? a.en : a).localeCompare(typeof b === 'object' ? b.en : b, undefined, { sensitivity: 'base' }))}
+                value={storyFlow}
+                onChange={setStoryFlow}
+                placeholder={t('selectFlowNone', lang)}
+                lang={lang}
+              />
             </div>
 
             {/* Industry */}
