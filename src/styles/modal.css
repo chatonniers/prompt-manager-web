@@ -170,6 +170,12 @@
 .char-count { font-size: 10px; color: var(--pm-text3); text-align: right; font-weight: 500; }
 
 .field-row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.modal-persona-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: -6px;
+}
 .field-col { display: flex; flex-direction: column; gap: 7px; }
 .field-col label { font-size: 12px; font-weight: 700; color: var(--pm-text2); letter-spacing: 0.2px; text-transform: uppercase; }
 .field-col select {

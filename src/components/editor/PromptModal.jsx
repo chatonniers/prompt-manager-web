@@ -16,7 +16,7 @@ function makeItem(body = '', body_fr = '') {
   return { id: crypto.randomUUID(), label: '', label_fr: '', body, body_fr };
 }
 
-function MultiSelectDropdown({ options, selected, onChange, placeholder, lang = 'en' }) {
+function MultiSelectDropdown({ options, selected, onChange, placeholder, lang = 'en', hideChips = false }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
@@ -51,7 +51,7 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder, lang = 
           {normalized.length === 0 && <div className="ms-empty">No options</div>}
         </div>
       )}
-      {selected.length > 0 && (
+      {!hideChips && selected.length > 0 && (
         <div className="card-edit-selected-pills">
           {selected.map(val => (
             <span key={val} className="card-edit-sys-chip selected">
@@ -477,12 +477,28 @@ export default function PromptModal() {
                     onChange={setPersonas}
                     placeholder={t('selectPersonas', lang)}
                     lang={lang}
+                    hideChips
                   />
                 ) : (
                   <p className="hint" style={{ fontSize: 12, margin: '4px 0 0' }}>{t('noPersonasYet', lang)}</p>
                 )}
               </div>
             </div>
+
+            {personas.length > 0 && (
+              <div className="modal-persona-chips">
+                {personas.map(val => {
+                  const opt = (catalog.personas || []).find(o => (typeof o === 'object' ? o.en : o) === val);
+                  const lbl = opt ? tl(opt, lang) : val;
+                  return (
+                    <span key={val} className="card-edit-sys-chip selected">
+                      · {lbl}
+                      <button type="button" className="card-edit-tag-del" onClick={() => setPersonas(personas.filter(x => x !== val))}>×</button>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
 
             <div className="field-row-2col">
               <div className="field-col">
