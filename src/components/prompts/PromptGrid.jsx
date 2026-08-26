@@ -469,8 +469,8 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
             const assistantColor = isAssistantCol ? CATEGORY_COLORS[col.colorIdx % CATEGORY_COLORS.length] : null;
             const color = (!isAssistantCol && col.key !== '__none__') ? getFlowColor(col.label) : null;
             const dropTarget = effectiveMode === 'assistant'
-              ? { category: catKey }
-              : { category: catKey, storyFlow: col.key !== '__none__' ? col.label : null };
+              ? { category: catKey, assistant: col.key !== '__none__' ? col.label : null }
+              : { category: catKey, storyFlow: col.key !== '__none__' ? col.label : null, assistant: null };
             return (
               <DropZone
                 key={col.key}
