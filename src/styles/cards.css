@@ -1035,10 +1035,32 @@
   border: 1.5px solid var(--pm-accent);
   border-radius: var(--pm-radius-sm);
   box-shadow: var(--pm-shadow-md);
-  max-height: 200px;
+  max-height: 240px;
   overflow-y: auto;
   padding: 4px 0;
 }
+
+.ms-search-wrap {
+  padding: 6px 8px 4px;
+  border-bottom: 1px solid var(--pm-border);
+  position: sticky;
+  top: 0;
+  background: var(--pm-surface);
+  z-index: 1;
+}
+.ms-search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  border: 1.5px solid var(--pm-border2);
+  border-radius: 5px;
+  background: var(--pm-bg);
+  color: var(--pm-text);
+  outline: none;
+}
+.ms-search:focus { border-color: var(--pm-accent); }
 
 .ms-option {
   display: flex;

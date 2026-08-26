@@ -76,15 +76,24 @@ function useAutoResize(value) {
   return ref;
 }
 
-function SingleSelectDropdown({ options, value, onChange, placeholder, lang = 'en' }) {
+function SingleSelectDropdown({ options, value, onChange, placeholder, lang = 'en', searchable = false }) {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const ref = useRef(null);
+  const searchRef = useRef(null);
   useEffect(() => {
-    function onOutside(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    function onOutside(e) { if (ref.current && !ref.current.contains(e.target)) { setOpen(false); setQuery(''); } }
     if (open) document.addEventListener('mousedown', onOutside);
     return () => document.removeEventListener('mousedown', onOutside);
   }, [open]);
+  useEffect(() => {
+    if (open && searchable) setTimeout(() => searchRef.current?.focus(), 30);
+    if (!open) setQuery('');
+  }, [open, searchable]);
   const normalized = options.map(o => typeof o === 'object' ? { value: o.en, label: tl(o, lang) } : { value: o, label: o });
+  const filtered = searchable && query
+    ? normalized.filter(o => o.label.toLowerCase().includes(query.toLowerCase()))
+    : normalized;
   const displayLabel = normalized.find(o => o.value === value)?.label ?? value ?? '';
   return (
     <div className="ms-dropdown" ref={ref}>
@@ -94,15 +103,23 @@ function SingleSelectDropdown({ options, value, onChange, placeholder, lang = 'e
       </button>
       {open && (
         <div className="ms-menu">
-          <label className={`ms-option${!value ? ' ms-selected' : ''}`} onClick={() => { onChange(''); setOpen(false); }}>
+          {searchable && (
+            <div className="ms-search-wrap">
+              <input ref={searchRef} className="ms-search" type="text" value={query}
+                onChange={e => setQuery(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Escape') { setOpen(false); setQuery(''); } if (e.key === 'Enter' && filtered.length === 1) { onChange(filtered[0].value); setOpen(false); setQuery(''); } }}
+                placeholder="Search…" />
+            </div>
+          )}
+          <label className={`ms-option${!value ? ' ms-selected' : ''}`} onClick={() => { onChange(''); setOpen(false); setQuery(''); }}>
             <span style={{ opacity: 0.5 }}>{placeholder}</span>
           </label>
-          {normalized.map(({ value: v, label: lbl }) => (
-            <label key={v} className={`ms-option${value === v ? ' ms-selected' : ''}`} onClick={() => { onChange(v); setOpen(false); }}>
+          {filtered.map(({ value: v, label: lbl }) => (
+            <label key={v} className={`ms-option${value === v ? ' ms-selected' : ''}`} onClick={() => { onChange(v); setOpen(false); setQuery(''); }}>
               {lbl}
             </label>
           ))}
-          {normalized.length === 0 && <div className="ms-empty">No options</div>}
+          {filtered.length === 0 && <div className="ms-empty">No results</div>}
         </div>
       )}
     </div>
@@ -461,6 +478,7 @@ export default function PromptModal() {
                   value={assistant}
                   onChange={v => { setAssistant(v); setAgent(''); }}
                   placeholder={t('selectNone', lang)}
+                  searchable
                 />
               </div>
             )}
@@ -473,6 +491,7 @@ export default function PromptModal() {
                   value={agent}
                   onChange={setAgent}
                   placeholder={t('selectNone', lang)}
+                  searchable
                 />
               </div>
             )}
