@@ -472,10 +472,15 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
     ];
   }
 
+  function scroll(dir) {
+    scrollRef.current?.scrollBy({ left: dir * 320, behavior: 'smooth' });
+  }
+
   return (
     <DropZone className="category-block" onDrop={id => onDrop(id, { category: catKey, storyFlow: null })}>
       {!hideLabel && <div className="grid-section-label">{label}<span className="section-count">{prompts.length}</span></div>}
       <div className="category-columns-wrap">
+        <button className="cat-scroll-btn cat-scroll-left" onClick={() => scroll(-1)} aria-label="Scroll left">‹</button>
         <div className="category-flow-columns" ref={scrollRef}>
           {columns.map(col => {
             const isAssistantCol = effectiveMode === 'assistant' && col.isAssistant;
@@ -506,6 +511,7 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
             );
           })}
         </div>
+        <button className="cat-scroll-btn cat-scroll-right" onClick={() => scroll(1)} aria-label="Scroll right">›</button>
       </div>
     </DropZone>
   );

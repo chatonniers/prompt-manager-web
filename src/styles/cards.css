@@ -54,6 +54,30 @@
   position: relative;
 }
 
+.cat-scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 28px;
+  height: 48px;
+  border-radius: 8px;
+  border: 1px solid var(--pm-border2);
+  background: var(--pm-surface);
+  color: var(--pm-text2);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.15s, background 0.15s;
+}
+.cat-scroll-btn:hover { opacity: 1; background: var(--pm-bg2); color: var(--pm-accent); }
+.cat-scroll-left  { left: -14px; }
+.cat-scroll-right { right: -14px; }
+
 .category-flow-columns {
   display: flex;
   gap: 12px;
