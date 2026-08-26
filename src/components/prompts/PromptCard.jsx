@@ -441,8 +441,8 @@ function CardEditBack({ prompt: p, catalog, lang, onSave, onCancel, onDuplicate,
                 <option value="">{t('selectNone', lang)}</option>
                 {(catalog.assistants || [])
                   .filter(a => !a.domain || a.domain === category || !category)
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
+                  .sort((a, b) => tl(a.name, lang).localeCompare(tl(b.name, lang)))
+                  .map(a => { const en = typeof a.name === 'object' ? a.name.en : a.name; return <option key={a.id} value={en}>{tl(a.name, lang)}</option>; })}
               </select>
             </div>
           )}
@@ -999,7 +999,7 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
             </div>
             {p.assistant && (
               <div className="prompt-card-meta" style={{ marginBottom: 4 }}>
-                {(() => { const ac = getAssistantColor(p.assistant, catalog.assistants); return <span className="pill assistant-pill" style={{ background: ac.bg, color: ac.text, borderColor: ac.border }}>{p.assistant}</span>; })()}
+                {(() => { const ac = getAssistantColor(p.assistant, catalog.assistants); const astObj = (catalog.assistants || []).find(a => (typeof a.name === 'object' ? a.name.en : a.name) === p.assistant); return <span className="pill assistant-pill" style={{ background: ac.bg, color: ac.text, borderColor: ac.border }}>{tl((astObj || {}).name || p.assistant, lang)}</span>; })()}
               </div>
             )}
             {p.notes && <NotesPreview notes={p.notes} compact />}

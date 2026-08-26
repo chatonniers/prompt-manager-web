@@ -273,7 +273,7 @@ function PromptTableRow({ p, selectedIds, onToggleSelect, onOpen, publishRequest
         </td>
         <td className="pt-td">
           {p.assistant
-            ? <span className="pill assistant-pill">{p.assistant}</span>
+            ? <span className="pill assistant-pill">{tl(((state.catalog?.assistants || []).find(a => (typeof a.name === 'object' ? a.name.en : a.name) === p.assistant) || {}).name || p.assistant, lang)}</span>
             : <span className="pt-td-dim">—</span>}
         </td>
         <td className="pt-td pt-td-pills">
@@ -425,15 +425,16 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
 
   let columns;
   if (effectiveMode === 'assistant') {
+    const getEn = a => typeof a.name === 'object' ? a.name.en || '' : a.name || '';
     const domainAssistants = (assistants || []).filter(a => !a.domain || a.domain === catKey);
     // Include any assistant actually used by prompts in this block, even if domain doesn't match
     const usedNames = [...new Set(prompts.map(p => p.assistant).filter(Boolean))];
     const usedAssistants = [
-      ...domainAssistants.filter(a => usedNames.includes(a.name)),
+      ...domainAssistants.filter(a => usedNames.includes(getEn(a))),
       ...usedNames
-        .filter(name => !domainAssistants.some(a => a.name === name))
+        .filter(name => !domainAssistants.some(a => getEn(a) === name))
         .map(name => {
-          const globalA = (assistants || []).find(a => a.name === name);
+          const globalA = (assistants || []).find(a => getEn(a) === name);
           const globalIdx = globalA ? (assistants || []).indexOf(globalA) : 0;
           return globalA ? { ...globalA, colorIdx: globalIdx } : { id: name, name, colorIdx: 0 };
         }),
@@ -442,9 +443,10 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
     columns = [
       ...usedAssistants.map(a => {
         const globalIdx = (assistants || []).findIndex(x => x.id === a.id);
-        return { key: a.id, label: a.name, prompts: prompts.filter(p => p.assistant === a.name), isAssistant: true, colorIdx: globalIdx >= 0 ? globalIdx : 0 };
+        const enKey = getEn(a);
+        return { key: a.id, label: tl(a.name, lang), enKey, prompts: prompts.filter(p => p.assistant === enKey), isAssistant: true, colorIdx: globalIdx >= 0 ? globalIdx : 0 };
       }),
-      ...(noAssistant.length > 0 ? [{ key: '__none__', label: '—', prompts: noAssistant, isAssistant: false }] : []),
+      ...(noAssistant.length > 0 ? [{ key: '__none__', label: '—', enKey: null, prompts: noAssistant, isAssistant: false }] : []),
     ];
   } else {
     const usedFlows = storyFlows.filter(f => prompts.some(p => p.storyFlow === f));
@@ -480,7 +482,7 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
             const assistantColor = isAssistantCol ? CATEGORY_COLORS[col.colorIdx % CATEGORY_COLORS.length] : null;
             const color = (!isAssistantCol && col.key !== '__none__') ? getFlowColor(col.label) : null;
             const dropTarget = effectiveMode === 'assistant'
-              ? { category: catKey, assistant: col.key !== '__none__' ? col.label : null }
+              ? { category: catKey, assistant: col.key !== '__none__' ? col.enKey : null }
               : { category: catKey, storyFlow: col.key !== '__none__' ? col.label : null, assistant: null };
             return (
               <DropZone

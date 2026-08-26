@@ -430,7 +430,7 @@ export default function PromptModal() {
               <div className="field-row">
                 <label>{t('aiAssistantLabel', lang)}</label>
                 <SingleSelectDropdown
-                  options={[...filteredAssistants].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })).map(a => a.name)}
+                  options={[...filteredAssistants].sort((a, b) => tl(a.name, lang).localeCompare(tl(b.name, lang), undefined, { sensitivity: 'base' })).map(a => a.name)}
                   value={assistant}
                   onChange={v => { setAssistant(v); setAgent(''); }}
                   placeholder={t('selectNone', lang)}
@@ -442,7 +442,7 @@ export default function PromptModal() {
               <div className="field-row">
                 <label>{t('aiAgentLabel', lang)}</label>
                 <SingleSelectDropdown
-                  options={[...filteredAgents].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })).map(a => a.name)}
+                  options={[...filteredAgents].sort((a, b) => tl(a.name, lang).localeCompare(tl(b.name, lang), undefined, { sensitivity: 'base' })).map(a => a.name)}
                   value={agent}
                   onChange={setAgent}
                   placeholder={t('selectNone', lang)}

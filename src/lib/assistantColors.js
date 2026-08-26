@@ -10,6 +10,9 @@ export const ASSISTANT_COLORS = [
 ];
 
 export function getAssistantColor(assistantName, catalogAssistants) {
-  const idx = (catalogAssistants || []).findIndex(a => a.name === assistantName);
+  const idx = (catalogAssistants || []).findIndex(a => {
+    const en = typeof a.name === 'object' ? a.name.en || '' : a.name || '';
+    return en === assistantName;
+  });
   return idx >= 0 ? ASSISTANT_COLORS[idx % ASSISTANT_COLORS.length] : ASSISTANT_COLORS[0];
 }
