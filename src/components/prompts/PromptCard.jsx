@@ -815,7 +815,7 @@ function PromptItemRow({ item, idx, label, body, isCopied, lang, onCopy }) {
   );
 }
 
-export default function PromptCard({ prompt: p, isSelected, onToggleSelect, compact }) {
+export default function PromptCard({ prompt: p, isSelected, onToggleSelect, compact, hideAssistant, hideCategory }) {
   const { state, dispatch } = useApp();
   const { isAdmin, isEditor, profile } = useAuth();
   const workspace = state.workspace ?? 'library';
@@ -1028,8 +1028,9 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
                 <div className="prompt-card-title">{p.title}</div>
               </div>
               <div className="prompt-card-header-pills">
-                {p.assistant && (() => { const ac = getAssistantColor(p.assistant, catalog.assistants); return <span className="pill assistant-pill" style={{ background: ac.bg, color: ac.text, borderColor: ac.border }}>{p.assistant}</span>; })()}
-                {p.category && (() => { const catObj = (catalog.categories || []).find(c => (typeof c === 'object' ? c.en : c) === p.category); return <span className="pill category card-header-category">{tl(catObj || p.category, lang)}</span>; })()}
+                {!hideAssistant && p.assistant && (() => { const ac = getAssistantColor(p.assistant, catalog.assistants); return <span className="pill assistant-pill" style={{ background: ac.bg, color: ac.text, borderColor: ac.border }}>{p.assistant}</span>; })()}
+                {!hideCategory && p.category && (() => { const catObj = (catalog.categories || []).find(c => (typeof c === 'object' ? c.en : c) === p.category); return <span className="pill category card-header-category">{tl(catObj || p.category, lang)}</span>; })()}
+                {(hideAssistant || hideCategory) && p.status && <span className={`pill status-${p.status}`} style={{ marginLeft: 'auto' }}>{t(`status${p.status.charAt(0).toUpperCase() + p.status.slice(1)}`, lang)}</span>}
               </div>
             </div>
 
@@ -1055,9 +1056,9 @@ export default function PromptCard({ prompt: p, isSelected, onToggleSelect, comp
               })}
             </div>
 
-            {/* Meta pills — status, language badge, usage count */}
+            {/* Meta pills — status (only if not shown in header), language badge, usage count */}
             <div className="prompt-card-meta">
-              {p.status && <span className={`pill status-${p.status}`}>{t(`status${p.status.charAt(0).toUpperCase() + p.status.slice(1)}`, lang)}</span>}
+              {!(hideAssistant || hideCategory) && p.status && <span className={`pill status-${p.status}`}>{t(`status${p.status.charAt(0).toUpperCase() + p.status.slice(1)}`, lang)}</span>}
               {langBadge}
               {p.usageCount > 0 && <span className="usage-hint" style={{ marginLeft: 'auto' }}>Used {t('usedCount', lang, p.usageCount)}{p.lastUsedAt ? ` · ${relTime(p.lastUsedAt, lang)}` : ''}</span>}
             </div>

@@ -447,7 +447,7 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
           {prompts.length === 0
             ? <div className="category-block-empty-hint">{t('dropCardsHere', lang)}</div>
             : <div className="category-flat-grid">
-                {prompts.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
+                {prompts.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} hideAssistant={effectiveMode === 'assistant'} hideCategory={!!catKey} />)}
               </div>
           }
         </DropZone>
@@ -488,7 +488,7 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
                   {col.label}
                   <span className="flow-column-count">{col.prompts.length}</span>
                 </div>
-                {col.prompts.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} />)}
+                {col.prompts.map(p => <PromptCard key={p.id} prompt={p} isSelected={selectedIds?.has(p.id)} onToggleSelect={onToggleSelect} hideAssistant={effectiveMode === 'assistant'} hideCategory={!!catKey} />)}
               </DropZone>
             );
           })}
