@@ -457,8 +457,8 @@ export default function PromptModal() {
               {errors.title && <span className="field-error">{errors.title}</span>}
             </div>
 
-            {(catalog.categories || []).length > 0 && (
-              <div className="field-row">
+            <div className="field-row-2col">
+              <div className="field-col">
                 <label>{t('category', lang)}</label>
                 <SingleSelectDropdown
                   options={[...(catalog.categories || [])].sort((a, b) => (typeof a === 'object' ? a.en : a).localeCompare(typeof b === 'object' ? b.en : b, undefined, { sensitivity: 'base' }))}
@@ -468,10 +468,24 @@ export default function PromptModal() {
                   lang={lang}
                 />
               </div>
-            )}
+              <div className="field-col">
+                <label>{t('personasLabel', lang)}</label>
+                {(catalog.personas || []).length > 0 ? (
+                  <MultiSelectDropdown
+                    options={catalog.personas || []}
+                    selected={personas}
+                    onChange={setPersonas}
+                    placeholder={t('selectPersonas', lang)}
+                    lang={lang}
+                  />
+                ) : (
+                  <p className="hint" style={{ fontSize: 12, margin: '4px 0 0' }}>{t('noPersonasYet', lang)}</p>
+                )}
+              </div>
+            </div>
 
-            {filteredAssistants.length > 0 && (
-              <div className="field-row">
+            <div className="field-row-2col">
+              <div className="field-col">
                 <label>{t('aiAssistantLabel', lang)}</label>
                 <SingleSelectDropdown
                   options={[...filteredAssistants].sort((a, b) => tl(a.name, lang).localeCompare(tl(b.name, lang), undefined, { sensitivity: 'base' })).map(a => a.name)}
@@ -481,10 +495,7 @@ export default function PromptModal() {
                   searchable
                 />
               </div>
-            )}
-
-            {filteredAgents.length > 0 && (
-              <div className="field-row">
+              <div className="field-col">
                 <label>{t('aiAgentLabel', lang)}</label>
                 <SingleSelectDropdown
                   options={[...filteredAgents].sort((a, b) => tl(a.name, lang).localeCompare(tl(b.name, lang), undefined, { sensitivity: 'base' })).map(a => a.name)}
@@ -494,21 +505,6 @@ export default function PromptModal() {
                   searchable
                 />
               </div>
-            )}
-
-            <div className="field-row">
-              <label>{t('personasLabel', lang)}</label>
-              {(catalog.personas || []).length > 0 ? (
-                <MultiSelectDropdown
-                  options={catalog.personas || []}
-                  selected={personas}
-                  onChange={setPersonas}
-                  placeholder={t('selectPersonas', lang)}
-                  lang={lang}
-                />
-              ) : (
-                <p className="hint" style={{ fontSize: 12, margin: '4px 0 0' }}>{t('noPersonasYet', lang)}</p>
-              )}
             </div>
 
             <div className="field-row">
