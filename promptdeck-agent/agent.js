@@ -21,7 +21,7 @@ import os from 'os';
 import { v4 as uuidv4 } from 'uuid';
 
 const PORT = 27384;
-const ALLOWED_ORIGIN = 'https://chatonniers.github.io';
+const ALLOWED_ORIGIN = 'https://promptdeck.cfapps.eu10.hana.ondemand.com';
 const ALLOWED_ORIGIN_LOCAL = 'http://localhost:5173';
 
 const pendingSkills = new Map(); // token → { name, content, expires }
