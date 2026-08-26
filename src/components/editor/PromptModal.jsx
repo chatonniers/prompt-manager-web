@@ -481,6 +481,44 @@ export default function PromptModal() {
                 </div>
               )}
             </div>
+
+            {/* Status + Favorite */}
+            <div className="field-row-2col">
+              <div className="field-col">
+                <label>{t('statusLabel', lang)}</label>
+                <div className="card-status-btns">
+                  {(canPublish ? ['draft', 'published', 'archived'] : ['draft']).map(s => (
+                    <button key={s} type="button"
+                      className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`}
+                      onClick={() => setStatus(s)} disabled={!canPublish && s !== 'draft'}>
+                      {s ? t(`status${s.charAt(0).toUpperCase() + s.slice(1)}`, lang) : '—'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="field-col">
+                <label>{t('favLabel', lang)}</label>
+                <label className="toggle-label">
+                  <input type="checkbox" checked={isFavorite} onChange={e => setIsFavorite(e.target.checked)} />
+                  <span> {t('markFav', lang)}</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Visibility */}
+            {canEdit && (
+              <div className="field-row">
+                <label>{t('visibilityLabel', lang)}</label>
+                <div className="card-privacy-btns">
+                  <button type="button" className={`card-privacy-btn${isPrivate !== false ? ' active private' : ''}`} onClick={() => setIsPrivate(true)}>
+                    {t('visibilityPrivate', lang)}
+                  </button>
+                  <button type="button" className={`card-privacy-btn${isPrivate === false ? ' active shared' : ''}`} onClick={() => setIsPrivate(false)}>
+                    {t('visibilityPublic', lang)}
+                  </button>
+                </div>
+              </div>
+            )}
           </>}
 
           {/* ── DETAILS TAB ─────────────────────────────────────── */}
@@ -535,44 +573,6 @@ export default function PromptModal() {
                   placeholder={t('selectSolutions', lang)}
                   lang={lang}
                 />
-              </div>
-            )}
-
-            {/* Status + Favorite */}
-            <div className="field-row-2col">
-              <div className="field-col">
-                <label>{t('statusLabel', lang)}</label>
-                <div className="card-status-btns">
-                  {(canPublish ? ['draft', 'published', 'archived'] : ['draft']).map(s => (
-                    <button key={s} type="button"
-                      className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`}
-                      onClick={() => setStatus(s)} disabled={!canPublish && s !== 'draft'}>
-                      {s ? t(`status${s.charAt(0).toUpperCase() + s.slice(1)}`, lang) : '—'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="field-col">
-                <label>{t('favLabel', lang)}</label>
-                <label className="toggle-label">
-                  <input type="checkbox" checked={isFavorite} onChange={e => setIsFavorite(e.target.checked)} />
-                  <span> {t('markFav', lang)}</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Visibility */}
-            {canEdit && (
-              <div className="field-row">
-                <label>{t('visibilityLabel', lang)}</label>
-                <div className="card-privacy-btns">
-                  <button type="button" className={`card-privacy-btn${isPrivate !== false ? ' active private' : ''}`} onClick={() => setIsPrivate(true)}>
-                    {t('visibilityPrivate', lang)}
-                  </button>
-                  <button type="button" className={`card-privacy-btn${isPrivate === false ? ' active shared' : ''}`} onClick={() => setIsPrivate(false)}>
-                    {t('visibilityPublic', lang)}
-                  </button>
-                </div>
               </div>
             )}
 

@@ -117,6 +117,17 @@ export default function PublishRequestBell() {
       localStorage.setItem(SEEN_USERS_KEY, JSON.stringify(merged));
       setSeenUserIds(merged);
     }
+    // Always refresh when opening so admin sees latest requests even if realtime missed it
+    if (opening) {
+      StorageAPI.getPublishRequests().catch(() => []).then(fresh => {
+        dispatch({ type: 'SET_PUBLISH_REQUESTS', payload: fresh });
+      });
+      if (isAdmin) {
+        StorageAPI.getNewUsers().catch(() => []).then(fresh => {
+          dispatch({ type: 'SET_NEW_USERS', payload: fresh });
+        });
+      }
+    }
   }
 
   async function approve(req) {

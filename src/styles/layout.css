@@ -1324,47 +1324,32 @@
 #favs-panel.favs-panel-collapsed {
   width: 44px !important;
   min-width: 44px;
-  padding: 8px 0;
+  padding: 8px 6px;
   align-items: center;
+  overflow: hidden;
 }
 
-.favs-panel-toggle {
+.favs-panel-header {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 7px;
-  padding: 6px 10px;
-  margin: 0 8px 10px;
-  cursor: pointer;
-  color: rgba(255,255,255,0.75);
+  padding: 0 12px 10px;
   font-size: 11px;
   font-weight: 700;
-  font-family: inherit;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
-  width: calc(100% - 16px);
+  color: rgba(255,255,255,0.55);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  margin-bottom: 6px;
 }
-#favs-panel.favs-panel-collapsed .favs-panel-toggle {
-  width: 32px;
-  padding: 8px;
-  margin: 0 auto 4px;
-  justify-content: center;
-}
-.favs-panel-toggle:hover { background: rgba(99,102,241,0.25); border-color: rgba(99,102,241,0.5); color: #fff; }
 
-.favs-panel-badge {
-  background: var(--pm-accent);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 800;
-  padding: 1px 5px;
-  border-radius: 20px;
-  min-width: 18px;
+.favs-panel-collapse-btn {
+  width: calc(100% - 16px);
+  margin: 8px 8px 0;
   text-align: center;
-  line-height: 1.4;
+  justify-content: center;
+  display: flex;
+  align-items: center;
 }
 
 .favs-panel-dropzone {
@@ -1397,11 +1382,6 @@
   background: linear-gradient(180deg, #f0f2ff 0%, #f5f7ff 100%);
   border-left-color: rgba(79,70,229,0.15);
 }
-[data-theme="light"] .favs-panel-toggle {
-  background: rgba(0,0,0,0.04);
-  border-color: rgba(0,0,0,0.1);
-  color: rgba(10,15,30,0.65);
-}
-[data-theme="light"] .favs-panel-toggle:hover { background: rgba(79,70,229,0.08); border-color: rgba(79,70,229,0.3); color: var(--pm-accent); }
+[data-theme="light"] .favs-panel-header { color: rgba(10,15,30,0.45); border-bottom-color: rgba(10,15,30,0.08); }
 
 @media (max-width: 768px) { #favs-panel { display: none; } }

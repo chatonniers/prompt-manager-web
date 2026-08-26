@@ -12,6 +12,9 @@ function StarIcon() {
   );
 }
 
+const IconChevronLeft  = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M7.5 2.5l-4 3.5 4 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const IconChevronRight = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4.5 2.5l4 3.5-4 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+
 function DropZone({ className, onDrop, children }) {
   const [over, setOver] = useState(false);
   return (
@@ -45,44 +48,48 @@ export default function FavsPanel({ collapsed, onToggle }) {
     dispatch({ type: 'TOGGLE_SELECT', payload: id });
   }
 
+  if (collapsed) {
+    return (
+      <aside id="favs-panel" className="favs-panel-collapsed">
+        <button className="sidebar-toggle-btn" onClick={onToggle} title={t('favorites', lang)}>
+          <IconChevronLeft />
+        </button>
+      </aside>
+    );
+  }
+
   return (
-    <aside id="favs-panel" className={collapsed ? 'favs-panel-collapsed' : ''}>
-      <button className="favs-panel-toggle" onClick={onToggle} title={collapsed ? t('favorites', lang) : undefined}>
+    <aside id="favs-panel">
+      <div className="favs-panel-header">
         <StarIcon />
-        {collapsed
-          ? (favs.length > 0 && <span className="favs-panel-badge">{favs.length}</span>)
+        <span>{t('favorites', lang)}</span>
+        <span className="section-count">{favs.length}</span>
+      </div>
+      <DropZone
+        className={`favs-panel-dropzone${isDragging ? ' favs-panel-dropzone-active' : ''}`}
+        onDrop={handleDrop}
+      >
+        {favs.length === 0
+          ? <p className="favs-panel-empty">{t('noFavoritesYet', lang)}</p>
           : (
-            <>
-              <span>{t('favorites', lang)}</span>
-              <span className="section-count">{favs.length}</span>
-            </>
+            <div className="favs-panel-list">
+              {favs.map(p => (
+                <div key={p.id} className="favs-panel-item">
+                  <PromptCard
+                    prompt={p}
+                    compact
+                    isSelected={selectedIds?.has(p.id)}
+                    onToggleSelect={onToggleSelect}
+                  />
+                </div>
+              ))}
+            </div>
           )
         }
+      </DropZone>
+      <button className="sidebar-toggle-btn favs-panel-collapse-btn" onClick={onToggle} title="Collapse panel">
+        <IconChevronRight />
       </button>
-      {!collapsed && (
-        <DropZone
-          className={`favs-panel-dropzone${isDragging ? ' favs-panel-dropzone-active' : ''}`}
-          onDrop={handleDrop}
-        >
-          {favs.length === 0
-            ? <p className="favs-panel-empty">{t('noFavoritesYet', lang)}</p>
-            : (
-              <div className="favs-panel-list">
-                {favs.map(p => (
-                  <div key={p.id} className="favs-panel-item">
-                    <PromptCard
-                      prompt={p}
-                      compact
-                      isSelected={selectedIds?.has(p.id)}
-                      onToggleSelect={onToggleSelect}
-                    />
-                  </div>
-                ))}
-              </div>
-            )
-          }
-        </DropZone>
-      )}
     </aside>
   );
 }

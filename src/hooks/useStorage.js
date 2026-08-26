@@ -62,13 +62,27 @@ export function useStorage() {
       });
 
       channelsRef.current = [promptsCh, catalogCh, requestsCh, profilesCh];
+
+      // Fallback poll every 60s for publish requests — realtime Postgres Changes
+      // with RLS doesn't reliably broadcast cross-user inserts.
+      const pollInterval = setInterval(async () => {
+        try {
+          const fresh = await StorageAPI.getPublishRequests().catch(() => null);
+          if (fresh) dispatch({ type: 'SET_PUBLISH_REQUESTS', payload: fresh });
+        } catch { /* ignore */ }
+      }, 60_000);
+
+      channelsRef.current.push({ _isInterval: true, _id: pollInterval });
     }
 
     init();
 
     return () => {
       cancelled = true;
-      channelsRef.current.forEach(ch => StorageAPI.unsubscribe(ch));
+      channelsRef.current.forEach(ch => {
+        if (ch?._isInterval) clearInterval(ch._id);
+        else StorageAPI.unsubscribe(ch);
+      });
       channelsRef.current = [];
     };
   }, [dispatch]); // eslint-disable-line react-hooks/exhaustive-deps
