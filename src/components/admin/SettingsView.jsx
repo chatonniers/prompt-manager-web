@@ -13,9 +13,9 @@ import UserManagement from './UserManagement.jsx';
 import AdminStatsView from './AdminStatsView.jsx';
 
 const FUNCTIONAL_SECTIONS = [
+  { id: 'categories', labelKey: 'categoriesAdmin' },
   { id: 'assistants', labelKey: 'assistantsAdmin' },
   { id: 'agents',     labelKey: 'agentsAdmin' },
-  { id: 'categories', labelKey: 'categoriesAdmin' },
   { id: 'flows',      labelKey: 'flowsAdmin' },
   { id: 'industries', labelKey: 'industriesAdmin' },
   { id: 'personas',   labelKey: 'personasAdmin' },
