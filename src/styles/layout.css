@@ -542,6 +542,23 @@
 
 .workspace-seg-btn:hover { opacity: 0.85; }
 
+/* ── Beta banner ──────────────────────────────────────────────────────── */
+.beta-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(245,158,11,0.1);
+  border: 1px solid rgba(245,158,11,0.35);
+  border-radius: 8px;
+  padding: 9px 14px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #F59E0B;
+}
+.beta-banner-icon { font-size: 15px; flex-shrink: 0; }
+[data-theme="light"] .beta-banner { background: rgba(245,158,11,0.08); color: #B45309; }
+
 /* ── Category tabs ────────────────────────────────────────────────────── */
 .category-tabs-wrap {
   display: flex;

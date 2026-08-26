@@ -9,6 +9,7 @@ import AdminSystemsCard from './AdminSystemsCard.jsx';
 import AdminAssistantsCard from './AdminAssistantsCard.jsx';
 import AdminAgentsCard from './AdminAgentsCard.jsx';
 import AdminVisibilityCard from './AdminVisibilityCard.jsx';
+import AdminBetaBannerCard from './AdminBetaBannerCard.jsx';
 import UserManagement from './UserManagement.jsx';
 import AdminStatsView from './AdminStatsView.jsx';
 
@@ -25,6 +26,7 @@ const FUNCTIONAL_SECTIONS = [
 
 const ADMIN_TECHNICAL_SECTIONS = [
   { id: 'system',     labelKey: null, label: 'System' },
+  { id: 'beta',       labelKey: null, label: 'Beta Banner' },
   { id: 'users',      labelKey: null, label: 'Users' },
   { id: 'visibility', labelKey: null, label: 'Visibility Rules' },
 ];
@@ -221,6 +223,7 @@ export default function SettingsView() {
           {activeSection === 'users' && <div className="view-card"><UserManagement /></div>}
           {activeSection === 'stats' && <AdminStatsView />}
           {activeSection === 'visibility' && <AdminVisibilityCard />}
+          {activeSection === 'beta' && isAdmin && <AdminBetaBannerCard />}
 
           {activeSection === 'system' && isAdmin && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

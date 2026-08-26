@@ -105,6 +105,7 @@ function dbToCatalog(row) {
     agents:          row.agents      || [],
     visibilityRules: row.visibility_rules ?? null,
     kpiRules:        row.kpi_rules        ?? null,
+    betaBanner:      row.beta_banner      ?? null,
   };
 }
 
@@ -121,6 +122,7 @@ function catalogToDb(catalog) {
     agents:            catalog.agents     || [],
     visibility_rules:  catalog.visibilityRules ?? null,
     kpi_rules:         catalog.kpiRules        ?? null,
+    beta_banner:       catalog.betaBanner      ?? null,
   };
 }
 

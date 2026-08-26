@@ -678,6 +678,13 @@ export default function PromptGrid() {
         )}
         <div id="prompt-grid-outer" className={draggingId ? 'is-drag-active' : ''}>
 
+          {catalog.betaBanner?.enabled && (
+            <div className="beta-banner">
+              <span className="beta-banner-icon">⚠️</span>
+              <span>{catalog.betaBanner.message || 'Beta Release — development in progress, expect disruptions.'}</span>
+            </div>
+          )}
+
           <div className="category-tabs-wrap" style={{ position: 'sticky', top: 0, zIndex: 19, background: 'var(--pm-bg)', paddingBottom: 4, marginBottom: 6 }}>
             <div className="category-tabs">
               {allTabs.map((block, idx) => {
