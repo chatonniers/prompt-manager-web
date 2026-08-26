@@ -103,7 +103,16 @@
   color: var(--pm-text3);
   transition: color 0.2s;
 }
-.status-seg-btn:not(:last-child) { border-right: 1.5px solid var(--pm-border); }
+.status-seg-btn:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 20%;
+  height: 60%;
+  width: 1.5px;
+  background: rgba(255,255,255,0.2);
+  z-index: 2;
+}
 .status-seg.draft     .status-seg-btn:nth-child(1),
 .status-seg.published .status-seg-btn:nth-child(2),
 .status-seg.archived  .status-seg-btn:nth-child(3) { color: #fff; }
