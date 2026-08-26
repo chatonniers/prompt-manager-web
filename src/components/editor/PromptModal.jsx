@@ -395,6 +395,16 @@ export default function PromptModal() {
             <button className={`modal-tab${activeTab === 'details' ? ' active' : ''}`} onClick={() => setActiveTab('details')}>{t('tabDetails', lang)}</button>
             {!isNew && <button className={`modal-tab${activeTab === 'history' ? ' active' : ''}`} onClick={() => setActiveTab('history')}>{t('tabHistory', lang)}</button>}
           </div>
+          {canEdit && (
+            <div className="modal-header-visibility">
+              <button type="button" className={`card-privacy-btn${isPrivate !== false ? ' active private' : ''}`} onClick={() => setIsPrivate(true)}>
+                {t('visibilityPrivate', lang)}
+              </button>
+              <button type="button" className={`card-privacy-btn${isPrivate === false ? ' active shared' : ''}`} onClick={() => setIsPrivate(false)}>
+                {t('visibilityPublic', lang)}
+              </button>
+            </div>
+          )}
           <button className="modal-close-btn" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
           </button>
@@ -482,43 +492,19 @@ export default function PromptModal() {
               )}
             </div>
 
-            {/* Status + Favorite */}
-            <div className="field-row-2col">
-              <div className="field-col">
-                <label>{t('statusLabel', lang)}</label>
-                <div className="card-status-btns">
-                  {(canPublish ? ['draft', 'published', 'archived'] : ['draft']).map(s => (
-                    <button key={s} type="button"
-                      className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`}
-                      onClick={() => setStatus(s)} disabled={!canPublish && s !== 'draft'}>
-                      {s ? t(`status${s.charAt(0).toUpperCase() + s.slice(1)}`, lang) : '—'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="field-col">
-                <label>{t('favLabel', lang)}</label>
-                <label className="toggle-label">
-                  <input type="checkbox" checked={isFavorite} onChange={e => setIsFavorite(e.target.checked)} />
-                  <span> {t('markFav', lang)}</span>
-                </label>
+            {/* Status */}
+            <div className="field-row">
+              <label>{t('statusLabel', lang)}</label>
+              <div className="card-status-btns">
+                {(canPublish ? ['draft', 'published', 'archived'] : ['draft']).map(s => (
+                  <button key={s} type="button"
+                    className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`}
+                    onClick={() => setStatus(s)} disabled={!canPublish && s !== 'draft'}>
+                    {s ? t(`status${s.charAt(0).toUpperCase() + s.slice(1)}`, lang) : '—'}
+                  </button>
+                ))}
               </div>
             </div>
-
-            {/* Visibility */}
-            {canEdit && (
-              <div className="field-row">
-                <label>{t('visibilityLabel', lang)}</label>
-                <div className="card-privacy-btns">
-                  <button type="button" className={`card-privacy-btn${isPrivate !== false ? ' active private' : ''}`} onClick={() => setIsPrivate(true)}>
-                    {t('visibilityPrivate', lang)}
-                  </button>
-                  <button type="button" className={`card-privacy-btn${isPrivate === false ? ' active shared' : ''}`} onClick={() => setIsPrivate(false)}>
-                    {t('visibilityPublic', lang)}
-                  </button>
-                </div>
-              </div>
-            )}
           </>}
 
           {/* ── DETAILS TAB ─────────────────────────────────────── */}
