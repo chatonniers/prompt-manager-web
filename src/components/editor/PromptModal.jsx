@@ -396,11 +396,11 @@ export default function PromptModal() {
             {!isNew && <button className={`modal-tab${activeTab === 'history' ? ' active' : ''}`} onClick={() => setActiveTab('history')}>{t('tabHistory', lang)}</button>}
           </div>
           {canEdit && (
-            <div className="modal-header-visibility">
-              <button type="button" className={`card-privacy-btn${isPrivate !== false ? ' active private' : ''}`} onClick={() => setIsPrivate(true)}>
+            <div className="modal-header-visibility tb-display-seg">
+              <button type="button" className={`tb-display-seg-btn${isPrivate !== false ? ' active' : ''}`} onClick={() => setIsPrivate(true)}>
                 {t('visibilityPrivate', lang)}
               </button>
-              <button type="button" className={`card-privacy-btn${isPrivate === false ? ' active shared' : ''}`} onClick={() => setIsPrivate(false)}>
+              <button type="button" className={`tb-display-seg-btn${isPrivate === false ? ' active' : ''}`} onClick={() => setIsPrivate(false)}>
                 {t('visibilityPublic', lang)}
               </button>
             </div>
@@ -495,15 +495,21 @@ export default function PromptModal() {
             {/* Status */}
             <div className="field-row">
               <label>{t('statusLabel', lang)}</label>
-              <div className="card-status-btns">
-                {(canPublish ? ['draft', 'published', 'archived'] : ['draft']).map(s => (
-                  <button key={s} type="button"
-                    className={`card-status-btn${s ? ` status-opt-${s}` : ''}${status === s ? ' active' : ''}`}
-                    onClick={() => setStatus(s)} disabled={!canPublish && s !== 'draft'}>
-                    {s ? t(`status${s.charAt(0).toUpperCase() + s.slice(1)}`, lang) : '—'}
+              {canPublish ? (
+                <div className={`status-seg ${status || 'draft'}`}>
+                  {['draft', 'published', 'archived'].map(s => (
+                    <button key={s} type="button" className="status-seg-btn" onClick={() => setStatus(s)}>
+                      {t(`status${s.charAt(0).toUpperCase() + s.slice(1)}`, lang)}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="status-seg draft status-seg-readonly">
+                  <button type="button" className="status-seg-btn" disabled>
+                    {t('statusDraft', lang)}
                   </button>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
           </>}
 
