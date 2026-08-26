@@ -426,7 +426,18 @@ function CategoryBlock({ label, catKey, prompts, storyFlows, lang, selectedIds, 
   let columns;
   if (effectiveMode === 'assistant') {
     const domainAssistants = (assistants || []).filter(a => !a.domain || a.domain === catKey);
-    const usedAssistants = domainAssistants.filter(a => prompts.some(p => p.assistant === a.name));
+    // Include any assistant actually used by prompts in this block, even if domain doesn't match
+    const usedNames = [...new Set(prompts.map(p => p.assistant).filter(Boolean))];
+    const usedAssistants = [
+      ...domainAssistants.filter(a => usedNames.includes(a.name)),
+      ...usedNames
+        .filter(name => !domainAssistants.some(a => a.name === name))
+        .map(name => {
+          const globalA = (assistants || []).find(a => a.name === name);
+          const globalIdx = globalA ? (assistants || []).indexOf(globalA) : 0;
+          return globalA ? { ...globalA, colorIdx: globalIdx } : { id: name, name, colorIdx: 0 };
+        }),
+    ];
     const noAssistant = prompts.filter(p => !p.assistant);
     columns = [
       ...usedAssistants.map(a => {
