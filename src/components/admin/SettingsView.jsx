@@ -7,12 +7,14 @@ import AdminCatalogCard from './AdminCatalogCard.jsx';
 import AdminCategoriesCard from './AdminCategoriesCard.jsx';
 import AdminSystemsCard from './AdminSystemsCard.jsx';
 import AdminAssistantsCard from './AdminAssistantsCard.jsx';
+import AdminAgentsCard from './AdminAgentsCard.jsx';
 import AdminVisibilityCard from './AdminVisibilityCard.jsx';
 import UserManagement from './UserManagement.jsx';
 import AdminStatsView from './AdminStatsView.jsx';
 
 const FUNCTIONAL_SECTIONS = [
   { id: 'assistants', labelKey: 'assistantsAdmin' },
+  { id: 'agents',     labelKey: 'agentsAdmin' },
   { id: 'categories', labelKey: 'categoriesAdmin' },
   { id: 'flows',      labelKey: 'flowsAdmin' },
   { id: 'industries', labelKey: 'industriesAdmin' },
@@ -181,6 +183,7 @@ export default function SettingsView() {
 
           {activeSection === 'systems' && <AdminSystemsCard />}
           {activeSection === 'assistants' && <AdminAssistantsCard />}
+          {activeSection === 'agents'     && <AdminAgentsCard />}
 
           {activeSection === 'industries' && (
             <AdminCatalogCard

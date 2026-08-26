@@ -129,6 +129,7 @@ export default function PromptModal() {
   const [storyFlow, setStoryFlow] = useState('');
   const [category, setCategory] = useState('');
   const [assistant, setAssistant] = useState('');
+  const [agent, setAgent] = useState('');
   const [industry, setIndustry] = useState('');
   const [isFavorite, setIsFavorite] = useState(false);
   const [isPrivate, setIsPrivate] = useState(true);
@@ -159,6 +160,7 @@ export default function PromptModal() {
       setStoryFlow(existing.storyFlow || '');
       setCategory(existing.category || '');
       setAssistant(existing.assistant || '');
+      setAgent(existing.agent || '');
       setIndustry(existing.industry || '');
       setIsFavorite(existing.isFavorite || false);
       setSelectedSolutions(existing.solutions || []);
@@ -355,6 +357,7 @@ export default function PromptModal() {
       category: category || null,
       storyFlow,
       assistant: assistant || null,
+      agent: agent || null,
       industry: industry || null,
       solutions: selectedSolutions,
       personas,
@@ -384,6 +387,8 @@ export default function PromptModal() {
   const activeItem = promptItems[activeItemIdx] || promptItems[0];
   const itemLang = activeItem ? getItemTab(activeItem.id) : 'en';
   const filteredAssistants = catalog.assistants || [];
+  // Agents filtered to those attached to the selected assistant (or all if none selected)
+  const filteredAgents = (catalog.agents || []).filter(ag => !ag.assistant || !assistant || ag.assistant === assistant);
 
   return (
     <div id="modal-backdrop" onClick={e => { if (e.target.id === 'modal-backdrop') dispatch({ type: 'CLOSE_MODAL' }); }}>
@@ -427,7 +432,19 @@ export default function PromptModal() {
                 <SingleSelectDropdown
                   options={[...filteredAssistants].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })).map(a => a.name)}
                   value={assistant}
-                  onChange={setAssistant}
+                  onChange={v => { setAssistant(v); setAgent(''); }}
+                  placeholder={t('selectNone', lang)}
+                />
+              </div>
+            )}
+
+            {filteredAgents.length > 0 && (
+              <div className="field-row">
+                <label>{t('aiAgentLabel', lang)}</label>
+                <SingleSelectDropdown
+                  options={[...filteredAgents].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })).map(a => a.name)}
+                  value={agent}
+                  onChange={setAgent}
                   placeholder={t('selectNone', lang)}
                 />
               </div>

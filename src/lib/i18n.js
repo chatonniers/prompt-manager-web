@@ -78,9 +78,12 @@ export const I18N = {
     addLandscape: "+ Add Landscape",
     assistantsAdmin: "AI Assistants",
     assistantsDesc:  "Configure AI assistants per domain. Each prompt can be assigned one assistant.",
+    agentsAdmin:     "AI Agents",
+    agentsDesc:      "Configure AI agents attached to an assistant. Each prompt can be assigned one agent.",
     industriesAdmin: "Industries",
     industriesDesc:  "Manage the list of industries for tagging prompts.",
     addAssistant: "+ Add Assistant",
+    addAgent:     "+ Add Agent",
     addIndustry:  "+ Add Industry",
     add:          "Add",
     unused:       "unused",
@@ -330,6 +333,7 @@ export const I18N = {
     tabHistory:           "History",
     // Modal fields
     aiAssistantLabel:     "AI Assistant",
+    aiAgentLabel:         "AI Agent",
     industryLabel:        "Industry",
     // History tab
     createdBy:            "Created by",
@@ -468,9 +472,12 @@ export const I18N = {
     addLandscape: "+ Ajouter un paysage",
     assistantsAdmin: "Assistants IA",
     assistantsDesc:  "Configurez les assistants IA par domaine. Chaque prompt peut se voir attribuer un assistant.",
+    agentsAdmin:     "Agents IA",
+    agentsDesc:      "Configurez les agents IA rattachés à un assistant. Chaque prompt peut se voir attribuer un agent.",
     industriesAdmin: "Industries",
     industriesDesc:  "Gérez la liste des industries pour étiqueter les prompts.",
     addAssistant: "+ Ajouter un assistant",
+    addAgent:     "+ Ajouter un agent",
     addIndustry:  "+ Ajouter une industrie",
     add:          "Ajouter",
     unused:       "non utilisé",
@@ -720,6 +727,7 @@ export const I18N = {
     tabHistory:           "Historique",
     // Modal fields
     aiAssistantLabel:     "Assistant IA",
+    aiAgentLabel:         "Agent IA",
     industryLabel:        "Industrie",
     // History tab
     createdBy:            "Créé par",

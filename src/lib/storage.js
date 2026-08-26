@@ -55,6 +55,7 @@ function dbToPrompt(row) {
     updatedAt:    row.updated_at,
     assistant:    row.assistant    || null,
     industry:     row.industry     || null,
+    agent:        row.agent        || null,
   };
 }
 
@@ -80,6 +81,7 @@ function promptToDb(p, userId) {
     attachments:   p.attachments|| [],
     assistant:     p.assistant  || null,
     industry:      p.industry   || null,
+    agent:         p.agent      || null,
     updated_by:    userId || null,
   };
   // Preserve timestamps and usage on import (only set if provided)
@@ -100,6 +102,7 @@ function dbToCatalog(row) {
     tags:            row.tags        || [],
     assistants:      row.assistants  || [],
     industries:      row.industries  || [],
+    agents:          row.agents      || [],
     visibilityRules: row.visibility_rules ?? null,
     kpiRules:        row.kpi_rules        ?? null,
   };
@@ -115,6 +118,7 @@ function catalogToDb(catalog) {
     tags:              catalog.tags       || [],
     assistants:        catalog.assistants || [],
     industries:        catalog.industries || [],
+    agents:            catalog.agents     || [],
     visibility_rules:  catalog.visibilityRules ?? null,
     kpi_rules:         catalog.kpiRules        ?? null,
   };
