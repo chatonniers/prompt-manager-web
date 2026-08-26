@@ -383,7 +383,7 @@ export default function PromptModal() {
 
   const activeItem = promptItems[activeItemIdx] || promptItems[0];
   const itemLang = activeItem ? getItemTab(activeItem.id) : 'en';
-  const filteredAssistants = (catalog.assistants || []).filter(a => !a.domain || a.domain === category || !category);
+  const filteredAssistants = catalog.assistants || [];
 
   return (
     <div id="modal-backdrop" onClick={e => { if (e.target.id === 'modal-backdrop') dispatch({ type: 'CLOSE_MODAL' }); }}>
